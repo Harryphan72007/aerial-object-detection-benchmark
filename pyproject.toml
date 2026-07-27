@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aerial-object-detection-benchmark"
+version = "0.1.0"
+description = "Reproducible VisDrone evaluation and experiment plumbing"
+requires-python = ">=3.10"
+authors = [{ name = "Minh Phan", email = "phan0368@umn.edu" }]
+dependencies = [
+  "PyYAML>=6.0,<7",
+]
+
+[project.optional-dependencies]
+eval = [
+  "Pillow>=10,<13",
+  "pycocotools>=2.0.8,<3",
+]
+optimize = [
+  "optuna>=4,<5",
+]
+dev = [
+  "pytest>=8,<9",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+aerial-benchmark = "aerial_benchmark.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aerial_benchmark"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

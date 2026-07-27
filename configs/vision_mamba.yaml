@@ -1,0 +1,13 @@
+inherits: common.yaml
+model:
+  family: vision_mamba
+  name: vim_tiny_detector
+  backend: hustvl-vim
+  upstream: https://github.com/hustvl/Vim
+  code_license: Apache-2.0
+  checkpoint: TBD
+  adapter: TBD
+  note: A common detection head is required; NVIDIA MambaVision is excluded.
+search_space:
+  learning_rate: {type: float, low: 0.000001, high: 0.0001, log: true}
+  drop_path: {type: float, low: 0.0, high: 0.3}

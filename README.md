@@ -1,10 +1,13 @@
 # Aerial Object Detection Benchmark
 
 [![CI](https://github.com/Harryphan72007/aerial-object-detection-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/Harryphan72007/aerial-object-detection-benchmark/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Status](https://img.shields.io/badge/status-experiments%20pending-F59E0B)
 
-Reproducible comparison of CNN, Transformer, Vision Mamba, and real-time DETR detector families on VisDrone.
+A reproducible benchmark for comparing CNN, Transformer, Vision Mamba, and real-time DETR detector families on VisDrone under one evaluation protocol.
 
-> **Status: scaffold complete, experiments not yet run.** Every result cell is `TBD`. This repository does not claim accuracy, latency, memory, or ranking results before timestamped artifacts are committed.
+> [!IMPORTANT]
+> The benchmark infrastructure is implemented, but model experiments have not yet been run. Every result remains `TBD`; this repository makes no accuracy, latency, memory, or ranking claims without committed artifacts.
 
 ## Research question
 
@@ -19,41 +22,58 @@ VisDrone is a useful stress test because aerial imagery combines small objects, 
 
 ## Compared families
 
-| Family | Planned implementation | Upstream code license | Integration |
+| Family | Planned implementation | Upstream code license | Integration status |
 | --- | --- | --- | --- |
-| CNN | TorchVision Faster R-CNN | BSD-3-Clause | adapter planned |
-| Transformer | Hugging Face DETR | Apache-2.0 | adapter planned |
-| Vision Mamba | HUST-VL Vim backbone + common detector head | Apache-2.0 | adapter planned |
-| Real-time DETR | Hugging Face RT-DETR | Apache-2.0 | adapter planned |
+| CNN | TorchVision Faster R-CNN | BSD-3-Clause | Adapter planned |
+| Transformer | Hugging Face DETR | Apache-2.0 | Adapter planned |
+| Vision Mamba | HUST-VL Vim backbone with a common detector head | Apache-2.0 | Adapter planned |
+| Real-time DETR | Hugging Face RT-DETR | Apache-2.0 | Adapter planned |
 
-Licenses were checked against upstream repositories, but pretrained weights and datasets can have separate terms. Re-verify every exact checkpoint before downloading or redistributing it. NVIDIA MambaVision is deliberately excluded because its official code and weights use noncommercial terms.
+Pretrained weights and datasets can have terms that differ from their source-code repositories. Every exact checkpoint must be reviewed before download or redistribution. NVIDIA MambaVision is deliberately excluded because its official code and weights use noncommercial terms.
 
-This repository itself has no license yet; reuse permission has not been granted.
+## Benchmark contract
 
-## Repository map
+The shared protocol is designed to prevent each model family from receiving a different experimental advantage:
+
+- Official train/validation split; test-challenge data reserved for final submission
+- Image size 640 unless an architecture constraint is documented
+- Identical geometric and color augmentations
+- Fixed 50-epoch and wall-clock budgets reported separately
+- Seeds `17`, `42`, and `73`
+- Equal per-family hyperparameter-search budgets
+- Shared COCO evaluation and confidence/IoU policy
+- Warm-up and device synchronization before latency measurement
+- Failed, pruned, and out-of-memory runs retained in study logs
+
+The complete publication checklist is in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
+
+## Repository structure
 
 ```text
-configs/       shared protocol and one config per detector family
-notebooks/     one thin, reproducible notebook per family
+configs/       shared protocol and one configuration per detector family
+notebooks/     thin, reproducible notebook entry points
 scripts/       dataset conversion, evaluation, dry runs, and Optuna studies
-src/           shared parsing, metrics, provenance, results, and study code
-tests/         fast unit tests for the benchmark contract
-results/       empty templates; generated artifacts are ignored
+src/           parsing, metrics, provenance, results, and study utilities
+tests/         fast tests for the benchmark contract
+results/       empty templates; generated artifacts remain ignored
 ```
 
-## Set up
+## Quick start
+
+Requires Python 3.10 or newer.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
+python -m pip install --upgrade pip
 python -m pip install -e ".[dev,eval,optimize]"
 ```
 
-Install the model framework for the adapter you are running only after checking its exact code and weight licenses.
+Install a model framework only when running its adapter, after checking the exact code and checkpoint licenses.
 
 ## Prepare VisDrone
 
-Download VisDrone from its official project and accept the dataset terms. The benchmark never redistributes the images or annotations.
+Download VisDrone from its official project and accept the dataset terms. This repository never redistributes source images or annotations.
 
 Expected detection layout:
 
@@ -76,13 +96,13 @@ python scripts/prepare_visdrone.py \
 
 ## Run and evaluate
 
-Inspect a family’s resolved protocol without training:
+Inspect a resolved protocol without training:
 
 ```bash
 python scripts/run_experiment.py --config configs/cnn.yaml --dry-run
 ```
 
-Adapters must emit standard COCO detection JSON. Evaluate all families through the same code:
+Adapters emit standard COCO detection JSON. All families are evaluated through the same command:
 
 ```bash
 python scripts/evaluate.py \
@@ -93,9 +113,9 @@ python scripts/evaluate.py \
   --output results/runs.jsonl
 ```
 
-The command records metrics with Git revision, environment, hardware, timestamp, and prediction-file hash. It refuses to invent missing measurements.
+Each result records the Git revision, environment, hardware, timestamp, and prediction-file hash. Missing measurements are rejected rather than inferred.
 
-## Resumable Optuna studies
+## Resumable optimization
 
 ```bash
 python scripts/run_study.py \
@@ -105,22 +125,7 @@ python scripts/run_study.py \
   --trials 30
 ```
 
-The study uses persistent storage and `load_if_exists=True`; interrupted jobs resume without losing completed trials. The objective is an adapter-owned function receiving one Optuna `Trial`.
-
-## Fair-comparison protocol
-
-- official train/validation split; test-challenge only for a final submission
-- image size 640 unless a documented architecture constraint requires otherwise
-- same geometric/color augmentations
-- fixed 50-epoch and wall-clock budgets reported separately
-- seeds `17`, `42`, and `73`
-- no test-set tuning
-- identical COCO evaluation and confidence/IoU policy
-- warm-up before latency measurement; batch size and precision reported
-- per-family hyperparameter search budget kept equal
-- failed and out-of-memory runs retained in the study log
-
-See [the reproducibility checklist](docs/REPRODUCIBILITY.md).
+Optuna studies use persistent storage and `load_if_exists=True`, so interrupted searches resume without losing completed trials.
 
 ## Results
 
@@ -133,17 +138,28 @@ No experiments have been run.
 | Vision Mamba / Vim | TBD | TBD | TBD | TBD | TBD | TBD | TBD |
 | Real-time / RT-DETR | TBD | TBD | TBD | TBD | TBD | TBD | TBD |
 
-## Milestones
+## Roadmap
 
 - [x] Shared dataset conversion, evaluation, provenance, and result schema
 - [x] Fairness protocol and resumable Optuna contract
-- [x] Four configuration files and notebooks
+- [x] Four family configuration files and notebook entry points
 - [ ] Implement and smoke-test each detector adapter
 - [ ] Run one-seed pilot experiments
 - [ ] Freeze search spaces and run equal-budget studies
 - [ ] Run three-seed final experiments
 - [ ] Publish plots, error analysis, model cards, and a tagged release
 
-## Citation
+## Verification
 
-Use [CITATION.cff](CITATION.cff) for this scaffold and cite the VisDrone dataset and each model implementation used in a run.
+```bash
+ruff check .
+pytest
+```
+
+The same checks run in GitHub Actions for pushes to `main` and pull requests.
+
+## Citation and reuse
+
+Citation metadata is provided in [`CITATION.cff`](CITATION.cff). Cite the VisDrone dataset and every exact model implementation and checkpoint used in a run.
+
+This repository currently has no license. Reuse permission has not been granted.

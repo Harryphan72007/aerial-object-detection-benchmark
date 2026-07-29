@@ -447,6 +447,233 @@ print("Next notebook: notebooks/01_dataset_analysis.ipynb")
     write_notebook(NOTEBOOKS / "00_visdrone_colab_setup.ipynb", cells)
 
 
+def build_lr_workflow_notebooks() -> None:
+    search_cells = [
+        markdown(
+            """# VisDrone learning-rate search
+
+This shared notebook runs the same LR-only protocol for one supported primary
+model. Search manifests are drawn exclusively from official train. Search
+checkpoints are isolated and are never registered as final benchmark runs.
+"""
+        ),
+        code(BOOTSTRAP, ["bootstrap"]),
+        markdown("## Configuration\n\nChange `MODEL_ID` for the model-day being run.\n"),
+        code(
+            """\
+MODEL_ID = "rtdetrv2_l"
+DATASET_TRACK = "2class"
+
+RUN_LR_RANGE_TEST = True
+RUN_BOUNDARY_EXTENSION = False
+
+SEARCH_SEED = 42
+IMAGE_SIZE = 640
+EFFECTIVE_BATCH_SIZE = 8
+SEARCH_MAX_EPOCHS = 15
+
+LR_CANDIDATES = 9
+PROMOTION_RUNGS = [
+    {"epoch": 2, "keep": 5},
+    {"epoch": 5, "keep": 3},
+    {"epoch": 10, "keep": 2},
+    {"epoch": 15, "keep": 1},
+]
+
+ONE_DAY_PER_MODEL = True
+ALLOW_OVER_BUDGET_RUN = False
+PER_DEVICE_BATCH_SIZE = 2
+GRADIENT_ACCUMULATION_STEPS = 4
+START_EXPENSIVE_STAGE = False
+if SMOKE_TEST:
+    START_EXPENSIVE_STAGE = False
+assert DATASET_TRACK == "2class"
+assert EFFECTIVE_BATCH_SIZE == PER_DEVICE_BATCH_SIZE * GRADIENT_ACCUMULATION_STEPS
+"""
+        ),
+        markdown("## Validate manifests, model identity, and baseline optimizer\n"),
+        code(
+            """\
+from src.models.registry import create_adapter, load_model_config
+from src.training.lr_search import (
+    SUPPORTED_PRIMARY_MODELS,
+    generate_lr_candidates,
+)
+from src.training.lr_workflow import LRControlledBenchmark
+
+assert MODEL_ID in SUPPORTED_PRIMARY_MODELS
+workflow = LRControlledBenchmark(REPO_DIR, DRIVE_ROOT)
+split_summary = workflow.prepare_manifests()
+model_config = load_model_config(MODEL_ID, REPO_DIR)
+adapter = create_adapter(MODEL_ID, "cpu")
+baseline = workflow.resolve_baseline(MODEL_ID)
+default_candidates = generate_lr_candidates(baseline.learning_rate)
+print("Framework:", model_config["framework"])
+print("Adapter:", type(adapter).__name__)
+print("Baseline audit:", baseline)
+print("Search split checks:", split_summary["verification"])
+print("Default LR candidates:", default_candidates)
+"""
+        ),
+        markdown("## Workload contract\n"),
+        code(
+            """\
+SEARCH_EPOCH_EQUIVALENTS = 9 * 2 + 5 * 3 + 3 * 5 + 2 * 5
+print("Search train epoch-equivalents:", SEARCH_EPOCH_EQUIVALENTS)
+print("Search validation passes:", SEARCH_EPOCH_EQUIVALENTS)
+calibration_path = paths.lr_search_checkpoints / MODEL_ID / "calibration.json"
+if calibration_path.exists():
+    import json
+    calibration = json.loads(calibration_path.read_text())
+    estimate = workflow.workload_estimate(
+        calibration,
+        range_optimizer_steps=300 if RUN_LR_RANGE_TEST else 0,
+        batch_size=PER_DEVICE_BATCH_SIZE,
+        accumulation=GRADIENT_ACCUMULATION_STEPS,
+    )
+    print("Measured workload estimate:", estimate)
+    if ONE_DAY_PER_MODEL and estimate["total_hours"] > 24:
+        print("WARNING: estimated protocol exceeds 24 hours.")
+        print("Set ALLOW_OVER_BUDGET_RUN=True to opt in explicitly.")
+else:
+    print("A one-epoch calibration will run before the search starts.")
+"""
+        ),
+        markdown("## Run or resume successive halving\n"),
+        code(
+            """\
+if START_EXPENSIVE_STAGE:
+    from src.notebook_utils import require_gpu, require_model_environment
+    require_model_environment(
+        "rtdetr" if MODEL_ID == "rtdetrv2_l" else "openmmlab"
+    )
+    require_gpu(MODEL_ID)
+    search_result = workflow.run_search(
+        MODEL_ID,
+        batch_size=PER_DEVICE_BATCH_SIZE,
+        accumulation=GRADIENT_ACCUMULATION_STEPS,
+        run_lr_range_test=RUN_LR_RANGE_TEST,
+        run_boundary_extension=RUN_BOUNDARY_EXTENSION,
+        allow_over_budget_run=ALLOW_OVER_BUDGET_RUN,
+    )
+    print("Promotion decisions:")
+    for decision in search_result["state"]["rung_decisions"]:
+        print(decision)
+    print("Selected:", search_result["selected"])
+else:
+    print("Expensive stage is OFF. Validation and candidate preview completed.")
+    print("Set START_EXPENSIVE_STAGE=True only for the selected model-day.")
+"""
+        ),
+        markdown(
+            """## Output
+
+The selected YAML is written to `configs/lr_search/` and copied to persistent
+storage. A boundary winner is reported as a finite-range warning, not as a
+global optimum.
+"""
+        ),
+    ]
+    write_notebook(
+        NOTEBOOKS / "12_learning_rate_search.ipynb", search_cells
+    )
+
+    final_cells = [
+        markdown(
+            """# Complete-official-train fine-tuning
+
+This notebook consumes one selected LR, reloads the original pretrained model,
+trains on every official training image for 25 epochs, and then invokes the
+common repository evaluator once on complete official validation.
+"""
+        ),
+        code(BOOTSTRAP, ["bootstrap"]),
+        markdown("## Configuration\n"),
+        code(
+            """\
+MODEL_ID = "rtdetrv2_l"
+SELECTED_CONFIG = "configs/lr_search/rtdetrv2_l_2class_selected.yaml"
+
+FINAL_EPOCHS = 25
+FINAL_SEED = 42
+PER_DEVICE_BATCH_SIZE = 2
+GRADIENT_ACCUMULATION_STEPS = 4
+ALLOW_OVER_BUDGET_RUN = False
+START_EXPENSIVE_STAGE = False
+if SMOKE_TEST:
+    START_EXPENSIVE_STAGE = False
+assert FINAL_EPOCHS == 25 and FINAL_SEED == 42
+assert PER_DEVICE_BATCH_SIZE * GRADIENT_ACCUMULATION_STEPS == 8
+"""
+        ),
+        markdown("## Load and validate the selected configuration\n"),
+        code(
+            """\
+import json
+from src.training.lr_workflow import LRControlledBenchmark
+from src.utils.serialization import read_yaml
+
+workflow = LRControlledBenchmark(REPO_DIR, DRIVE_ROOT)
+workflow.prepare_manifests()
+selected_path = REPO_DIR / SELECTED_CONFIG
+if not selected_path.exists():
+    if SMOKE_TEST:
+        print("No selected YAML in smoke mode; run notebook 12 on a GPU first.")
+        selected = None
+    else:
+        raise FileNotFoundError(
+            f"{selected_path} is missing. Complete notebook 12 first."
+        )
+else:
+    selected = read_yaml(selected_path)
+    assert selected["experiment"]["model_id"] == MODEL_ID
+    assert selected["final_training"]["dataset"] == "complete_official_train"
+    assert selected["final_training"]["restart_from_pretrained"] is True
+    print(selected)
+"""
+        ),
+        markdown("## Prove complete-train identity and validation exclusion\n"),
+        code(
+            """\
+from src.training.lr_search import assert_final_training_uses_official_train
+assert_final_training_uses_official_train(workflow.manifest_dir)
+summary = json.loads((workflow.manifest_dir / "split_summary.json").read_text())
+print("Complete official train proof:", summary["sources"]["official_train"])
+print("Split checks:", summary["verification"])
+"""
+        ),
+        markdown("## Restart from pretrained and run final benchmark\n"),
+        code(
+            """\
+if START_EXPENSIVE_STAGE:
+    if selected is None:
+        raise RuntimeError("A selected LR configuration is required.")
+    from src.notebook_utils import require_gpu, require_model_environment
+    require_model_environment(
+        "rtdetr" if MODEL_ID == "rtdetrv2_l" else "openmmlab"
+    )
+    require_gpu(MODEL_ID)
+    final_manifest = workflow.run_final_training(
+        MODEL_ID,
+        selected_path,
+        batch_size=PER_DEVICE_BATCH_SIZE,
+        accumulation=GRADIENT_ACCUMULATION_STEPS,
+        allow_over_budget_run=ALLOW_OVER_BUDGET_RUN,
+        run_common_evaluation=True,
+    )
+    print("Final registered run:", final_manifest["run_id"])
+    print("Output directory:", final_manifest["run_dir"])
+    print("Evaluation:", final_manifest.get("final_evaluation_metrics"))
+else:
+    print("Expensive stage is OFF; no model weights were changed.")
+"""
+        ),
+    ]
+    write_notebook(
+        NOTEBOOKS / "13_full_dataset_finetune.ipynb", final_cells
+    )
+
+
 def patch_existing_notebooks() -> None:
     paths = sorted(NOTEBOOKS.glob("*.ipynb"))
     for path in paths:
@@ -471,6 +698,9 @@ def patch_existing_notebooks() -> None:
         }:
             config_cell = notebook["cells"][4]
             config_source = "".join(config_cell["source"])
+            config_source = config_source.replace(
+                "RUN_HYPERPARAMETER_SEARCH = False\n", ""
+            )
             config_source += (
                 "\nif SMOKE_TEST:\n"
                 "    NUM_EPOCHS = 1\n"
@@ -504,6 +734,20 @@ else:
     subprocess.run(shlex.split(cmd), check=True)
 """
             )
+            for index, cell in enumerate(notebook["cells"]):
+                source = "".join(cell.get("source", []))
+                if "## Optional Optuna search" in source:
+                    notebook["cells"][index] = markdown(
+                        "## Learning-rate selection\n\n"
+                        "Use the shared `12_learning_rate_search.ipynb`, then "
+                        "`13_full_dataset_finetune.ipynb`. The legacy "
+                        "multidimensional Optuna search has been removed.\n"
+                    )
+                    if index + 1 < len(notebook["cells"]):
+                        notebook["cells"][index + 1] = code(
+                            "print('LR search: notebooks/12_learning_rate_search.ipynb')\n"
+                            "print('Final training: notebooks/13_full_dataset_finetune.ipynb')\n"
+                        )
             if name in {
                 "02_train_resnet50_faster_rcnn.ipynb",
                 "03_train_swin_t_faster_rcnn.ipynb",
@@ -701,4 +945,5 @@ print("Next: notebooks/00_visdrone_colab_setup.ipynb")
 
 if __name__ == "__main__":
     build_setup_notebook()
+    build_lr_workflow_notebooks()
     patch_existing_notebooks()

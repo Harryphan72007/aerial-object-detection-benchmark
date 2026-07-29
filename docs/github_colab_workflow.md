@@ -33,7 +33,13 @@ under `DRIVE_ROOT/datasets/VisDrone2019-DET/archives`, preserves extracted data
 under `raw`, and produces both COCO tracks under `processed`. The two older
 setup notebooks are compatibility preflights.
 
-The training notebooks retain the existing model IDs and interface. The standard configuration is `DATASET_TRACK="2class"`, `IMAGE_SIZE=1024`, `BATCH_SIZE=2`, `GRADIENT_ACCUMULATION_STEPS=8`, `NUM_EPOCHS=100`, `SEED=42`, `USE_AMP=True`, `RESUME_RUN_ID=None`, and `RUN_HYPERPARAMETER_SEARCH=False`. Checkpoints and all important state are written to Drive. If Colab disconnects, rerun the same notebook with `RESUME_RUN_ID` set to the registered run ID. Training stops before starting when Drive is unavailable or unwritable.
+Notebooks 02–05 retain model-specific environment and adapter checks. Notebook
+12 owns the shared LR-only protocol: 2-class data, 640-pixel input, seed 42,
+AMP, effective batch 8, nine log-spaced candidates, and resumable 2/5/10/15
+epoch rungs. Notebook 13 reloads the original pretrained checkpoint, trains on
+complete official train for 25 epochs, and invokes the common evaluator once on
+complete official validation. Search checkpoints stay outside the final run
+registry. Training stops before starting when Drive is unavailable or unwritable.
 
 Each run records `git_commit.txt`, `git_status.txt`, `run_manifest.json`, and (when dirty) `source_changes.patch`. A dirty source tree is marked in the manifest; it does not silently become an untraceable experiment.
 

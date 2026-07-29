@@ -5,7 +5,7 @@ The project has three storage layers.
 | Layer | Contents |
 |---|---|
 | GitHub | Source, configs, cleared notebooks, tests, lightweight CSV/JSON summaries, final PNG figures, Markdown/HTML reports, manifests, and small qualitative samples |
-| Google Drive | VisDrone data, converted COCO annotations, pretrained files, resumable checkpoints, optimizer/scheduler/AMP state, complete histories/logs, raw predictions, profiling, Optuna, ONNX/TensorRT exports, complete reports, and result bundles |
+| Google Drive | VisDrone data, converted COCO annotations, pretrained files, resumable LR-search/final checkpoints, optimizer/scheduler/AMP/RNG state, complete histories/logs, raw predictions, profiling, LR-search artifacts, ONNX/TensorRT exports, complete reports, and result bundles |
 | Colab `/content` | Cloned source, framework trees, caches, compiled extensions, and temporary intermediates |
 
 The single Drive root is `/content/drive/MyDrive/visdrone_architecture_benchmark`.

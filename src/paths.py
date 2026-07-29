@@ -41,12 +41,28 @@ class ProjectPaths:
         return self.root / "datasets"
 
     @property
+    def visdrone(self) -> Path:
+        return self.datasets / "VisDrone2019-DET"
+
+    @property
+    def archives(self) -> Path:
+        return self.visdrone / "archives"
+
+    @property
     def raw(self) -> Path:
-        return self.datasets / "raw"
+        return self.visdrone / "raw"
+
+    @property
+    def processed(self) -> Path:
+        return self.visdrone / "processed"
+
+    @property
+    def dataset_manifests(self) -> Path:
+        return self.visdrone / "manifests"
 
     def coco(self, track: str) -> Path:
         self.validate_track(track)
-        return self.datasets / f"coco_{track}"
+        return self.processed / f"coco_{track}"
 
     @property
     def checkpoints(self) -> Path:
@@ -113,7 +129,10 @@ class ProjectPaths:
     def create(self) -> "ProjectPaths":
         """Create the canonical Drive layout without touching source data."""
         for path in (
+            self.archives,
             self.raw,
+            self.processed,
+            self.dataset_manifests,
             self.coco("2class"),
             self.coco("10class"),
             self.checkpoints,

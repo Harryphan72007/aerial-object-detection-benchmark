@@ -17,3 +17,10 @@ class CocoDetectionRecords:
         meta=self.images[index]; image=Image.open(self.image_dir/str(meta["file_name"])).convert("RGB")
         record={"image":image,"image_id":int(meta["id"]),"file_name":meta["file_name"],"annotations":self.anns[int(meta["id"])],"original_size":(int(meta["height"]),int(meta["width"]))}
         return self.transform(record) if self.transform else record
+
+
+def detection_collate(batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep variable-size images and targets as records for a detection batch."""
+    if not batch:
+        raise ValueError("cannot collate an empty detection batch")
+    return batch

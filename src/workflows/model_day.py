@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from src.benchmark_status import discover_model_status, find_selected_config
+from src.data.contract import verify_complete_data_contract
+from src.data.local_cache import DataAccessPaths, resolve_data_access
 from src.models.registry import create_adapter, load_model_config
 from src.paths import ProjectPaths
 from src.training.lr_search import resolve_batch_policy
@@ -40,12 +42,18 @@ class ModelDayOptions:
     start_expensive_stage: bool = False
     allow_over_budget_run: bool = False
     smoke_test: bool = False
+    data_access_mode: str = "drive_direct"
+    local_cache_root: str = "/content/visdrone_cache"
 
     def validate(self) -> None:
         require_primary_model(self.model_id)
         allowed = {"auto", *(stage.value.lower() for stage in Stage)}
         if self.run_mode.lower() not in allowed:
             raise ValueError(f"RUN_MODE must be auto or a stage name, got {self.run_mode!r}")
+        if self.data_access_mode not in {"local_cache", "drive_direct"}:
+            raise ValueError(
+                "DATA_ACCESS_MODE must be 'local_cache' or 'drive_direct'"
+            )
 
 
 def _dataset_ready(paths: ProjectPaths) -> bool:
@@ -74,10 +82,30 @@ def inspect_model_day(
     drive_root: str | Path,
     model_id: str,
     repo_root: str | Path = ".",
+    *,
+    verify_data: bool = True,
+    local_cache: DataAccessPaths | str | Path | None = None,
 ) -> dict[str, Any]:
     """Derive every path and the next incomplete stage without writing state."""
     require_primary_model(model_id)
     paths = ProjectPaths.from_value(drive_root)
+    if verify_data:
+        data_contract = verify_complete_data_contract(
+            paths,
+            repo_root=repo_root,
+            local_cache=local_cache,
+            max_images_per_split=12
+            if os.environ.get("SMOKE_TEST", "").lower() in {"1", "true", "yes"}
+            else None,
+        )
+        dataset_ready = data_contract.verified
+        data_contract_payload = data_contract.to_dict()
+    else:
+        dataset_ready = _dataset_ready(paths)
+        data_contract_payload = {
+            "verified": dataset_ready,
+            "verification": "authoritative preflight already completed in this process",
+        }
     status = discover_model_status(paths.root, model_id, repo_root)
     run_id = status.get("final_run_id")
     gate_path = paths.lr_search_checkpoints / model_id / "adapter_smoke.json"
@@ -95,7 +123,7 @@ def inspect_model_day(
     )
     status["report_status"] = "COMPLETE" if report_complete else "NOT_STARTED"
 
-    if not _dataset_ready(paths):
+    if not dataset_ready:
         stage = Stage.DATA
     elif (
         gate.get("status") != "READY"
@@ -143,6 +171,7 @@ def inspect_model_day(
         ),
         "adapter_gate": gate,
         "contract": BENCHMARK_CONTRACT,
+        "data_contract": data_contract_payload,
     }
 
 
@@ -206,8 +235,8 @@ def _adapter_smoke(
                 ),
                 train_annotation_override=train_manifest,
                 validation_annotation_override=val_manifest,
-                train_images_override=workflow.paths.images("train"),
-                validation_images_override=workflow.paths.images("train"),
+                train_images_override=workflow.train_images,
+                validation_images_override=workflow.train_images,
                 explicit_run_dir=run_dir,
                 explicit_run_id=f"{model_id}__adapter_smoke",
                 register_run=False,
@@ -281,12 +310,24 @@ def run_model_day(
     repo_root: str | Path,
     drive_root: str | Path,
     options: ModelDayOptions,
+    *,
+    data_access: DataAccessPaths | None = None,
+    verified_data_contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run all currently actionable stages, skipping completed persistent state."""
     options.validate()
     repo = Path(repo_root).resolve()
     paths = ProjectPaths.from_value(drive_root)
-    initial = inspect_model_day(paths.root, options.model_id, repo)
+    initial = inspect_model_day(
+        paths.root,
+        options.model_id,
+        repo,
+        verify_data=verified_data_contract is None,
+    )
+    if verified_data_contract is not None:
+        if not verified_data_contract.get("verified"):
+            raise RuntimeError("DATA CONTRACT VERIFIED: NO")
+        initial["data_contract"] = verified_data_contract
     if initial["stage"] == Stage.DATA.value:
         return {
             **initial,
@@ -303,10 +344,23 @@ def run_model_day(
             ),
         }
 
-    workflow = LRControlledBenchmark(repo, paths.root)
+    data_access = data_access or resolve_data_access(
+        paths, options.data_access_mode, cache_root=options.local_cache_root
+    )
+    if verified_data_contract is None:
+        verified = verify_complete_data_contract(
+            paths,
+            repo_root=repo,
+            local_cache=data_access if data_access.mode == "local_cache" else None,
+            max_images_per_split=12 if options.smoke_test else None,
+        )
+        verified.raise_for_errors()
+    workflow = LRControlledBenchmark(repo, paths.root, data_access=data_access)
     history: list[str] = []
     while True:
-        state = inspect_model_day(paths.root, options.model_id, repo)
+        state = inspect_model_day(
+            paths.root, options.model_id, repo, verify_data=False
+        )
         stage = Stage(state["stage"])
         if options.run_mode.lower() != "auto":
             requested = Stage(options.run_mode.upper())
@@ -457,6 +511,10 @@ def run_model_day(
                 "--resolutions",
                 "640",
                 "--skip-profile",
+                "--image-root",
+                str(workflow.validation_images),
+                "--annotation-file",
+                str(data_access.coco_annotation_dir / "instances_val.json"),
             )
             history.append("EVALUATION:COMPLETE")
             continue
@@ -472,6 +530,8 @@ def run_model_day(
             ]
             if options.smoke_test:
                 profile_args.extend(["--warmup", "1", "--iterations", "1"])
+            profile_image = next(workflow.validation_images.glob("*"))
+            profile_args.extend(["--image", str(profile_image)])
             _run_command(repo, *profile_args)
             history.append("PROFILING:COMPLETE")
             continue
@@ -495,5 +555,7 @@ def run_model_day(
             )
             history.append("REPORT:COMPLETE")
             continue
-        final = inspect_model_day(paths.root, options.model_id, repo)
+        final = inspect_model_day(
+            paths.root, options.model_id, repo, verify_data=False
+        )
         return {**final, "history": history, "options": asdict(options)}

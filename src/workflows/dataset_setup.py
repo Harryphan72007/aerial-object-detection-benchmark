@@ -1,30 +1,34 @@
-"""Idempotent dataset preparation used by notebook 00."""
+"""Idempotent, provenance-aware dataset preparation used by notebook 00."""
 from __future__ import annotations
 
-import json
-import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
+from src.data.contract import verify_complete_data_contract
+from src.data.conversion import ensure_conversion
 from src.data.download import VISDRONE_ARCHIVES, ensure_archive, extract_idempotent
-from src.data.validate_annotations import validate_coco
 from src.paths import ProjectPaths
+from src.training.lr_search import validate_lr_search_manifests
 from src.training.lr_workflow import LRControlledBenchmark
+from src.utils.serialization import write_json
 
 
-def _valid_track(paths: ProjectPaths, track: str) -> bool:
-    annotation_root = paths.coco(track) / "annotations"
+def _lr_manifests_current(paths: ProjectPaths) -> bool:
+    annotations = paths.coco("2class") / "annotations"
     try:
-        for split in ("train", "val"):
-            report = validate_coco(
-                annotation_root / f"instances_{split}.json",
-                paths.images(split),
-            )
-            report.raise_for_errors()
-    except (FileNotFoundError, KeyError, RuntimeError, ValueError):
+        validate_lr_search_manifests(
+            paths.lr_search_manifests,
+            official_train_json=annotations / "instances_train.json",
+            official_validation_json=annotations / "instances_val.json",
+        )
+        return True
+    except (
+        AssertionError,
+        FileNotFoundError,
+        KeyError,
+        ValueError,
+    ):
         return False
-    return True
 
 
 def prepare_visdrone(
@@ -36,56 +40,78 @@ def prepare_visdrone(
     redownload: bool = False,
     smoke_test: bool = False,
 ) -> dict[str, Any]:
-    """Download/restore, verify, extract, convert, validate, and make search manifests."""
-    if dataset_source not in {"auto", "download", "drive"}:
-        raise ValueError("DATASET_SOURCE must be auto, download, or drive")
+    """Prepare and verify the exact persistent data contract used by every model."""
+    if dataset_source not in {"auto", "download", "drive", "manual"}:
+        raise ValueError("DATASET_SOURCE must be auto, download, drive, or manual")
     repo = Path(repo_root).resolve()
     paths = ProjectPaths.from_value(drive_root).create()
-    archive_records = []
+    operations: dict[str, list[str]] = {
+        "downloads": [],
+        "archive_manifest_refreshes": [],
+        "extractions": [],
+        "conversions": [],
+        "lr_manifest_generations": [],
+    }
+    archive_records: list[dict[str, Any]] = []
     for split, spec in VISDRONE_ARCHIVES.items():
-        archive = paths.archives / str(spec["filename"])
-        if dataset_source == "drive" and not archive.is_file():
-            raise FileNotFoundError(f"Drive archive is missing: {archive}")
-        record = ensure_archive(
+        ensured = ensure_archive(
             split,
             paths.archives,
             paths.dataset_manifests,
+            source_mode=dataset_source,
             redownload=redownload,
         )
-        archive_records.append(record.__dict__)
-        extract_idempotent(record.archive_path, paths.raw, str(spec["folder"]))
+        if ensured.action == "downloaded":
+            operations["downloads"].append(split)
+        elif ensured.action == "manifest_refreshed":
+            operations["archive_manifest_refreshes"].append(split)
+        archive_records.append(ensured.manifest.__dict__)
+        _, extraction_action = extract_idempotent(
+            ensured.manifest.archive_path,
+            paths.raw,
+            str(spec["folder"]),
+            split=split,
+            manifest_path=paths.dataset_manifests / f"{split}_extraction.json",
+            verified_archive_sha256=ensured.manifest.sha256,
+            verified_archive_size_bytes=ensured.manifest.size_bytes,
+        )
+        if extraction_action == "extracted":
+            operations["extractions"].append(split)
 
     tracks = ["2class", *(["10class"] if prepare_10class_track else [])]
-    pending = [track for track in tracks if not _valid_track(paths, track)]
-    if pending:
-        command = [
-            sys.executable,
-            "-m",
-            "scripts.prepare_data",
-            "--drive-root",
-            str(paths.root),
-            "--tracks",
-            *pending,
-            "--validate",
-        ]
-        if smoke_test:
-            command.extend(["--max-images-per-split", "4"])
-        subprocess.run(command, check=True, cwd=repo)
-    validation = {}
+    max_images = 12 if smoke_test else None
+    conversion_records: dict[str, dict[str, Any]] = {}
     for track in tracks:
-        validation[track] = {}
+        conversion_records[track] = {}
         for split in ("train", "val"):
-            report = validate_coco(
-                paths.coco(track) / "annotations" / f"instances_{split}.json",
-                paths.images(split),
+            manifest, action = ensure_conversion(
+                paths,
+                repo,
+                track,
+                split,
+                max_images=max_images,
             )
-            report.raise_for_errors()
-            validation[track][split] = report.__dict__
-    split_summary = LRControlledBenchmark(repo, paths.root).prepare_manifests()
+            conversion_records[track][split] = manifest
+            if action == "converted":
+                operations["conversions"].append(f"{track}:{split}")
+
+    lr_was_current = _lr_manifests_current(paths)
+    split_summary = LRControlledBenchmark(repo, paths.root).prepare_manifests(
+        force=not lr_was_current
+    )
+    if not lr_was_current:
+        operations["lr_manifest_generations"].append("2class")
+
+    contract = verify_complete_data_contract(
+        paths,
+        repo_root=repo,
+        max_images_per_split=max_images,
+    )
+    contract.raise_for_errors()
     result = {
         "drive_root": str(paths.root),
-        "official_train": str(paths.raw / "VisDrone2019-DET-train"),
-        "official_validation": str(paths.raw / "VisDrone2019-DET-val"),
+        "official_train": str(paths.official_split("train")),
+        "official_validation": str(paths.official_split("val")),
         "train_images": str(paths.images("train")),
         "validation_images": str(paths.images("val")),
         "coco_2class": str(paths.coco("2class")),
@@ -94,11 +120,10 @@ def prepare_visdrone(
         else None,
         "lr_search_manifests": str(paths.lr_search_manifests),
         "archives": archive_records,
-        "validation": validation,
+        "conversions": conversion_records,
         "split_summary": split_summary,
+        "operations": operations,
+        "data_contract": contract.to_dict(),
     }
-    (paths.dataset_manifests / "dataset_setup_summary.json").write_text(
-        json.dumps(result, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    write_json(paths.dataset_manifests / "dataset_setup_summary.json", result)
     return result

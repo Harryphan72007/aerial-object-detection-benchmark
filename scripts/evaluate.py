@@ -19,6 +19,30 @@ from src.training.checkpointing import RunRegistry
 from src.utils.serialization import read_yaml, write_json
 
 
+def discover_evaluation_dataset(
+    paths: ProjectPaths,
+    dataset_track: str,
+    split: str,
+    *,
+    image_root: str | Path | None = None,
+    annotation_file: str | Path | None = None,
+) -> dict[str, Any]:
+    """Resolve and instantiate the exact evaluator data view."""
+    resolved_annotation = (
+        Path(annotation_file)
+        if annotation_file
+        else paths.coco(dataset_track) / "annotations" / f"instances_{split}.json"
+    )
+    resolved_images = Path(image_root) if image_root else paths.images(split)
+    records = CocoDetectionRecords(resolved_images, resolved_annotation)
+    return {
+        "annotation_file": resolved_annotation,
+        "image_root": resolved_images,
+        "record_count": len(records),
+        "records": records,
+    }
+
+
 def _update_resize(node: Any, image_size: int) -> None:
     if isinstance(node, dict):
         if node.get("type") in {"Resize", "RandomResize"}:
@@ -83,6 +107,8 @@ def parse_args() -> argparse.Namespace:
         "--dataset-track", choices=["2class", "10class"], default="2class"
     )
     parser.add_argument("--split", default="val")
+    parser.add_argument("--image-root")
+    parser.add_argument("--annotation-file")
     parser.add_argument("--run-id", action="append")
     parser.add_argument("--best-per-model", action="store_true")
     parser.add_argument("--models", nargs="*")
@@ -123,13 +149,15 @@ def main() -> None:
     if len(mappings) != 1:
         raise RuntimeError("Selected runs have incompatible class mappings.")
 
-    full_annotation = (
-        paths.coco(args.dataset_track)
-        / "annotations"
-        / f"instances_{args.split}.json"
+    dataset = discover_evaluation_dataset(
+        paths,
+        args.dataset_track,
+        args.split,
+        image_root=args.image_root,
+        annotation_file=args.annotation_file,
     )
-    image_root = paths.images(args.split)
-    records = CocoDetectionRecords(image_root, full_annotation)
+    full_annotation = dataset["annotation_file"]
+    records = dataset["records"]
     count = (
         len(records)
         if args.max_images is None

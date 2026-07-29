@@ -4,7 +4,9 @@ import zipfile
 import pytest
 
 from src.data.download import (
+    ManualArchiveRequired,
     dataset_split_ready,
+    ensure_archive,
     extract_idempotent,
     sha256_file,
     validate_zip,
@@ -36,9 +38,50 @@ def test_archive_validation_and_idempotent_extraction(tmp_path):
     validate_zip(archive, expected)
     assert len(sha256_file(archive)) == 64
     raw = tmp_path / "raw"
-    destination = extract_idempotent(archive, raw, expected)
-    assert dataset_split_ready(destination)
-    assert extract_idempotent(archive, raw, expected) == destination
+    manifest = tmp_path / "val_extraction.json"
+    destination, action = extract_idempotent(
+        archive,
+        raw,
+        expected,
+        split="val",
+        manifest_path=manifest,
+    )
+    assert action == "extracted"
+    assert dataset_split_ready(
+        destination,
+        archive_path=archive,
+        manifest_path=manifest,
+        split="val",
+    )
+    second_destination, second_action = extract_idempotent(
+        archive,
+        raw,
+        expected,
+        split="val",
+        manifest_path=manifest,
+    )
+    assert second_destination == destination
+    assert second_action == "reused"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    assert payload["archive_sha256"] == sha256_file(archive)
+    assert payload["image_count"] == 1
+    assert payload["annotation_count"] == 1
+    assert len(payload["relative_filename_inventory_sha256"]) == 64
+    assert payload["total_extracted_bytes"] > 0
+
+
+def test_manual_archive_mode_prints_exact_placement_contract(tmp_path):
+    with pytest.raises(ManualArchiveRequired) as error:
+        ensure_archive(
+            "train",
+            tmp_path / "archives",
+            tmp_path / "manifests",
+            source_mode="manual",
+        )
+    message = str(error.value)
+    assert "VisDrone2019-DET-train.zip" in message
+    assert "VisDrone2019-DET-val.zip" in message
+    assert str(tmp_path / "archives") in message
 
 
 def test_preflight_detects_annotation_track_mismatch(tmp_path):

@@ -9,9 +9,11 @@ from PIL import Image
 from src.data.download import VISDRONE_ARCHIVES
 
 
-def create_smoke_archives(archive_dir: str | Path, images_per_split: int = 8) -> list[Path]:
-    if images_per_split < 6:
-        raise ValueError("images_per_split must be at least 6 for visualization coverage")
+def create_smoke_archives(archive_dir: str | Path, images_per_split: int = 12) -> list[Path]:
+    if images_per_split < 10:
+        raise ValueError(
+            "images_per_split must be at least 10 so both LR-search subsets are nonempty"
+        )
     archive_dir = Path(archive_dir)
     archive_dir.mkdir(parents=True, exist_ok=True)
     outputs: list[Path] = []
@@ -20,7 +22,7 @@ def create_smoke_archives(archive_dir: str | Path, images_per_split: int = 8) ->
         archive_path = archive_dir / str(spec["filename"])
         with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             for index in range(images_per_split):
-                image_name = f"{index + 1:07d}.jpg"
+                image_name = f"{split}_{index + 1:07d}.jpg"
                 image_path = archive_dir / f".{split}-{image_name}"
                 width, height = 160, 96
                 Image.new(

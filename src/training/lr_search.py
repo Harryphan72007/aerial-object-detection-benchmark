@@ -406,6 +406,28 @@ def summarize_coco(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _ensure_image_identity(
+    data: dict[str, Any],
+    *,
+    original_split: str,
+    source_archive_identity: str,
+) -> None:
+    for image in data.get("images", []):
+        recorded_split = image.setdefault("original_split", original_split)
+        recorded_archive = image.setdefault(
+            "source_archive_sha256", source_archive_identity
+        )
+        if recorded_split != original_split:
+            raise ValueError(
+                f"image {image.get('file_name')} records original split "
+                f"{recorded_split!r}, expected {original_split!r}"
+            )
+        if not recorded_archive:
+            raise ValueError(
+                f"image {image.get('file_name')} has no source archive identity"
+            )
+
+
 def create_lr_search_manifests(
     official_train_json: str | Path,
     official_validation_json: str | Path,
@@ -414,11 +436,29 @@ def create_lr_search_manifests(
     seed: int = 42,
     search_train_fraction: float = 0.20,
     search_validation_fraction: float = 0.05,
+    source_archive_identities: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     official_train_json = Path(official_train_json).resolve()
     official_validation_json = Path(official_validation_json).resolve()
     train = json.loads(official_train_json.read_text(encoding="utf-8"))
     validation = json.loads(official_validation_json.read_text(encoding="utf-8"))
+    source_archive_identities = dict(source_archive_identities or {})
+    train_identity = source_archive_identities.get(
+        "train", f"coco-source:{sha256_json(official_train_json)}"
+    )
+    validation_identity = source_archive_identities.get(
+        "val", f"coco-source:{sha256_json(official_validation_json)}"
+    )
+    _ensure_image_identity(
+        train,
+        original_split="train",
+        source_archive_identity=train_identity,
+    )
+    _ensure_image_identity(
+        validation,
+        original_split="val",
+        source_archive_identity=validation_identity,
+    )
     if [category["id"] for category in train.get("categories", [])] != [1, 2]:
         raise ValueError("LR search requires the 2class track with category IDs [1, 2]")
     features, _ = _image_features(train)
@@ -472,10 +512,12 @@ def create_lr_search_manifests(
             "official_train": {
                 "path": str(official_train_json),
                 "sha256": sha256_json(official_train_json),
+                "source_archive_sha256": train_identity,
             },
             "official_validation": {
                 "path": str(official_validation_json),
                 "sha256": sha256_json(official_validation_json),
+                "source_archive_sha256": validation_identity,
             },
         },
     }
@@ -483,7 +525,12 @@ def create_lr_search_manifests(
     return summary
 
 
-def validate_lr_search_manifests(manifest_dir: str | Path) -> dict[str, Any]:
+def validate_lr_search_manifests(
+    manifest_dir: str | Path,
+    *,
+    official_train_json: str | Path | None = None,
+    official_validation_json: str | Path | None = None,
+) -> dict[str, Any]:
     root = Path(manifest_dir)
     search_train = json.loads((root / "search_train_seed42.json").read_text(encoding="utf-8"))
     search_validation = json.loads(
@@ -498,14 +545,82 @@ def validate_lr_search_manifests(manifest_dir: str | Path) -> dict[str, Any]:
     search_validation_ids = ids(search_validation)
     official_train_ids = ids(official_train)
     official_validation_ids = ids(official_validation)
+    filenames = lambda data: {str(image["file_name"]) for image in data["images"]}
+    identities = lambda data: {
+        (
+            str(image["file_name"]),
+            str(image.get("original_split", "")),
+            str(image.get("source_archive_sha256", "")),
+        )
+        for image in data["images"]
+    }
+    search_train_filenames = filenames(search_train)
+    search_validation_filenames = filenames(search_validation)
+    official_train_filenames = filenames(official_train)
+    official_validation_filenames = filenames(official_validation)
+    search_train_identities = identities(search_train)
+    search_validation_identities = identities(search_validation)
+    official_train_identities = identities(official_train)
+    official_validation_identities = identities(official_validation)
     checks = {
-        "search_splits_disjoint": not (search_train_ids & search_validation_ids),
+        "search_numeric_ids_disjoint": not (
+            search_train_ids & search_validation_ids
+        ),
         "search_train_subset_official_train": search_train_ids <= official_train_ids,
         "search_validation_subset_official_train": search_validation_ids <= official_train_ids,
-        "official_train_validation_disjoint": not (
+        "official_train_validation_numeric_ids_disjoint": not (
             official_train_ids & official_validation_ids
         ),
+        "search_train_validation_filenames_disjoint": not (
+            search_train_filenames & search_validation_filenames
+        ),
+        "search_train_filenames_subset_official_train": (
+            search_train_filenames <= official_train_filenames
+        ),
+        "search_validation_filenames_subset_official_train": (
+            search_validation_filenames <= official_train_filenames
+        ),
+        "official_train_validation_filenames_disjoint": not (
+            official_train_filenames & official_validation_filenames
+        ),
+        "search_train_stable_identities_subset_official_train": (
+            search_train_identities <= official_train_identities
+        ),
+        "search_validation_stable_identities_subset_official_train": (
+            search_validation_identities <= official_train_identities
+        ),
+        "official_train_validation_stable_identities_disjoint": not (
+            official_train_identities & official_validation_identities
+        ),
+        "official_train_original_split_is_train": all(
+            image.get("original_split") == "train"
+            for image in official_train["images"]
+        ),
+        "official_validation_original_split_is_val": all(
+            image.get("original_split") == "val"
+            for image in official_validation["images"]
+        ),
+        "source_archive_identity_present": all(
+            image.get("source_archive_sha256")
+            for data in (official_train, official_validation)
+            for image in data["images"]
+        ),
     }
+    summary_path = root / "split_summary.json"
+    if official_train_json is not None:
+        checks["official_train_source_hash_current"] = (
+            sha256_json(official_train_json)
+            == json.loads(summary_path.read_text(encoding="utf-8"))["sources"][
+                "official_train"
+            ]["sha256"]
+        )
+    if official_validation_json is not None:
+        checks["official_validation_source_hash_current"] = (
+            sha256_json(official_validation_json)
+            == json.loads(summary_path.read_text(encoding="utf-8"))["sources"][
+                "official_validation"
+            ]["sha256"]
+        )
     if not all(checks.values()):
         raise AssertionError(f"invalid LR-search manifests: {checks}")
     return checks
@@ -529,17 +644,52 @@ def assert_final_training_uses_official_train(
             ).get("sources", {}).get("official_train", {}).get("path")
     if official_train_source is None:
         raise ValueError("official_train_source is required to prove dataset identity")
+    source_payload = json.loads(
+        Path(official_train_source).read_text(encoding="utf-8")
+    )
     official_train_image_ids = {
-        int(image["id"])
-        for image in json.loads(
-            Path(official_train_source).read_text(encoding="utf-8")
-        )["images"]
+        int(image["id"]) for image in source_payload["images"]
     }
     official_validation_image_ids = {
         int(image["id"]) for image in official_validation["images"]
     }
     assert final_train_image_ids == official_train_image_ids
     assert not (final_train_image_ids & official_validation_image_ids)
+    summary = json.loads(
+        (root / "split_summary.json").read_text(encoding="utf-8")
+    )
+    train_archive_identity = str(
+        summary["sources"]["official_train"]["source_archive_sha256"]
+    )
+
+    def stable_identity(
+        image: Mapping[str, Any],
+        *,
+        default_split: str = "",
+        default_archive: str = "",
+    ) -> tuple[str, str, str]:
+        return (
+            str(image["file_name"]),
+            str(image.get("original_split", default_split)),
+            str(image.get("source_archive_sha256", default_archive)),
+        )
+
+    final_train_identities = {
+        stable_identity(image) for image in final_train["images"]
+    }
+    official_train_identities = {
+        stable_identity(
+            image,
+            default_split="train",
+            default_archive=train_archive_identity,
+        )
+        for image in source_payload["images"]
+    }
+    official_validation_identities = {
+        stable_identity(image) for image in official_validation["images"]
+    }
+    assert final_train_identities == official_train_identities
+    assert not (final_train_identities & official_validation_identities)
 
 
 def exponential_moving_average(values: Iterable[float], beta: float = 0.98) -> list[float]:

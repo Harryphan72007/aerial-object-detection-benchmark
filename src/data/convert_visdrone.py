@@ -105,6 +105,7 @@ def convert_split(
     split: str | None = None,
     report_json: str | Path | None = None,
     max_images: int | None = None,
+    source_archive_sha256: str | None = None,
 ) -> ConversionSummary:
     image_dir = Path(image_dir)
     annotation_dir = Path(annotation_dir)
@@ -139,9 +140,17 @@ def convert_split(
         with Image.open(image_path) as img:
             width, height = img.size
             img.verify()
-        images.append(
-            {"id": image_id, "file_name": image_path.name, "width": width, "height": height}
-        )
+        image_record: dict[str, object] = {
+            "id": image_id,
+            "file_name": image_path.name,
+            "width": width,
+            "height": height,
+        }
+        if split:
+            image_record["original_split"] = split
+        if source_archive_sha256:
+            image_record["source_archive_sha256"] = source_archive_sha256
+        images.append(image_record)
         summary.images += 1
         annotation_path = annotation_dir / f"{image_path.stem}.txt"
         before = summary.annotations

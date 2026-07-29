@@ -135,6 +135,7 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "RUN_BOUNDARY_EXTENSION",
             "START_EXPENSIVE_STAGE",
             "ALLOW_OVER_BUDGET_RUN",
+            "DATA_ACCESS_MODE",
         },
         "02_publish_results.ipynb": {"MODEL_ID", "PUBLISH_RESULTS", "DRY_RUN"},
     }
@@ -151,30 +152,54 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
 
 def test_auto_stage_detection_skips_completed_stages(tmp_path):
     paths = ProjectPaths.from_value(tmp_path)
-    assert inspect_model_day(tmp_path, MODEL_ID, ROOT)["stage"] == Stage.DATA
+    assert (
+        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
+        == Stage.DATA
+    )
     _ready_dataset(paths)
-    assert inspect_model_day(tmp_path, MODEL_ID, ROOT)["stage"] == Stage.ENVIRONMENT
+    assert (
+        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
+        == Stage.ENVIRONMENT
+    )
     write_json(
         paths.lr_search_checkpoints / MODEL_ID / "adapter_smoke.json",
         {"status": "READY", "batch_policy": {"per_device_batch_size": 2, "gradient_accumulation_steps": 4}},
     )
-    assert inspect_model_day(tmp_path, MODEL_ID, ROOT)["stage"] == Stage.LR_SEARCH
+    assert (
+        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
+        == Stage.LR_SEARCH
+    )
     _selected(paths)
-    assert inspect_model_day(tmp_path, MODEL_ID, ROOT)["stage"] == Stage.FINAL_TRAINING
+    assert (
+        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
+        == Stage.FINAL_TRAINING
+    )
     _run(paths)
-    assert inspect_model_day(tmp_path, MODEL_ID, ROOT)["stage"] == Stage.EVALUATION
+    assert (
+        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
+        == Stage.EVALUATION
+    )
     write_json(
         paths.evaluation / f"{RUN_ID}__res640__metrics.json",
         {"run_id": RUN_ID, "model_id": MODEL_ID, "dataset_track": "2class"},
     )
-    assert inspect_model_day(tmp_path, MODEL_ID, ROOT)["stage"] == Stage.PROFILING
+    assert (
+        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
+        == Stage.PROFILING
+    )
     write_json(paths.evaluation / f"{RUN_ID}__profile.json", {"profiles": []})
-    assert inspect_model_day(tmp_path, MODEL_ID, ROOT)["stage"] == Stage.REPORT
+    assert (
+        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
+        == Stage.REPORT
+    )
     write_json(
         paths.reports / "models" / MODEL_ID / RUN_ID / "final_results.json",
         [{"run_id": RUN_ID}],
     )
-    assert inspect_model_day(tmp_path, MODEL_ID, ROOT)["stage"] == Stage.COMPLETE
+    assert (
+        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
+        == Stage.COMPLETE
+    )
 
 
 def test_final_contract_rejects_incompatible_resume_configuration():

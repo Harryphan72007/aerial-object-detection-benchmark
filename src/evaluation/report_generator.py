@@ -478,7 +478,7 @@ def generate_report(
         "Model architectures": "CNN, Swin Transformer, VMamba selective state-space, and end-to-end RT-DETRv2 integrations are represented by concrete run manifests.",
         "License review": "See LICENSES.md. Dataset usage remains research-only unless the dataset owner grants broader rights.",
         "Experimental protocol": "Compare only matching class mappings, splits, seeds, recipes, resolutions, hardware, and precision modes.",
-        "Hyperparameter search": "Optuna trials are stored separately and should be distinguished from final confirmation runs.",
+        "Learning-rate search": "Deterministic LR-search candidates are stored separately and must be distinguished from complete-train final runs.",
         "Training results": dataframe.to_markdown(index=False) if not dataframe.empty else "No completed evaluation rows.",
         "Detection results": "COCO, tiny-object, per-class, localization, confidence, and error outputs are stored in final_results.json.",
         "Efficiency results": "Latency values require synchronized warm-up and timing on shared hardware. Export failures remain valid measured outcomes.",

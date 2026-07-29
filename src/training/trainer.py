@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import time
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -41,12 +42,37 @@ class TrainingOrchestrator:
         use_amp: bool = True,
         resume_run_id: str | None = None,
         overrides: dict[str, Any] | None = None,
+        *,
+        train_annotation_override: str | Path | None = None,
+        validation_annotation_override: str | Path | None = None,
+        train_images_override: str | Path | None = None,
+        validation_images_override: str | Path | None = None,
+        explicit_run_dir: str | Path | None = None,
+        explicit_run_id: str | None = None,
+        register_run: bool = True,
+        scheduler_horizon: int | None = None,
+        validation_interval: int = 1,
+        run_kind: str = "benchmark",
+        lr_range_test_steps: int = 0,
+        lr_range_output: str | Path | None = None,
     ) -> dict[str, Any]:
         validate_drive_writable(self.paths.root)
         validate_dataset(self.paths, dataset_track)
         seed_everything(seed)
         model_config = load_model_config(model_id, self.repo_root)
-        if resume_run_id:
+        scheduler_horizon = scheduler_horizon or epochs
+        if scheduler_horizon < epochs:
+            raise ValueError("scheduler_horizon must be greater than or equal to epochs")
+        if validation_interval < 0:
+            raise ValueError("validation_interval must be non-negative")
+        if explicit_run_dir is not None:
+            run_dir = Path(explicit_run_dir).expanduser().resolve()
+            run_id = explicit_run_id or run_dir.name
+            if resume_run_id and resume_run_id != run_id:
+                raise ValueError("resume_run_id must match explicit_run_id")
+            for subdirectory in ("tensorboard", "logs"):
+                (run_dir / subdirectory).mkdir(parents=True, exist_ok=True)
+        elif resume_run_id:
             candidates = RunRegistry(self.paths).list_available_runs(
                 model_id, dataset_track, status=None
             )
@@ -64,10 +90,16 @@ class TrainingOrchestrator:
             )
 
         dataset_root = self.paths.coco(dataset_track)
-        train_annotation = dataset_root / "annotations" / "instances_train.json"
-        validation_annotation = dataset_root / "annotations" / "instances_val.json"
-        train_images = dataset_root / "train"
-        validation_images = dataset_root / "val"
+        train_annotation = Path(train_annotation_override or (
+            dataset_root / "annotations" / "instances_train.json"
+        )).resolve()
+        validation_annotation = Path(validation_annotation_override or (
+            dataset_root / "annotations" / "instances_val.json"
+        )).resolve()
+        train_images = Path(train_images_override or (dataset_root / "train")).resolve()
+        validation_images = Path(
+            validation_images_override or (dataset_root / "val")
+        ).resolve()
         for path in (
             train_annotation,
             validation_annotation,
@@ -79,20 +111,35 @@ class TrainingOrchestrator:
                     f"required converted dataset path missing: {path}"
                 )
 
+        world_size = int(os.environ.get("WORLD_SIZE", "1"))
         run_config = {
             "model_id": model_id,
             "dataset_track": dataset_track,
             "image_size": image_size,
             "batch_size": batch_size,
             "gradient_accumulation_steps": gradient_accumulation_steps,
-            "effective_batch_size": batch_size * gradient_accumulation_steps,
+            "world_size": world_size,
+            "effective_batch_size": (
+                batch_size * gradient_accumulation_steps * world_size
+            ),
             "epochs": epochs,
+            "scheduler_horizon": scheduler_horizon,
+            "validation_interval": validation_interval,
             "seed": seed,
             "use_amp": use_amp,
             "resume_run_id": resume_run_id,
             "overrides": overrides or {},
+            "run_kind": run_kind,
+            "register_run": register_run,
+            "lr_range_test_steps": lr_range_test_steps,
+            "lr_range_output": str(lr_range_output) if lr_range_output else None,
+            "train_annotation": str(train_annotation),
+            "validation_annotation": str(validation_annotation),
+            "train_images": str(train_images),
+            "validation_images": str(validation_images),
         }
         write_yaml(run_dir / "training_config.yaml", run_config)
+        write_yaml(run_dir / "resolved_config.yaml", run_config)
         write_yaml(run_dir / "model_config.yaml", model_config)
         dataset_config = read_yaml(
             self.repo_root
@@ -103,6 +150,7 @@ class TrainingOrchestrator:
         write_yaml(run_dir / "dataset_config.yaml", dataset_config)
         write_json(run_dir / "environment.json", collect_environment())
         provenance = write_git_provenance(self.repo_root, run_dir)
+        write_json(run_dir / "git_provenance.json", provenance)
         try:
             frozen = subprocess.check_output(
                 [sys.executable, "-m", "pip", "freeze"], text=True
@@ -171,7 +219,8 @@ class TrainingOrchestrator:
             manifest["total_training_seconds"] = time.perf_counter() - started
 
         write_json(run_dir / "run_manifest.json", manifest)
-        RunRegistry(self.paths).register_run(run_dir / "run_manifest.json")
+        if register_run:
+            RunRegistry(self.paths).register_run(run_dir / "run_manifest.json")
         return manifest
 
     def _base_manifest(
@@ -191,6 +240,7 @@ class TrainingOrchestrator:
         )
         return {
             "run_id": run_id,
+            "run_dir": str(run_dir),
             "model_id": run_config["model_id"],
             "architecture_family": model_config["architecture_family"],
             "dataset_track": run_config["dataset_track"],
@@ -231,6 +281,54 @@ class TrainingOrchestrator:
             raise FileNotFoundError(path)
         return path
 
+    @staticmethod
+    def _validate_controlled_overrides(
+        run_dir: Path, run_config: dict[str, Any]
+    ) -> None:
+        if run_config.get("run_kind") not in {
+            "lr_search_candidate",
+            "lr_range_test_non_promotable",
+            "runtime_calibration_non_promotable",
+            "final_complete_official_train",
+        }:
+            return
+        report_path = run_dir / "applied_overrides.json"
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        unsupported = report.get("unsupported", {})
+        if unsupported:
+            raise RuntimeError(
+                f"controlled benchmark override was not applied: {unsupported}"
+            )
+
+    @staticmethod
+    def _run_backend_process(
+        command: list[str], cwd: Path, log_path: Path
+    ) -> None:
+        """Stream backend output while retaining enough context to classify failures."""
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        tail: deque[str] = deque(maxlen=200)
+        with log_path.open("a", encoding="utf-8") as log:
+            process = subprocess.Popen(
+                command,
+                cwd=cwd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                print(line, end="")
+                log.write(line)
+                log.flush()
+                tail.append(line.rstrip())
+            return_code = process.wait()
+        if return_code:
+            raise RuntimeError(
+                f"backend process exited with code {return_code}\n"
+                + "\n".join(tail)
+            )
+
     def _run_mmdetection(
         self,
         run_dir: Path,
@@ -269,6 +367,10 @@ class TrainingOrchestrator:
             str(run_config["gradient_accumulation_steps"]),
             "--epochs",
             str(run_config["epochs"]),
+            "--scheduler-horizon",
+            str(run_config["scheduler_horizon"]),
+            "--validation-interval",
+            str(run_config["validation_interval"]),
             "--seed",
             str(run_config["seed"]),
             "--overrides",
@@ -295,7 +397,32 @@ class TrainingOrchestrator:
             command.append("--amp")
         if run_config.get("resume_run_id"):
             command.append("--resume")
-        subprocess.run(command, check=True, cwd=self.repo_root)
+        if run_config.get("lr_range_test_steps"):
+            command.extend(
+                [
+                    "--lr-range-test-steps",
+                    str(run_config["lr_range_test_steps"]),
+                    "--lr-range-output",
+                    str(
+                        run_config.get("lr_range_output")
+                        or (run_dir / "lr_range_test")
+                    ),
+                ]
+            )
+        self._run_backend_process(
+            command, self.repo_root, run_dir / "logs" / "backend.log"
+        )
+        self._validate_controlled_overrides(run_dir, run_config)
+        if run_config.get("lr_range_test_steps"):
+            return json.loads(
+                (
+                    Path(
+                        run_config.get("lr_range_output")
+                        or (run_dir / "lr_range_test")
+                    )
+                    / "summary.json"
+                ).read_text(encoding="utf-8")
+            )
         final_metrics = run_dir / "final_metrics.json"
         return (
             json.loads(final_metrics.read_text(encoding="utf-8"))
@@ -330,6 +457,10 @@ class TrainingOrchestrator:
             str(validation_images),
             "--epochs",
             str(run_config["epochs"]),
+            "--scheduler-horizon",
+            str(run_config["scheduler_horizon"]),
+            "--validation-interval",
+            str(run_config["validation_interval"]),
             "--batch-size",
             str(run_config["batch_size"]),
             "--accumulation",
@@ -345,7 +476,32 @@ class TrainingOrchestrator:
             command.append("--amp")
         if run_config.get("resume_run_id"):
             command.append("--resume")
-        subprocess.run(command, check=True, cwd=self.repo_root)
+        if run_config.get("lr_range_test_steps"):
+            command.extend(
+                [
+                    "--lr-range-test-steps",
+                    str(run_config["lr_range_test_steps"]),
+                    "--lr-range-output",
+                    str(
+                        run_config.get("lr_range_output")
+                        or (run_dir / "lr_range_test")
+                    ),
+                ]
+            )
+        self._run_backend_process(
+            command, self.repo_root, run_dir / "logs" / "backend.log"
+        )
+        self._validate_controlled_overrides(run_dir, run_config)
+        if run_config.get("lr_range_test_steps"):
+            return json.loads(
+                (
+                    Path(
+                        run_config.get("lr_range_output")
+                        or (run_dir / "lr_range_test")
+                    )
+                    / "summary.json"
+                ).read_text(encoding="utf-8")
+            )
         return json.loads(
             (run_dir / "final_metrics.json").read_text(encoding="utf-8")
         )

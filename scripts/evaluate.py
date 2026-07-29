@@ -45,6 +45,14 @@ def _mmdet_config_for_resolution(
     for key in ("train_dataloader", "val_dataloader", "test_dataloader"):
         if key in cfg:
             _update_resize(cfg[key], resolution)
+    try:
+        cfg.model.test_cfg.rcnn.score_thr = 0.001
+        cfg.model.test_cfg.rcnn.max_per_img = 500
+    except (AttributeError, KeyError, TypeError) as error:
+        raise RuntimeError(
+            "MMDetection final evaluation requires RCNN score_thr and "
+            "max_per_img controls"
+        ) from error
     destination.parent.mkdir(parents=True, exist_ok=True)
     cfg.dump(str(destination))
     return destination
@@ -142,7 +150,9 @@ def main() -> None:
     results: list[dict[str, Any]] = []
     failed_models: list[dict[str, Any]] = []
     for run in runs:
-        run_dir = paths.run_dir(run["model_id"], run["run_id"])
+        run_dir = Path(
+            run.get("run_dir") or paths.run_dir(run["model_id"], run["run_id"])
+        )
         base_model_config = read_yaml(run_dir / "model_config.yaml")
         resolutions = sorted(
             set([int(run["input_resolution"]), *args.resolutions])
@@ -153,6 +163,7 @@ def main() -> None:
         for resolution in resolutions:
             model_config = dict(base_model_config)
             model_config["confidence_threshold"] = 0.001
+            model_config["max_detections"] = 500
             model_config["input_resolution"] = resolution
             if run["framework"] in {"mmdetection", "vmamba_mmdetection"}:
                 model_config["resolved_framework_config"] = str(

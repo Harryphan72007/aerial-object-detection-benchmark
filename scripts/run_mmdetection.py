@@ -141,6 +141,42 @@ def _set_recursive(node: Any, key: str, value: Any) -> int:
     return changed
 
 
+def configure_scheduler_horizon(
+    schedulers: Any, original_max_epochs: int, scheduler_horizon: int
+) -> Any:
+    """Retarget epoch-based schedules once while preserving their relative policy."""
+    if original_max_epochs <= 0 or scheduler_horizon <= 0:
+        raise ValueError("scheduler horizons must be positive")
+    items = schedulers if isinstance(schedulers, list) else [schedulers]
+    for scheduler in items:
+        if not isinstance(scheduler, dict):
+            continue
+        if bool(scheduler.get("by_epoch", True)):
+            if "begin" in scheduler:
+                scheduler["begin"] = round(
+                    int(scheduler["begin"]) * scheduler_horizon / original_max_epochs
+                )
+            if "end" in scheduler:
+                scheduler["end"] = round(
+                    int(scheduler["end"]) * scheduler_horizon / original_max_epochs
+                )
+            if "milestones" in scheduler:
+                scheduler["milestones"] = [
+                    max(
+                        1,
+                        round(
+                            int(milestone)
+                            * scheduler_horizon
+                            / original_max_epochs
+                        ),
+                    )
+                    for milestone in scheduler["milestones"]
+                ]
+            if "T_max" in scheduler:
+                scheduler["T_max"] = scheduler_horizon
+    return schedulers
+
+
 def apply_overrides(cfg: Any, overrides: dict[str, Any]) -> dict[str, Any]:
     """Apply only documented backend fields and report unsupported keys."""
     applied: dict[str, Any] = {}
@@ -201,6 +237,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, required=True)
     parser.add_argument("--accumulation", type=int, required=True)
     parser.add_argument("--epochs", type=int, required=True)
+    parser.add_argument("--scheduler-horizon", type=int, required=True)
+    parser.add_argument("--validation-interval", type=int, default=1)
+    parser.add_argument("--lr-range-test-steps", type=int, default=0)
+    parser.add_argument("--lr-range-output")
+    parser.add_argument("--lr-range-start-multiplier", type=float, default=0.01)
+    parser.add_argument("--lr-range-end-multiplier", type=float, default=20.0)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--strip-mask-branch", action="store_true")
     parser.add_argument("--registration-import")
@@ -214,8 +256,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.scheduler_horizon < args.epochs:
+        raise ValueError("--scheduler-horizon must be >= --epochs")
+    if args.validation_interval < 0:
+        raise ValueError("--validation-interval must be non-negative")
     try:
         from mmengine.config import Config
+        from mmengine.hooks import Hook
         from mmengine.runner import Runner
     except ImportError as exc:
         raise RuntimeError(
@@ -307,10 +354,29 @@ def main() -> None:
         {"type": "AerialCocoMetric", "ann_file": args.val_ann},
     ]
     if hasattr(cfg, "train_cfg") and cfg.train_cfg:
+        original_max_epochs = int(cfg.train_cfg.max_epochs)
+        cfg.param_scheduler = configure_scheduler_horizon(
+            cfg.get("param_scheduler", []),
+            original_max_epochs,
+            args.scheduler_horizon,
+        )
         cfg.train_cfg.max_epochs = args.epochs
-        cfg.train_cfg.val_interval = 1
+        cfg.train_cfg.val_interval = (
+            args.validation_interval
+            if args.validation_interval > 0
+            else args.epochs + 1
+        )
+    if args.lr_range_test_steps:
+        if args.resume:
+            raise ValueError("the LR range test must start from pretrained weights")
+        cfg.train_cfg = {
+            "type": "IterBasedTrainLoop",
+            "max_iters": args.lr_range_test_steps * args.accumulation,
+            "val_interval": args.lr_range_test_steps * args.accumulation + 1,
+        }
+        cfg.param_scheduler = []
     cfg.work_dir = str(run_dir)
-    cfg.randomness = {"seed": args.seed, "deterministic": False}
+    cfg.randomness = {"seed": args.seed, "deterministic": True}
     cfg.resume = bool(args.resume)
     if args.resume and (run_dir / "last.pth").exists():
         cfg.load_from = str(run_dir / "last.pth")
@@ -337,9 +403,185 @@ def main() -> None:
         {"type": "TensorboardVisBackend", "save_dir": str(run_dir / "tensorboard")},
     ]
     cfg.dump(str(run_dir / "runtime_config.py"))
+    scheduler_contract_path = run_dir / "scheduler_contract.json"
+    if args.resume and scheduler_contract_path.exists():
+        prior_contract = json.loads(
+            scheduler_contract_path.read_text(encoding="utf-8")
+        )
+        prior_horizon = int(prior_contract["scheduler_horizon"])
+        if prior_horizon != args.scheduler_horizon:
+            raise ValueError(
+                "scheduler horizon changed across resume: "
+                f"checkpoint={prior_horizon}, requested={args.scheduler_horizon}"
+            )
+    scheduler_contract_path.write_text(
+        json.dumps(
+            {
+                "scheduler_horizon": args.scheduler_horizon,
+                "target_epochs": args.epochs,
+                "resume": bool(args.resume),
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    from src.reproducibility import capture_rng_state, restore_rng_state
+
+    class FullResumeStateHook(Hook):
+        """Persist RNG and sampler state not covered by backend-specific weights."""
+
+        priority = "VERY_HIGH"
+
+        def before_save_checkpoint(
+            self, runner: Any, checkpoint: dict[str, Any]
+        ) -> None:
+            checkpoint["benchmark_rng_state"] = capture_rng_state()
+            sampler = getattr(runner.train_dataloader, "sampler", None)
+            sampler_state: dict[str, Any] = {"epoch": int(runner.epoch)}
+            if sampler is not None and hasattr(sampler, "state_dict"):
+                sampler_state["state_dict"] = sampler.state_dict()
+            checkpoint["benchmark_sampler_state"] = sampler_state
+            checkpoint["benchmark_scheduler_horizon"] = args.scheduler_horizon
+
+        def after_load_checkpoint(
+            self, runner: Any, checkpoint: dict[str, Any]
+        ) -> None:
+            checkpoint_horizon = int(
+                checkpoint.get(
+                    "benchmark_scheduler_horizon", args.scheduler_horizon
+                )
+            )
+            if checkpoint_horizon != args.scheduler_horizon:
+                raise ValueError(
+                    "scheduler horizon changed across resume checkpoint: "
+                    f"{checkpoint_horizon} != {args.scheduler_horizon}"
+                )
+            if checkpoint.get("benchmark_rng_state"):
+                restore_rng_state(checkpoint["benchmark_rng_state"])
+            sampler_state = checkpoint.get("benchmark_sampler_state", {})
+            sampler = getattr(runner.train_dataloader, "sampler", None)
+            if (
+                sampler is not None
+                and sampler_state.get("state_dict") is not None
+                and hasattr(sampler, "load_state_dict")
+            ):
+                sampler.load_state_dict(sampler_state["state_dict"])
+            elif sampler is not None and hasattr(sampler, "set_epoch"):
+                sampler.set_epoch(int(sampler_state.get("epoch", runner.epoch)))
 
     started = time.perf_counter()
     runner = Runner.from_cfg(cfg)
+    runner.register_hook(FullResumeStateHook(), priority="VERY_HIGH")
+    if args.lr_range_test_steps:
+        import math
+        import torch
+        from src.training.lr_range import (
+            exponential_lr_schedule,
+            save_lr_range_artifacts,
+            should_stop_range_test,
+        )
+
+        baseline_lr = float(cfg.optim_wrapper.optimizer.lr)
+        schedule = exponential_lr_schedule(
+            baseline_lr,
+            args.lr_range_test_steps,
+            args.lr_range_start_multiplier,
+            args.lr_range_end_multiplier,
+        )
+        range_history: list[dict[str, Any]] = []
+        original_step = runner.optim_wrapper.step
+        range_state: dict[str, Any] = {
+            "optimizer_step": 0,
+            "pending_losses": [],
+        }
+
+        def tracked_step(**kwargs: Any) -> Any:
+            squared = torch.zeros((), device=runner.model.data_preprocessor.device)
+            for parameter in runner.model.parameters():
+                if parameter.grad is not None:
+                    squared += parameter.grad.detach().float().norm(2).square()
+            runner.optim_wrapper._lr_range_gradient_norm = float(
+                squared.sqrt().cpu().item()
+            )
+            result = original_step(**kwargs)
+            range_state["optimizer_step"] += 1
+            return result
+
+        runner.optim_wrapper.step = tracked_step
+
+        class LRRangeStop(RuntimeError):
+            pass
+
+        class LRRangeHook(Hook):
+            priority = "VERY_HIGH"
+
+            def before_train_iter(
+                self, runner: Any, batch_idx: int, data_batch: Any = None
+            ) -> None:
+                learning_rate = schedule[
+                    min(range_state["optimizer_step"], len(schedule) - 1)
+                ]
+                for group in runner.optim_wrapper.optimizer.param_groups:
+                    group["lr"] = learning_rate
+
+            def after_train_iter(
+                self,
+                runner: Any,
+                batch_idx: int,
+                data_batch: Any = None,
+                outputs: Any = None,
+            ) -> None:
+                loss: float | None = None
+                if isinstance(outputs, dict) and outputs.get("loss") is not None:
+                    value = outputs["loss"]
+                    loss = float(value.detach().item() if hasattr(value, "detach") else value)
+                if loss is None:
+                    scalar = runner.message_hub.get_scalar("train/loss")
+                    loss = float(scalar.current())
+                range_state["pending_losses"].append(loss)
+                if range_state["optimizer_step"] <= len(range_history):
+                    return
+                learning_rate = schedule[range_state["optimizer_step"] - 1]
+                range_history.append(
+                    {
+                        "optimizer_step": range_state["optimizer_step"],
+                        "learning_rate": learning_rate,
+                        "raw_loss": float(
+                            sum(range_state["pending_losses"])
+                            / len(range_state["pending_losses"])
+                        ),
+                        "gradient_norm": float(
+                            getattr(
+                                runner.optim_wrapper,
+                                "_lr_range_gradient_norm",
+                                math.nan,
+                            )
+                        ),
+                    }
+                )
+                range_state["pending_losses"] = []
+                stop, reason = should_stop_range_test(
+                    [row["raw_loss"] for row in range_history]
+                )
+                if stop:
+                    raise LRRangeStop(str(reason))
+
+        runner.register_hook(LRRangeHook(), priority="VERY_HIGH")
+        stopped_reason = None
+        try:
+            runner.train()
+        except LRRangeStop as error:
+            stopped_reason = str(error)
+        output = Path(args.lr_range_output or (run_dir / "lr_range_test"))
+        summary = save_lr_range_artifacts(
+            output,
+            range_history,
+            baseline_learning_rate=baseline_lr,
+            stopped_reason=stopped_reason,
+        )
+        print(json.dumps(summary, indent=2))
+        return
     runner.train()
     elapsed = time.perf_counter() - started
 

@@ -17,6 +17,13 @@ from src.training.callbacks import (
     save_training_curves,
 )
 from src.training.checkpointing import atomic_torch_save, materialize_checkpoint_alias
+from src.training.recipes import (
+    RTDETR_BASELINE_LR,
+    RTDETR_GRADIENT_CLIP,
+    RTDETR_MAX_DETECTIONS,
+    RTDETR_WARMUP_EPOCHS,
+    RTDETR_WEIGHT_DECAY,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -28,12 +35,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train-images", required=True)
     parser.add_argument("--val-images", required=True)
     parser.add_argument("--epochs", type=int, required=True)
+    parser.add_argument("--scheduler-horizon", type=int, required=True)
+    parser.add_argument("--validation-interval", type=int, default=1)
+    parser.add_argument("--lr-range-test-steps", type=int, default=0)
+    parser.add_argument("--lr-range-output")
+    parser.add_argument("--lr-range-start-multiplier", type=float, default=0.01)
+    parser.add_argument("--lr-range-end-multiplier", type=float, default=20.0)
     parser.add_argument("--batch-size", type=int, required=True)
     parser.add_argument("--accumulation", type=int, required=True)
     parser.add_argument("--image-size", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
-    parser.add_argument("--learning-rate", type=float, default=1e-4)
-    parser.add_argument("--weight-decay", type=float, default=0.05)
+    parser.add_argument("--learning-rate", type=float, default=RTDETR_BASELINE_LR)
+    parser.add_argument("--weight-decay", type=float, default=RTDETR_WEIGHT_DECAY)
     parser.add_argument("--amp", action="store_true")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--overrides", default="{}")
@@ -52,9 +65,18 @@ def main() -> None:
     )
 
     from src.evaluation.coco_evaluator import evaluate_coco
-    from src.reproducibility import seed_everything
+    from src.reproducibility import (
+        capture_rng_state,
+        restore_rng_state,
+        seed_everything,
+        worker_seed,
+    )
 
     seed_everything(args.seed)
+    if args.scheduler_horizon < args.epochs:
+        raise ValueError("--scheduler-horizon must be >= --epochs")
+    if args.validation_interval < 0:
+        raise ValueError("--validation-interval must be non-negative")
     run_dir = Path(args.run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -160,6 +182,8 @@ def main() -> None:
 
     train_records = Records(train_data, args.train_images)
     validation_records = Records(validation_data, args.val_images)
+    sampler_generator = torch.Generator()
+    sampler_generator.manual_seed(args.seed)
     train_loader = DataLoader(
         train_records,
         batch_size=args.batch_size,
@@ -167,17 +191,21 @@ def main() -> None:
         num_workers=2,
         collate_fn=collate,
         pin_memory=torch.cuda.is_available(),
+        generator=sampler_generator,
+        worker_init_fn=worker_seed,
     )
     learning_rate = float(overrides.get("learning_rate", args.learning_rate))
     weight_decay = float(overrides.get("weight_decay", args.weight_decay))
-    gradient_clip = float(overrides.get("gradient_clip", 1.0))
-    warmup_epochs = int(overrides.get("warmup_epochs", 0))
-    maximum_detections = int(overrides.get("max_detections", 500))
+    gradient_clip = float(overrides.get("gradient_clip", RTDETR_GRADIENT_CLIP))
+    warmup_epochs = int(overrides.get("warmup_epochs", RTDETR_WARMUP_EPOCHS))
+    maximum_detections = int(
+        overrides.get("max_detections", RTDETR_MAX_DETECTIONS)
+    )
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=learning_rate, weight_decay=weight_decay
     )
     cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=max(1, args.epochs - warmup_epochs)
+        optimizer, T_max=max(1, args.scheduler_horizon - warmup_epochs)
     )
     if warmup_epochs > 0:
         warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
@@ -193,6 +221,83 @@ def main() -> None:
     scaler = torch.amp.GradScaler(
         "cuda", enabled=args.amp and torch.cuda.is_available()
     )
+    if args.lr_range_test_steps:
+        if args.resume:
+            raise ValueError("the LR range test must start from pretrained weights")
+        from src.training.lr_range import (
+            exponential_lr_schedule,
+            save_lr_range_artifacts,
+            should_stop_range_test,
+        )
+
+        schedule = exponential_lr_schedule(
+            learning_rate,
+            args.lr_range_test_steps,
+            args.lr_range_start_multiplier,
+            args.lr_range_end_multiplier,
+        )
+        range_history: list[dict[str, Any]] = []
+        stopped_reason: str | None = None
+        loader_iterator = iter(train_loader)
+        model.train()
+        for optimizer_step, step_learning_rate in enumerate(schedule, start=1):
+            for group in optimizer.param_groups:
+                group["lr"] = step_learning_rate
+            optimizer.zero_grad(set_to_none=True)
+            step_losses: list[float] = []
+            for _ in range(args.accumulation):
+                try:
+                    batch = next(loader_iterator)
+                except StopIteration:
+                    loader_iterator = iter(train_loader)
+                    batch = next(loader_iterator)
+                pixel_values = batch["pixel_values"].to(device, non_blocking=True)
+                labels = [
+                    {
+                        key: value.to(device) if hasattr(value, "to") else value
+                        for key, value in label.items()
+                    }
+                    for label in batch["labels"]
+                ]
+                with torch.autocast(
+                    device_type="cuda",
+                    dtype=torch.float16,
+                    enabled=args.amp and torch.cuda.is_available(),
+                ):
+                    outputs = model(pixel_values=pixel_values, labels=labels)
+                    raw_loss = outputs.loss
+                    scaled_loss = raw_loss / args.accumulation
+                step_losses.append(float(raw_loss.detach().item()))
+                scaler.scale(scaled_loss).backward()
+            scaler.unscale_(optimizer)
+            gradient_norm = float(
+                torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip)
+            )
+            scaler.step(optimizer)
+            scaler.update()
+            mean_loss = float(np.mean(step_losses))
+            range_history.append(
+                {
+                    "optimizer_step": optimizer_step,
+                    "learning_rate": step_learning_rate,
+                    "raw_loss": mean_loss,
+                    "gradient_norm": gradient_norm,
+                }
+            )
+            stop, stopped_reason = should_stop_range_test(
+                [row["raw_loss"] for row in range_history]
+            )
+            if stop:
+                break
+        output = Path(args.lr_range_output or (run_dir / "lr_range_test"))
+        summary = save_lr_range_artifacts(
+            output,
+            range_history,
+            baseline_learning_rate=learning_rate,
+            stopped_reason=stopped_reason,
+        )
+        print(json.dumps(summary, indent=2))
+        return
     history = EpochHistoryWriter(run_dir)
     best = BestMetricState()
     start_epoch = 1
@@ -214,6 +319,16 @@ def main() -> None:
         best.best_aptiny = float(state.get("best_aptiny", float("-inf")))
         best.best_map_epoch = int(state.get("best_map_epoch", 0))
         best.best_aptiny_epoch = int(state.get("best_aptiny_epoch", 0))
+        checkpoint_horizon = int(state.get("scheduler_horizon", args.scheduler_horizon))
+        if checkpoint_horizon != args.scheduler_horizon:
+            raise ValueError(
+                "scheduler horizon changed across resume: "
+                f"checkpoint={checkpoint_horizon}, requested={args.scheduler_horizon}"
+            )
+        if state.get("rng_state"):
+            restore_rng_state(state["rng_state"])
+        if state.get("sampler_generator_state") is not None:
+            sampler_generator.set_state(state["sampler_generator_state"])
 
     started = time.perf_counter()
     for epoch in range(start_epoch, args.epochs + 1):
@@ -298,51 +413,62 @@ def main() -> None:
             "best_aptiny": best.best_aptiny,
             "best_map_epoch": best.best_map_epoch,
             "best_aptiny_epoch": best.best_aptiny_epoch,
+            "scheduler_horizon": args.scheduler_horizon,
+            "rng_state": capture_rng_state(),
+            "sampler_generator_state": sampler_generator.get_state(),
         }
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
 
-        validation_start = time.perf_counter()
-        model.eval()
-        predictions: list[dict[str, Any]] = []
-        with torch.inference_mode():
-            for index in range(len(validation_records)):
-                item = validation_records[index]
-                encoded = processor(images=item["image"], return_tensors="pt")
-                encoded = {
-                    key: value.to(device) for key, value in encoded.items()
-                }
-                outputs = model(**encoded)
-                target_sizes = torch.tensor(
-                    [(item["image"].height, item["image"].width)],
-                    device=device,
-                )
-                result = processor.post_process_object_detection(
-                    outputs, target_sizes=target_sizes, threshold=0.001
-                )[0]
-                if len(result["scores"]) > maximum_detections:
-                    keep = result["scores"].argsort(descending=True)[:maximum_detections]
-                    result = {key: value[keep] for key, value in result.items()}
-                for box, score, label in zip(
-                    result["boxes"].cpu(),
-                    result["scores"].cpu(),
-                    result["labels"].cpu(),
-                ):
-                    x1, y1, x2, y2 = box.tolist()
-                    predictions.append(
-                        {
-                            "image_id": item["image_id"],
-                            "category_id": int(label) + 1,
-                            "bbox": [x1, y1, x2 - x1, y2 - y1],
-                            "score": float(score),
-                        }
-                    )
-        validation_seconds = time.perf_counter() - validation_start
-        prediction_path = run_dir / f"predictions_epoch_{epoch:03d}.json"
-        prediction_path.write_text(
-            json.dumps(predictions), encoding="utf-8"
+        should_validate = (
+            args.validation_interval > 0
+            and epoch % args.validation_interval == 0
         )
-        metrics = evaluate_coco(args.val_ann, prediction_path)
-        flags = best.update(epoch, metrics)
+        validation_seconds = 0.0
+        metrics: dict[str, float] = {}
+        flags = {"best_map": False, "best_aptiny": False}
+        if should_validate:
+            validation_start = time.perf_counter()
+            model.eval()
+            predictions: list[dict[str, Any]] = []
+            with torch.inference_mode():
+                for index in range(len(validation_records)):
+                    item = validation_records[index]
+                    encoded = processor(images=item["image"], return_tensors="pt")
+                    encoded = {
+                        key: value.to(device) for key, value in encoded.items()
+                    }
+                    outputs = model(**encoded)
+                    target_sizes = torch.tensor(
+                        [(item["image"].height, item["image"].width)],
+                        device=device,
+                    )
+                    result = processor.post_process_object_detection(
+                        outputs, target_sizes=target_sizes, threshold=0.001
+                    )[0]
+                    if len(result["scores"]) > maximum_detections:
+                        keep = result["scores"].argsort(descending=True)[
+                            :maximum_detections
+                        ]
+                        result = {key: value[keep] for key, value in result.items()}
+                    for box, score, label in zip(
+                        result["boxes"].cpu(),
+                        result["scores"].cpu(),
+                        result["labels"].cpu(),
+                    ):
+                        x1, y1, x2, y2 = box.tolist()
+                        predictions.append(
+                            {
+                                "image_id": item["image_id"],
+                                "category_id": int(label) + 1,
+                                "bbox": [x1, y1, x2 - x1, y2 - y1],
+                                "score": float(score),
+                            }
+                        )
+            validation_seconds = time.perf_counter() - validation_start
+            prediction_path = run_dir / f"predictions_epoch_{epoch:03d}.json"
+            prediction_path.write_text(json.dumps(predictions), encoding="utf-8")
+            metrics = evaluate_coco(args.val_ann, prediction_path)
+            flags = best.update(epoch, metrics)
         # Save the updated best-state metadata in the canonical last checkpoint.
         checkpoint_state.update(
             {
@@ -350,6 +476,8 @@ def main() -> None:
                 "best_aptiny": best.best_aptiny,
                 "best_map_epoch": best.best_map_epoch,
                 "best_aptiny_epoch": best.best_aptiny_epoch,
+                "rng_state": capture_rng_state(),
+                "sampler_generator_state": sampler_generator.get_state(),
             }
         )
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
@@ -395,6 +523,12 @@ def main() -> None:
         save_training_curves(history.rows, run_dir / "training_curves.png")
         print(json.dumps(row))
 
+    if not (run_dir / "best_map.pth").exists():
+        materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_map.pth")
+    if not (run_dir / "best_aptiny.pth").exists():
+        materialize_checkpoint_alias(
+            run_dir / "last.pth", run_dir / "best_aptiny.pth"
+        )
     total = sum(parameter.numel() for parameter in model.parameters())
     trainable = sum(
         parameter.numel() for parameter in model.parameters() if parameter.requires_grad
@@ -416,8 +550,10 @@ def main() -> None:
         "trainable_parameters": trainable,
         "frozen_parameters": total - trainable,
         "estimated_model_size_bytes_fp32": total * 4,
-        "best_validation_map": best.best_map,
-        "best_validation_aptiny": best.best_aptiny,
+        "best_validation_map": best.best_map if np.isfinite(best.best_map) else 0.0,
+        "best_validation_aptiny": (
+            best.best_aptiny if np.isfinite(best.best_aptiny) else 0.0
+        ),
         "best_epoch": best.best_map_epoch,
         "best_aptiny_epoch": best.best_aptiny_epoch,
         "time_to_best_map_seconds": time_to_best_map,

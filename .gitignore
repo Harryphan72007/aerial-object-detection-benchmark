@@ -21,6 +21,10 @@ VisDrone*/
 *.tar
 *.tar.gz
 
+# Keep the Python source package named `src/data` tracked.
+!src/data/
+!src/data/*.py
+
 # Research artifacts
 /datasets/
 /checkpoints/

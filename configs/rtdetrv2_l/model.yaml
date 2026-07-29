@@ -1,8 +1,8 @@
 model_id: rtdetrv2_l
 architecture_family: End-to-end Transformer
 framework: transformers
-# Concrete checkpoint is recorded because public integrations use backbone names.
-pretrained_model_name_or_path: PekingU/rtdetr_v2_r50vd
+# The public integration uses backbone names; R101 is the concrete large variant.
+pretrained_model_name_or_path: PekingU/rtdetr_v2_r101vd
 expected_num_queries: 300
 approx_gpu_vram_gb_1024_bs2: 18
 supports_amp: true

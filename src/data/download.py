@@ -182,6 +182,13 @@ def extract_idempotent(
         shutil.rmtree(staging)
     staging.mkdir(parents=True)
     with zipfile.ZipFile(archive_path) as archive:
+        staging_resolved = staging.resolve()
+        for member in archive.infolist():
+            destination_member = (staging / member.filename).resolve()
+            if staging_resolved not in destination_member.parents and (
+                destination_member != staging_resolved
+            ):
+                raise ValueError(f"unsafe path in ZIP archive: {member.filename}")
         archive.extractall(staging)
     extracted = staging / expected_folder
     if not dataset_split_ready(extracted):

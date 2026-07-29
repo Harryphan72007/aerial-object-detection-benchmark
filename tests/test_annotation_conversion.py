@@ -72,6 +72,9 @@ def test_conversion_audits_invalid_rows_and_is_deterministic(tmp_path):
         "malformed\n",
         encoding="utf-8",
     )
+    (annotations / "orphan.txt").write_text(
+        "1,2,5,6,1,1,0,0\n", encoding="utf-8"
+    )
     first = tmp_path / "first.json"
     second = tmp_path / "second.json"
     report_path = tmp_path / "audit.json"
@@ -90,6 +93,7 @@ def test_conversion_audits_invalid_rows_and_is_deterministic(tmp_path):
     assert summary.out_of_bounds_boxes == 1
     assert summary.unknown_category_ids == 1
     assert summary.malformed_rows == 1
+    assert summary.missing_images == 1
     assert report_path.is_file()
 
 

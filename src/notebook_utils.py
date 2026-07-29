@@ -14,7 +14,10 @@ from src.paths import ProjectPaths
 
 
 def in_colab() -> bool:
-    return importlib.util.find_spec("google.colab") is not None
+    try:
+        return importlib.util.find_spec("google.colab") is not None
+    except ModuleNotFoundError:
+        return False
 
 
 def find_repository_root(start: str | Path | None = None) -> Path:

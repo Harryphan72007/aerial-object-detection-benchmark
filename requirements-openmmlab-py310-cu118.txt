@@ -1,0 +1,13 @@
+# Install only in a Python 3.10 / PyTorch 2.1.0+cu118 model environment.
+# Install torch/torchvision first from the official PyTorch cu118 index, then
+# install the matching MMCV wheel from the OpenMMLab torch2.1/cu118 index.
+numpy==1.26.4
+mmengine==0.10.7
+mmdet==3.3.0
+mmcv==2.1.0
+openmim==0.3.9
+opencv-python-headless==4.10.0.84
+pycocotools==2.0.10
+timm==0.9.16
+einops==0.8.1
+ninja==1.11.1.4

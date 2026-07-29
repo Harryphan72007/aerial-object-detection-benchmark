@@ -52,6 +52,7 @@ def main() -> None:
     )
     parser.add_argument("--exclude-light-vehicles", action="store_true")
     parser.add_argument("--validate", action="store_true")
+    parser.add_argument("--max-images-per-split", type=int)
     args = parser.parse_args()
     paths = ProjectPaths.from_value(args.drive_root).create()
     raw = Path(args.raw_root) if args.raw_root else paths.raw
@@ -79,6 +80,7 @@ def main() -> None:
                 mapping,
                 split=split,
                 report_json=audit_file,
+                max_images=args.max_images_per_split,
             )
             print(json.dumps({"track": track, "split": split, **summary.to_dict()}, indent=2))
             if args.validate:

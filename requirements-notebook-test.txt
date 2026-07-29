@@ -1,0 +1,5 @@
+-r requirements-dataset-colab.txt
+pytest==8.4.1
+nbformat==5.10.4
+nbclient==0.10.2
+ipykernel==6.29.5

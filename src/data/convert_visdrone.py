@@ -18,6 +18,7 @@ class ConversionSummary:
     images: int = 0
     annotations: int = 0
     ignored_regions: int = 0
+    missing_images: int = 0
     missing_annotations: int = 0
     malformed_rows: int = 0
     zero_area_boxes: int = 0
@@ -103,6 +104,7 @@ def convert_split(
     keep_attributes: bool = True,
     split: str | None = None,
     report_json: str | Path | None = None,
+    max_images: int | None = None,
 ) -> ConversionSummary:
     image_dir = Path(image_dir)
     annotation_dir = Path(annotation_dir)
@@ -122,6 +124,17 @@ def convert_split(
     image_paths = sorted(
         p for p in image_dir.iterdir() if p.suffix.lower() in {".jpg", ".jpeg", ".png"}
     )
+    image_stems = {path.stem for path in image_paths}
+    orphan_annotations = sorted(
+        path for path in annotation_dir.glob("*.txt") if path.stem not in image_stems
+    )
+    summary.missing_images = len(orphan_annotations)
+    for path in orphan_annotations[:50]:
+        summary.issue_examples.append(f"missing image for annotation: {path}")
+    if max_images is not None:
+        if max_images <= 0:
+            raise ValueError("max_images must be positive")
+        image_paths = image_paths[:max_images]
     for image_id, image_path in enumerate(image_paths, start=1):
         with Image.open(image_path) as img:
             width, height = img.size

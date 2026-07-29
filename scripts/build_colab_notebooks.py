@@ -498,11 +498,61 @@ print(cmd)
 if SMOKE_TEST:
     print("SMOKE_TEST: command validated; expensive training not started.")
 else:
-    from src.notebook_utils import require_gpu
+    from src.notebook_utils import require_gpu, require_model_environment
+    require_model_environment("rtdetr" if MODEL_ID == "rtdetrv2_l" else "openmmlab")
     require_gpu(MODEL_ID)
     subprocess.run(shlex.split(cmd), check=True)
 """
             )
+            if name in {
+                "02_train_resnet50_faster_rcnn.ipynb",
+                "03_train_swin_t_faster_rcnn.ipynb",
+            }:
+                notebook["cells"][first_code]["source"].extend(
+                    """\
+if not SMOKE_TEST:
+    MMDET_ROOT = Path(os.environ.get("MMDET_ROOT", "/content/mmdetection"))
+    if not (MMDET_ROOT / ".git").is_dir():
+        subprocess.run(
+            ["git", "clone", "--depth", "1", "--branch", "v3.3.0",
+             "https://github.com/open-mmlab/mmdetection.git", str(MMDET_ROOT)],
+            check=True,
+        )
+    os.environ["MMDET_ROOT"] = str(MMDET_ROOT)
+""".splitlines(True)
+                )
+            elif name == "04_train_vmamba_t_faster_rcnn.ipynb":
+                notebook["cells"][first_code]["source"].extend(
+                    """\
+if not SMOKE_TEST:
+    VMAMBA_ROOT = Path(os.environ.get("VMAMBA_ROOT", "/content/VMamba"))
+    VMAMBA_COMMIT = "2ed52ead062a51a64521ed3871d52914bf532876"
+    if not (VMAMBA_ROOT / ".git").is_dir():
+        subprocess.run(["git", "clone", "https://github.com/MzeroMiko/VMamba.git",
+                        str(VMAMBA_ROOT)], check=True)
+    subprocess.run(["git", "-C", str(VMAMBA_ROOT), "checkout", VMAMBA_COMMIT], check=True)
+    os.environ["VMAMBA_ROOT"] = str(VMAMBA_ROOT)
+    try:
+        import selective_scan_cuda
+    except ImportError:
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install",
+             str(VMAMBA_ROOT / "kernels/selective_scan"), "--no-build-isolation"],
+            check=True,
+        )
+""".splitlines(True)
+                )
+            elif name == "05_train_rtdetrv2_l.ipynb":
+                notebook["cells"][first_code]["source"].extend(
+                    """\
+if IS_COLAB and not SMOKE_TEST:
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-q", "-r",
+         "requirements-rtdetr-colab.txt"],
+        check=True,
+    )
+""".splitlines(True)
+                )
         elif name == "06_train_yolox_s_optional.ipynb":
             notebook["cells"][6] = code(
                 """\

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib.util
+import importlib.metadata
 import json
 import os
 import shutil
@@ -98,6 +99,46 @@ def require_gpu(runtime_name: str) -> None:
     if not torch.cuda.is_available():
         raise RuntimeError(
             f"{runtime_name} requires a CUDA GPU. In Colab choose Runtime > Change runtime type > GPU."
+        )
+
+
+def require_model_environment(family: str) -> None:
+    """Fail before model construction when a binary/package stack is incompatible."""
+    errors: list[str] = []
+    if family == "openmmlab":
+        if sys.version_info[:2] != (3, 10):
+            errors.append(
+                f"Python 3.10 required, active version is {sys.version_info.major}."
+                f"{sys.version_info.minor}"
+            )
+        expected = {
+            "torch": "2.1.",
+            "mmcv": "2.1.0",
+            "mmengine": "0.10.",
+            "mmdet": "3.3.0",
+        }
+    elif family == "rtdetr":
+        expected = {"transformers": "4.52.4", "accelerate": "1.7.0"}
+    else:
+        raise ValueError(f"unknown model environment family: {family}")
+    for package, prefix in expected.items():
+        try:
+            version = importlib.metadata.version(package)
+        except importlib.metadata.PackageNotFoundError:
+            errors.append(f"{package} is not installed")
+            continue
+        if not version.startswith(prefix):
+            errors.append(f"{package} {prefix} required, active version is {version}")
+    if errors:
+        requirements = (
+            "requirements-openmmlab-py310-cu118.txt"
+            if family == "openmmlab"
+            else "requirements-rtdetr-colab.txt"
+        )
+        raise RuntimeError(
+            f"incompatible {family} environment:\n- "
+            + "\n- ".join(errors)
+            + f"\nUse the isolated stack documented in {requirements}."
         )
 
 

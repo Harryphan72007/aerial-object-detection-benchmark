@@ -7,6 +7,25 @@ A reproducible research repository for comparing **CNN, Transformer, Mamba, and 
 
 Never compare 2-class mAP directly with published 10-class mAP.
 
+## Run the one-day-per-model benchmark
+
+Follow the authoritative student guide:
+[Run LR search, fine-tune, evaluate, and upload results](docs/RUN_SEARCH_FINETUNE_AND_UPLOAD.md).
+
+Run one model per day. Tune only learning rate. Use a subset of official train
+for LR selection. Use the complete official train split for final fine-tuning.
+Use the official validation split only for final evaluation. Upload only
+lightweight result artifacts to GitHub.
+
+Required Colab notebooks:
+
+- [00 — prepare VisDrone](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/00_visdrone_colab_setup.ipynb)
+- [12 — LR search](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/12_learning_rate_search.ipynb)
+- [13 — full-dataset fine-tuning](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/13_full_dataset_finetune.ipynb)
+- [07 — evaluate final run](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/07_evaluate_all_models.ipynb)
+- [10 — generate report](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/10_generate_final_report.ipynb)
+- [11 — validate, dry-run, and publish](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/11_sync_results_to_github.ipynb)
+
 ## Models
 
 | ID | Family | Detector / backbone | Integration |
@@ -174,7 +193,6 @@ python scripts/lr_search.py --drive-root "$DRIVE_ROOT" \
 
 python scripts/full_dataset_finetune.py --drive-root "$DRIVE_ROOT" \
   --model-id rtdetrv2_l \
-  --selected-config configs/lr_search/rtdetrv2_l_2class_selected.yaml \
   --batch-size 2 --accumulation 4 --start-expensive-stage
 ```
 
@@ -183,8 +201,11 @@ python scripts/full_dataset_finetune.py --drive-root "$DRIVE_ROOT" \
 ```bash
 python scripts/evaluate.py   --drive-root "$DRIVE_ROOT"   --dataset-track 2class   --split val   --best-per-model   --resolutions 640 1024 1280
 
-python scripts/create_results_manifest.py --drive-root "$DRIVE_ROOT" --dataset-track 2class
-python scripts/sync_results_to_repo.py --drive-root "$DRIVE_ROOT" --bundle-id "evaluation__2class__YYYYMMDD_HHMMSS" --repo-root . --validate --dry-run
+python scripts/create_results_manifest.py --drive-root "$DRIVE_ROOT" \
+  --dataset-track 2class --model-id rtdetrv2_l --run-id RUN_ID
+python scripts/sync_results_to_repo.py --drive-root "$DRIVE_ROOT" \
+  --bundle-id "rtdetrv2_l__2class__YYYYMMDD_HHMMSS" \
+  --repo-root . --validate --dry-run
 python scripts/validate_results.py --repo-results results/
 
 python scripts/profile_model.py --drive-root "$DRIVE_ROOT" --run-id RUN_ID

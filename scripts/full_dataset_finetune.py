@@ -24,7 +24,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--drive-root")
     parser.add_argument("--config", default="project_config.yaml")
     parser.add_argument("--model-id", required=True)
-    parser.add_argument("--selected-config", required=True)
+    parser.add_argument(
+        "--selected-config",
+        help="Optional; automatically discovered from Drive or configs/lr_search.",
+    )
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--accumulation", type=int, default=4)
     parser.add_argument("--start-expensive-stage", action="store_true")
@@ -36,7 +39,21 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
-    selected_path = Path(args.selected_config)
+    from src.benchmark_status import find_selected_config
+
+    selected_path = (
+        Path(args.selected_config)
+        if args.selected_config
+        else find_selected_config(
+            configured_drive_root(args.config, args.drive_root),
+            args.model_id,
+            repo_root,
+        )
+    )
+    if selected_path is None:
+        raise FileNotFoundError(
+            f"No selected LR config found for {args.model_id}. Run notebook 12."
+        )
     if not selected_path.is_absolute():
         selected_path = repo_root / selected_path
     selected = read_yaml(selected_path)

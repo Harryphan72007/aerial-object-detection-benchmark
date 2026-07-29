@@ -15,7 +15,6 @@ from src.evaluation.error_analysis import decompose_errors, evaluate_visdrone_sl
 from src.models.registry import create_adapter
 from src.paths import ProjectPaths
 from src.drive_sync import validate_drive_writable
-from src.result_export import create_result_bundle
 from src.training.checkpointing import RunRegistry
 from src.utils.serialization import read_yaml, write_json
 
@@ -270,17 +269,5 @@ def main() -> None:
         / f"comparison_{args.dataset_track}_{args.split}.json",
         results,
     )
-    if results:
-        try:
-            bundle = create_result_bundle(args.drive_root, args.dataset_track, ".")
-            manifest_path = bundle / "bundle_manifest.json"
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            manifest["failed_models"] = failed_models
-            write_json(manifest_path, manifest)
-            print(f"Created result bundle: {bundle}")
-        except Exception as error:
-            print(f"Result bundle creation failed: {type(error).__name__}: {error}")
-
-
 if __name__ == "__main__":
     main()

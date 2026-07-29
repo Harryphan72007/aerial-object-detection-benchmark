@@ -62,8 +62,11 @@ the recorded SHA-256 agree, and it skips valid extracted split directories.
 Conversion is deterministic and safely overwrites generated JSON; raw files
 remain unchanged.
 
-For training, reopen the same model notebook and set `RESUME_RUN_ID` to the run
-ID recorded in `experiment_registry/checkpoint_registry.json`. Run IDs retain:
+For LR search, reopen notebook 12 with the same model, seed, and Drive root;
+completed rungs and candidate epochs are reused. For final fine-tuning, reopen
+notebook 13 with the same model. It automatically resumes the latest compatible
+incomplete final run and refuses incompatible LR/model/track/seed settings. Run
+IDs retain:
 
 ```text
 MODEL_ID__DATASET_TRACK__RESOLUTION__TIMESTAMP__SEED

@@ -37,7 +37,10 @@ def main() -> None:
     )
     if not run:
         raise KeyError(args.run_id)
-    run_dir = paths.run_dir(run["model_id"], run["run_id"])
+    run_dir = Path(
+        run.get("run_dir")
+        or paths.run_dir(run["model_id"], run["run_id"])
+    )
     config = read_yaml(run_dir / "model_config.yaml")
     config["input_resolution"] = run["input_resolution"]
     if run["framework"] in {"mmdetection", "vmamba_mmdetection"}:

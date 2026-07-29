@@ -13,8 +13,17 @@ def main() -> None:
     parser.add_argument("--dataset-track", choices=["2class", "10class"], required=True)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--bundle-id")
+    parser.add_argument("--model-id")
+    parser.add_argument("--run-id")
     args = parser.parse_args()
-    output = create_result_bundle(args.drive_root, args.dataset_track, args.repo_root, args.bundle_id)
+    output = create_result_bundle(
+        args.drive_root,
+        args.dataset_track,
+        args.repo_root,
+        args.bundle_id,
+        model_id=args.model_id,
+        run_id=args.run_id,
+    )
     print(output)
 
 

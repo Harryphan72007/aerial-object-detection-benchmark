@@ -11,6 +11,10 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from src.benchmark_status import (
+    find_resumable_final_run,
+    find_selected_config,
+)
 from src.git_utils import git_commit
 from src.models.registry import load_model_config
 from src.paths import ProjectPaths
@@ -637,17 +641,29 @@ class LRControlledBenchmark:
     def run_final_training(
         self,
         model_id: str,
-        selected_config: str | Path,
+        selected_config: str | Path | None = None,
         *,
         batch_size: int,
         accumulation: int,
         allow_over_budget_run: bool,
         run_common_evaluation: bool = True,
+        auto_resume: bool = True,
     ) -> dict[str, Any]:
         self.prepare_manifests()
-        selected_path = Path(selected_config)
-        if not selected_path.is_absolute():
-            selected_path = self.repo_root / selected_path
+        if selected_config is None:
+            discovered = find_selected_config(
+                self.paths.root, model_id, self.repo_root
+            )
+            if discovered is None:
+                raise FileNotFoundError(
+                    f"No selected LR config found for {model_id}. "
+                    "Complete notebook 12 first."
+                )
+            selected_path = discovered
+        else:
+            selected_path = Path(selected_config)
+            if not selected_path.is_absolute():
+                selected_path = self.repo_root / selected_path
         selected = read_yaml(selected_path)
         if selected["experiment"]["model_id"] != model_id:
             raise ValueError("selected configuration model identity mismatch")
@@ -718,18 +734,34 @@ class LRControlledBenchmark:
                 f"Estimated total is {workload['total_hours']:.2f} hours. "
                 "Set ALLOW_OVER_BUDGET_RUN=True explicitly to continue."
             )
-        run_id = make_run_id(
-            model_id,
-            "2class",
-            self.settings.image_size,
-            self.settings.seed,
+        resumable = (
+            find_resumable_final_run(
+                self.paths.root,
+                model_id,
+                selected_learning_rate=float(final["learning_rate"]),
+            )
+            if auto_resume
+            else None
         )
-        run_dir = self.paths.final_checkpoints / model_id / run_id
+        if resumable:
+            run_id = str(resumable["run_id"])
+            run_dir = Path(str(resumable["run_dir"]))
+            resume_run_id = run_id
+        else:
+            run_id = make_run_id(
+                model_id,
+                "2class",
+                self.settings.image_size,
+                self.settings.seed,
+            )
+            run_dir = self.paths.final_checkpoints / model_id / run_id
+            resume_run_id = None
         manifest = self.orchestrator.run(
             model_id,
             batch_size=batch_size,
             gradient_accumulation_steps=accumulation,
             epochs=self.settings.final_epochs,
+            resume_run_id=resume_run_id,
             overrides=self._benchmark_overrides(float(final["learning_rate"])),
             train_annotation_override=self.manifest_dir / "official_full_train.json",
             validation_annotation_override=(

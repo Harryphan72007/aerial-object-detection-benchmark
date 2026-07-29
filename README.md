@@ -7,6 +7,25 @@ A reproducible research repository for comparing **CNN, Transformer, Mamba, and 
 
 Never compare 2-class mAP directly with published 10-class mAP.
 
+## Run the one-day-per-model benchmark
+
+Follow the authoritative student guide:
+[Run LR search, fine-tune, evaluate, and upload results](docs/RUN_SEARCH_FINETUNE_AND_UPLOAD.md).
+
+Run one model per day. Tune only learning rate. Use a subset of official train
+for LR selection. Use the complete official train split for final fine-tuning.
+Use the official validation split only for final evaluation. Upload only
+lightweight result artifacts to GitHub.
+
+Required Colab notebooks:
+
+- [00 — prepare VisDrone](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/00_visdrone_colab_setup.ipynb)
+- [12 — LR search](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/12_learning_rate_search.ipynb)
+- [13 — full-dataset fine-tuning](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/13_full_dataset_finetune.ipynb)
+- [07 — evaluate final run](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/07_evaluate_all_models.ipynb)
+- [10 — generate report](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/10_generate_final_report.ipynb)
+- [11 — validate, dry-run, and publish](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/11_sync_results_to_github.ipynb)
+
 ## Models
 
 | ID | Family | Detector / backbone | Integration |
@@ -36,9 +55,9 @@ pytest -q
 2. Mount Drive when prompted. The notebook verifies/caches archives, preserves
    raw data, builds both COCO tracks, visualizes annotations, and batch-tests data.
 3. Run `01_dataset_analysis.ipynb`.
-4. Open one model notebook in its compatible environment. Do not combine the
-   VMamba/OpenMMLab stack with the shared dataset or RT-DETR environment.
-5. Resume interrupted runs with the registered `RESUME_RUN_ID`.
+4. Open one model notebook in its compatible environment to validate its adapter.
+5. Run notebook 12 to select an LR, then notebook 13 to restart from pretrained
+   weights and fine-tune on complete official train.
 6. Evaluate, generate reports, then optionally publish a reviewed lightweight bundle.
 
 See the exact runtime choices and interaction points in
@@ -65,13 +84,17 @@ predictions, logs, and credentials never enter normal Git history.
 | `10_generate_final_report.ipynb` | Generate tables, figures, and reports | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/10_generate_final_report.ipynb |
 | `08`–`10` analysis/report notebooks | Visualize, analyze errors, and report | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/10_generate_final_report.ipynb |
 | `11_sync_results_to_github.ipynb` | Preview/export results and prepare a PR | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/11_sync_results_to_github.ipynb |
+| `12_learning_rate_search.ipynb` | Shared deterministic LR-only search and successive halving | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/12_learning_rate_search.ipynb |
+| `13_full_dataset_finetune.ipynb` | Pretrained restart, complete-train fine-tuning, and one common final evaluation | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/13_full_dataset_finetune.ipynb |
 
 For Colab, execute notebooks in order:
 
 ```text
 00_visdrone_colab_setup.ipynb
 01_dataset_analysis.ipynb
-02–05 one model-specific training notebook in its compatible runtime
+02–05 one model-specific environment/adapter notebook
+12_learning_rate_search.ipynb
+13_full_dataset_finetune.ipynb
 07_evaluate_all_models.ipynb
 08_architecture_visualization.ipynb
 09_error_analysis.ipynb
@@ -117,13 +140,72 @@ Resume with `--resume-run-id RUN_ID`. A completed run writes a manifest, standar
 
 VMamba requires cloning the official repository and setting `VMAMBA_ROOT`. Set `VMAMBA_T_PRETRAINED` only to a locally verified VMamba-T checkpoint; when it is unset, the run is explicitly marked as training from scratch. MMDetection paths can be set with `MMDET_ROOT`; the setup notebook installs supported versions and records them. RT-DETRv2 uses the exact configured Hugging Face model ID and saves that ID in the manifest.
 
+## VisDrone Learning-Rate-Controlled Architecture Benchmark
+
+The controlled experiment includes `faster_rcnn_resnet50`,
+`faster_rcnn_swin_t`, `faster_rcnn_vmamba_t`, and `rtdetrv2_l`. YOLOX is
+excluded because its adapter is incomplete. Its comparison claim is:
+
+> Each model receives the same learning-rate search protocol, search data
+> policy, promotion rules, final dataset, input resolution, effective batch
+> size, seed policy, evaluation protocol, and final training budget. Only the
+> learning rate differs between candidates.
+
+The selected value is the best LR among the evaluated candidates under this
+budget; it is not claimed to be a global optimum.
+
+Run one model per model-day:
+
+1. Run the VisDrone setup notebook.
+2. Create deterministic LR-search manifests.
+3. Select one model.
+4. Run its environment and adapter smoke test.
+5. Resolve its original baseline LR from the actual optimizer configuration.
+6. Run the optional 300-step LR range test.
+7. Generate nine logarithmically spaced LR candidates.
+8. Run successive halving at total epochs 2, 5, 10, and 15 (keep 5, 3, 2, 1).
+9. Export the selected LR.
+10. Open the full-dataset fine-tuning notebook.
+11. Reload the original pretrained weights; never continue from a search checkpoint.
+12. Train on the complete official training split for 25 epochs.
+13. Evaluate once on the complete official validation split with the common evaluator.
+14. Repeat for the next model on another day.
+
+Fixed settings are the 2-class track, 640-pixel input, seed 42, AMP, effective
+batch size 8, a 15-epoch search scheduler horizon, and a 25-epoch final budget.
+Only `learning_rate` varies. Search uses deterministic 20% train and 5%
+search-validation subsets drawn exclusively from official train. Official
+validation is never used for LR selection. Final fine-tuning uses every
+official training image and excludes every official validation image.
+
+One seed is intentional because this is a small controlled benchmark, not a
+full statistical study. Before starting, the workflow calibrates epoch time and
+prints search, final-training, and total estimates. If the estimate exceeds 24
+hours, `ALLOW_OVER_BUDGET_RUN=True` is mandatory; candidate counts and budgets
+are never silently reduced.
+
+CLI equivalents:
+
+```bash
+python scripts/lr_search.py --drive-root "$DRIVE_ROOT" \
+  --model-id rtdetrv2_l --batch-size 2 --accumulation 4 \
+  --start-expensive-stage
+
+python scripts/full_dataset_finetune.py --drive-root "$DRIVE_ROOT" \
+  --model-id rtdetrv2_l \
+  --batch-size 2 --accumulation 4 --start-expensive-stage
+```
+
 ## Evaluation
 
 ```bash
 python scripts/evaluate.py   --drive-root "$DRIVE_ROOT"   --dataset-track 2class   --split val   --best-per-model   --resolutions 640 1024 1280
 
-python scripts/create_results_manifest.py --drive-root "$DRIVE_ROOT" --dataset-track 2class
-python scripts/sync_results_to_repo.py --drive-root "$DRIVE_ROOT" --bundle-id "evaluation__2class__YYYYMMDD_HHMMSS" --repo-root . --validate --dry-run
+python scripts/create_results_manifest.py --drive-root "$DRIVE_ROOT" \
+  --dataset-track 2class --model-id rtdetrv2_l --run-id RUN_ID
+python scripts/sync_results_to_repo.py --drive-root "$DRIVE_ROOT" \
+  --bundle-id "rtdetrv2_l__2class__YYYYMMDD_HHMMSS" \
+  --repo-root . --validate --dry-run
 python scripts/validate_results.py --repo-results results/
 
 python scripts/profile_model.py --drive-root "$DRIVE_ROOT" --run-id RUN_ID
@@ -147,12 +229,13 @@ Registry writes use a temporary file, `fsync`, and atomic replacement. `runs.csv
 ```text
 visdrone_architecture_benchmark/
 ├── datasets/VisDrone2019-DET/{archives,raw,processed,manifests}
-├── checkpoints/MODEL_ID/RUN_ID/
+├── checkpoints/lr_search/MODEL_ID/CANDIDATE_ID/
+├── checkpoints/final/MODEL_ID/RUN_ID/
 ├── experiment_registry/{checkpoint_registry.json,runs.csv}
 ├── predictions/
 ├── evaluation/
 ├── logs/
-├── optuna/
+├── lr_search_configs/
 ├── profiling/
 ├── exports/
 ├── reports/
@@ -162,7 +245,8 @@ visdrone_architecture_benchmark/
 
 ## Reproducibility protocol
 
-- Seeds: `17`, `42`, `3407`.
+- LR-controlled benchmark seed: `42`. Broader multi-seed studies may use
+  `17`, `42`, and `3407`, but are outside this one-day-per-model protocol.
 - Save exact code commit, `pip freeze`, GPU/CUDA/PyTorch versions, config copies, label mapping, and checkpoint hashes.
 - Train architecture-default and controlled-recipe experiments separately.
 - Compare models only on the same split, class mapping, resolution, seed policy, and hardware/software environment.
@@ -183,6 +267,9 @@ Figures are generated into `reports/figures/` as PNG and PDF. Empty placeholders
 ## Known limitations
 
 - Heavy frameworks and CUDA extensions cannot be validated on every Colab image in CI; CI runs lightweight unit tests and import guards.
+- Full GPU executions of the range test, 58 search epoch-equivalents, framework
+  checkpoint resume, and 25-epoch final runs remain runtime-specific integration
+  checks. CPU tests cover the scheduler contract and deterministic workflow logic.
 - VMamba depends on its official extension build and vendored MMDetection 3.3.0 tree; use the setup notebook's pinned environment.
 - Exact RT-DETRv2 “L” naming differs across repositories. The run manifest records the concrete backbone/model ID; compare architecture fields, not aliases.
 - TIDE, TensorRT, and NVML energy estimates are optional and reported only when dependencies and hardware support them.

@@ -75,6 +75,9 @@ def save_training_curves(
     if not rows:
         return
     try:
+        import matplotlib
+
+        matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except ImportError:
         return

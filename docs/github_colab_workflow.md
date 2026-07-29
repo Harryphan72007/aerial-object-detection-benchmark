@@ -33,7 +33,13 @@ under `DRIVE_ROOT/datasets/VisDrone2019-DET/archives`, preserves extracted data
 under `raw`, and produces both COCO tracks under `processed`. The two older
 setup notebooks are compatibility preflights.
 
-The training notebooks retain the existing model IDs and interface. The standard configuration is `DATASET_TRACK="2class"`, `IMAGE_SIZE=1024`, `BATCH_SIZE=2`, `GRADIENT_ACCUMULATION_STEPS=8`, `NUM_EPOCHS=100`, `SEED=42`, `USE_AMP=True`, `RESUME_RUN_ID=None`, and `RUN_HYPERPARAMETER_SEARCH=False`. Checkpoints and all important state are written to Drive. If Colab disconnects, rerun the same notebook with `RESUME_RUN_ID` set to the registered run ID. Training stops before starting when Drive is unavailable or unwritable.
+Notebooks 02–05 retain model-specific environment and adapter checks. Notebook
+12 owns the shared LR-only protocol: 2-class data, 640-pixel input, seed 42,
+AMP, effective batch 8, nine log-spaced candidates, and resumable 2/5/10/15
+epoch rungs. Notebook 13 reloads the original pretrained checkpoint, trains on
+complete official train for 25 epochs, and invokes the common evaluator once on
+complete official validation. Search checkpoints stay outside the final run
+registry. Training stops before starting when Drive is unavailable or unwritable.
 
 Each run records `git_commit.txt`, `git_status.txt`, `run_manifest.json`, and (when dirty) `source_changes.patch`. A dirty source tree is marked in the manifest; it does not silently become an untraceable experiment.
 
@@ -41,13 +47,21 @@ Each run records `git_commit.txt`, `git_status.txt`, `run_manifest.json`, and (w
 
 Run `07_evaluate_all_models.ipynb` or `scripts/evaluate.py`. Evaluation discovers completed checkpoints through the existing registry, filters by track/model/resolution/seed, verifies class mappings, and writes raw predictions and complete metrics to Drive. A model failure is recorded and compatible models continue where safe.
 
-Create a versioned bundle with `scripts/create_results_manifest.py`. Never mix `2class` and `10class` rows in one bundle. The bundle records run IDs, architecture families, checkpoint and annotation hashes, training commits, hardware/software, resolutions, metric settings, generated files, exclusions, failures, and seed status.
+Create a versioned per-model bundle with `scripts/create_results_manifest.py`.
+Never mix models, runs, seeds, or dataset tracks in one bundle. The bundle
+records the run identity, selected LR, resolved final configuration, search
+history, checkpoint and annotation hashes, training/evaluation commits,
+environment, official dataset proof, measured metrics, generated files,
+exclusions, and single-seed status.
 
 ## Safe result synchronization
 
 Open notebook `11_sync_results_to_github.ipynb`, list bundles, run the exporter with `--dry-run`, inspect copied destinations and exclusions, then run it for real. Inspect `git status --short`, `git diff --stat`, and `git diff -- results/`. Configure repository identity locally. Use Colab Secrets for a temporary `GITHUB_TOKEN` only during push; never print, save, or put it in Git config, notebook output, Drive, or manifests. A local computer is the safer alternative.
 
-Use a separate `experiment-results` branch. Fetch and inspect remote changes before rebasing. Do not force-push by default. Stage only approved paths (`git add results/ benchmark_data/`), run validation, commit, and push. Create a PR only after `gh auth status` succeeds; do not include private Drive URLs.
+Use the separate `experiment-results` branch. Fetch and inspect remote changes
+before updating it. Do not force-push by default. Stage only approved paths
+(`git add -- results`), run validation, commit, and push. Create a PR only after
+`gh auth status` succeeds; do not include private Drive URLs.
 
 Interrupted pushes are safe to retry after inspecting `git status` and remote differences. If GitHub rejects a large file, remove it from staging/history as needed, add the appropriate ignore rule, and retain the artifact on Drive or an external release store. Do not use `git add .`.
 

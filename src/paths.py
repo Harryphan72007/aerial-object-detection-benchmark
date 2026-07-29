@@ -60,6 +60,10 @@ class ProjectPaths:
     def dataset_manifests(self) -> Path:
         return self.visdrone / "manifests"
 
+    @property
+    def lr_search_manifests(self) -> Path:
+        return self.dataset_manifests / "lr_search"
+
     def coco(self, track: str) -> Path:
         self.validate_track(track)
         return self.processed / f"coco_{track}"
@@ -70,6 +74,14 @@ class ProjectPaths:
 
     def model_checkpoints(self, model_id: str) -> Path:
         return self.checkpoints / model_id
+
+    @property
+    def lr_search_checkpoints(self) -> Path:
+        return self.checkpoints / "lr_search"
+
+    @property
+    def final_checkpoints(self) -> Path:
+        return self.checkpoints / "final"
 
     def run_dir(self, model_id: str, run_id: str) -> Path:
         return self.model_checkpoints(model_id) / run_id
@@ -107,10 +119,6 @@ class ProjectPaths:
         return self.root / "logs"
 
     @property
-    def optuna(self) -> Path:
-        return self.root / "optuna"
-
-    @property
     def profiling(self) -> Path:
         return self.root / "profiling"
 
@@ -133,15 +141,17 @@ class ProjectPaths:
             self.raw,
             self.processed,
             self.dataset_manifests,
+            self.lr_search_manifests,
             self.coco("2class"),
             self.coco("10class"),
             self.checkpoints,
+            self.lr_search_checkpoints,
+            self.final_checkpoints,
             self.registry_dir,
             self.predictions,
             self.evaluation,
             self.reports,
             self.logs,
-            self.optuna,
             self.profiling,
             self.exports,
             self.result_bundles,

@@ -15,7 +15,6 @@ from src.evaluation.error_analysis import decompose_errors, evaluate_visdrone_sl
 from src.models.registry import create_adapter
 from src.paths import ProjectPaths
 from src.drive_sync import validate_drive_writable
-from src.result_export import create_result_bundle
 from src.training.checkpointing import RunRegistry
 from src.utils.serialization import read_yaml, write_json
 
@@ -45,6 +44,14 @@ def _mmdet_config_for_resolution(
     for key in ("train_dataloader", "val_dataloader", "test_dataloader"):
         if key in cfg:
             _update_resize(cfg[key], resolution)
+    try:
+        cfg.model.test_cfg.rcnn.score_thr = 0.001
+        cfg.model.test_cfg.rcnn.max_per_img = 500
+    except (AttributeError, KeyError, TypeError) as error:
+        raise RuntimeError(
+            "MMDetection final evaluation requires RCNN score_thr and "
+            "max_per_img controls"
+        ) from error
     destination.parent.mkdir(parents=True, exist_ok=True)
     cfg.dump(str(destination))
     return destination
@@ -142,7 +149,9 @@ def main() -> None:
     results: list[dict[str, Any]] = []
     failed_models: list[dict[str, Any]] = []
     for run in runs:
-        run_dir = paths.run_dir(run["model_id"], run["run_id"])
+        run_dir = Path(
+            run.get("run_dir") or paths.run_dir(run["model_id"], run["run_id"])
+        )
         base_model_config = read_yaml(run_dir / "model_config.yaml")
         resolutions = sorted(
             set([int(run["input_resolution"]), *args.resolutions])
@@ -153,6 +162,7 @@ def main() -> None:
         for resolution in resolutions:
             model_config = dict(base_model_config)
             model_config["confidence_threshold"] = 0.001
+            model_config["max_detections"] = 500
             model_config["input_resolution"] = resolution
             if run["framework"] in {"mmdetection", "vmamba_mmdetection"}:
                 model_config["resolved_framework_config"] = str(
@@ -259,17 +269,5 @@ def main() -> None:
         / f"comparison_{args.dataset_track}_{args.split}.json",
         results,
     )
-    if results:
-        try:
-            bundle = create_result_bundle(args.drive_root, args.dataset_track, ".")
-            manifest_path = bundle / "bundle_manifest.json"
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            manifest["failed_models"] = failed_models
-            write_json(manifest_path, manifest)
-            print(f"Created result bundle: {bundle}")
-        except Exception as error:
-            print(f"Result bundle creation failed: {type(error).__name__}: {error}")
-
-
 if __name__ == "__main__":
     main()

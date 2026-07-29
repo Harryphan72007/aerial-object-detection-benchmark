@@ -10,6 +10,11 @@ venv/
 build/
 dist/
 .ipynb_checkpoints/
+frameworks/
+*.so
+*.pyd
+*.dylib
+*.cu.o
 .DS_Store
 Thumbs.db
 
@@ -74,9 +79,5 @@ local_paths.yaml
 .notebook-smoke/
 .jupyter/
 
-# Repository documentation and smoke evidence (not generated experiment reports).
-!/reports/
-/reports/*
-!/reports/notebook_blocker_audit.md
-!/reports/colab_compatibility_matrix.md
-!/reports/notebook_smoke_results.json
+# Generated experimental reports stay outside tracked repository documentation.
+/reports/

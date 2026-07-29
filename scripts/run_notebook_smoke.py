@@ -18,7 +18,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--kernel", default="python3")
     parser.add_argument("--timeout", type=int, default=180)
-    parser.add_argument("--output", default="reports/notebook_smoke_results.json")
+    parser.add_argument("--output", default=".notebook-smoke/notebook_smoke_results.json")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     smoke_root = root / ".notebook-smoke"
@@ -30,10 +30,15 @@ def main() -> None:
             "VISDRONE_DRIVE_ROOT": str(smoke_root),
         }
     )
-    notebooks = sorted((root / "notebooks").glob("*.ipynb"))
-    setup = root / "notebooks/00_visdrone_colab_setup.ipynb"
-    notebooks.remove(setup)
-    notebooks.insert(0, setup)
+    notebooks = [
+        root / "notebooks" / name
+        for name in (
+            "00_prepare_visdrone.ipynb",
+            "01_run_model_day.ipynb",
+            "02_publish_results.ipynb",
+            "03_compare_all_models.ipynb",
+        )
+    ]
     results: list[dict[str, object]] = []
     for path in notebooks:
         started = time.monotonic()

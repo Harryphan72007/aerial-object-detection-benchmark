@@ -31,23 +31,27 @@ pytest -q
 
 ## GitHub → Colab → Drive → GitHub Workflow
 
-1. Upload the source repository using the commands in [the workflow guide](docs/github_colab_workflow.md).
-2. Open `00_colab_repository_setup.ipynb` in Google Colab and edit the username placeholder.
-3. Mount Google Drive and prepare VisDrone.
-4. Train individual models; resumable checkpoints stay on Drive.
-5. Resume after interruptions with the registered `RESUME_RUN_ID`.
-6. Evaluate through the Drive registry and generate the final report.
-7. Create a versioned lightweight result bundle.
-8. Open notebook 11, inspect the Git diff, validate, push `experiment-results`, and open a pull request.
+1. Open `00_visdrone_colab_setup.ipynb`; its user cell controls storage,
+   source, tracks, redownload behavior, seed, and smoke size.
+2. Mount Drive when prompted. The notebook verifies/caches archives, preserves
+   raw data, builds both COCO tracks, visualizes annotations, and batch-tests data.
+3. Run `01_dataset_analysis.ipynb`.
+4. Open one model notebook in its compatible environment. Do not combine the
+   VMamba/OpenMMLab stack with the shared dataset or RT-DETR environment.
+5. Resume interrupted runs with the registered `RESUME_RUN_ID`.
+6. Evaluate, generate reports, then optionally publish a reviewed lightweight bundle.
 
-The username is intentionally not inferred. Checkpoints, datasets, raw predictions, logs, and credentials never enter normal Git history; see [the storage policy](docs/result_storage_policy.md).
+See the exact runtime choices and interaction points in
+[the Colab runbook](docs/colab_runbook.md). Checkpoints, datasets, raw
+predictions, logs, and credentials never enter normal Git history.
 
 ## Open in Colab
 
 | Notebook | Purpose | Open in Colab |
 |---|---|---|
+| `00_visdrone_colab_setup.ipynb` | **Start here:** acquire, verify, extract, convert, validate, visualize, and batch-test VisDrone | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/00_visdrone_colab_setup.ipynb |
 | `00_colab_repository_setup.ipynb` | Clone, install, mount Drive, and verify environment | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/00_colab_repository_setup.ipynb |
-| `00_environment_and_data_setup.ipynb` | Prepare and validate VisDrone | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/00_environment_and_data_setup.ipynb |
+| `00_environment_and_data_setup.ipynb` | Legacy compatibility preflight; does not install model stacks | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/00_environment_and_data_setup.ipynb |
 | `01_dataset_analysis.ipynb` | Analyze converted tracks | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/01_dataset_analysis.ipynb |
 | `02_train_resnet50_faster_rcnn.ipynb` | Train CNN Faster R-CNN / ResNet-50 | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/02_train_resnet50_faster_rcnn.ipynb |
 | `03_train_swin_t_faster_rcnn.ipynb` | Train Transformer Faster R-CNN / Swin-T | https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/03_train_swin_t_faster_rcnn.ipynb |
@@ -65,14 +69,14 @@ The username is intentionally not inferred. Checkpoints, datasets, raw predictio
 For Colab, execute notebooks in order:
 
 ```text
-00_colab_repository_setup.ipynb
-00_environment_and_data_setup.ipynb
+00_visdrone_colab_setup.ipynb
 01_dataset_analysis.ipynb
-02–06 individual training notebooks
+02–05 one model-specific training notebook in its compatible runtime
 07_evaluate_all_models.ipynb
 08_architecture_visualization.ipynb
 09_error_analysis.ipynb
 10_generate_final_report.ipynb
+11_sync_results_to_github.ipynb (optional; reviewed bundles only)
 ```
 
 The notebooks use one root only:
@@ -85,19 +89,20 @@ All model-specific paths are built by `src.paths.ProjectPaths`.
 
 ## Dataset setup
 
-Download VisDrone2019-DET from its official distribution into:
+Notebook 00 creates this persistent layout:
 
 ```text
-$DRIVE_ROOT/datasets/raw/
-  VisDrone2019-DET-train/
-  VisDrone2019-DET-val/
-  VisDrone2019-DET-test-dev/        # optional, labels may be unavailable
+$DRIVE_ROOT/datasets/VisDrone2019-DET/
+  archives/
+  raw/{VisDrone2019-DET-train,VisDrone2019-DET-val}/
+  processed/{coco_2class,coco_10class}/
+  manifests/
 ```
 
 Convert and validate:
 
 ```bash
-python scripts/prepare_data.py   --drive-root "$DRIVE_ROOT"   --raw-root "$DRIVE_ROOT/datasets/raw"   --tracks 2class 10class   --validate
+python -m scripts.prepare_data --drive-root "$DRIVE_ROOT" --tracks 2class 10class --validate
 ```
 
 Exclude light vehicles from the collapsed vehicle class with `--exclude-light-vehicles`.
@@ -141,7 +146,7 @@ Registry writes use a temporary file, `fsync`, and atomic replacement. `runs.csv
 
 ```text
 visdrone_architecture_benchmark/
-├── datasets/{raw,coco_2class,coco_10class}
+├── datasets/VisDrone2019-DET/{archives,raw,processed,manifests}
 ├── checkpoints/MODEL_ID/RUN_ID/
 ├── experiment_registry/{checkpoint_registry.json,runs.csv}
 ├── predictions/

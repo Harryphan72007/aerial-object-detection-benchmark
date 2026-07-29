@@ -71,3 +71,12 @@ local_paths.yaml
 
 # Local notebook/runtime state
 *.ipynb_checkpoints/
+.notebook-smoke/
+.jupyter/
+
+# Repository documentation and smoke evidence (not generated experiment reports).
+!/reports/
+/reports/*
+!/reports/notebook_blocker_audit.md
+!/reports/colab_compatibility_matrix.md
+!/reports/notebook_smoke_results.json

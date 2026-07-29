@@ -11,7 +11,7 @@ git branch -M main
 git add README.md LICENSE LICENSES.md CITATION.cff
 git add project_config.yaml pyproject.toml
 git add src/ scripts/ configs/ notebooks/ tests/ docs/
-git add requirements.txt requirements-colab.txt
+git add requirements.txt requirements-dataset-colab.txt
 git add .gitignore .gitattributes .github/
 git diff --cached --stat
 git commit -m "chore: initialize VisDrone architecture benchmark"
@@ -27,7 +27,11 @@ gh repo create aerial-object-detection-benchmark --public --source=. --remote=or
 
 ## Colab setup and training
 
-Open notebook `00_colab_repository_setup.ipynb` in Colab, edit the username placeholder, mount Drive, clone the repository, install dependencies, initialize Drive directories, and run lightweight tests. Place official VisDrone archives under `DRIVE_ROOT/datasets/raw/`, then run `00_environment_and_data_setup` and `scripts/prepare_data.py`.
+Open `00_visdrone_colab_setup.ipynb` in Colab, review its configuration cell,
+mount Drive, and run top to bottom. It downloads or restores validated archives
+under `DRIVE_ROOT/datasets/VisDrone2019-DET/archives`, preserves extracted data
+under `raw`, and produces both COCO tracks under `processed`. The two older
+setup notebooks are compatibility preflights.
 
 The training notebooks retain the existing model IDs and interface. The standard configuration is `DATASET_TRACK="2class"`, `IMAGE_SIZE=1024`, `BATCH_SIZE=2`, `GRADIENT_ACCUMULATION_STEPS=8`, `NUM_EPOCHS=100`, `SEED=42`, `USE_AMP=True`, `RESUME_RUN_ID=None`, and `RUN_HYPERPARAMETER_SEARCH=False`. Checkpoints and all important state are written to Drive. If Colab disconnects, rerun the same notebook with `RESUME_RUN_ID` set to the registered run ID. Training stops before starting when Drive is unavailable or unwritable.
 

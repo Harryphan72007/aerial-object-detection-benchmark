@@ -21,6 +21,14 @@ def validate_repo_results(results_root: str | Path, max_file_size_mb: float = 20
     errors: list[str] = []
     manifest_path = root / "manifests" / "latest_result_manifest.json"
     if not manifest_path.exists():
+        present = {
+            path.relative_to(root).as_posix()
+            for path in root.rglob("*")
+            if path.is_file()
+        } if root.is_dir() else set()
+        scaffold_files = {".gitkeep", "README.md"}
+        if present <= scaffold_files:
+            return []
         return [f"missing {manifest_path}"]
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

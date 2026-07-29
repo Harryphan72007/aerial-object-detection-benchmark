@@ -15,6 +15,7 @@ from src.result_export import (
 from src.paths import ProjectPaths
 from src.training.lr_search import sha256_json
 from src.utils.serialization import write_json, write_yaml
+from scripts.validate_results import validate_repo_results
 
 
 def _make_bundle(root: Path, track: str = "2class") -> Path:
@@ -211,6 +212,19 @@ def test_path_sanitizer_replaces_drive_and_windows_paths():
     value = sanitize_text("/content/drive/MyDrive/private C:\\Users\\alice\\secret.txt")
     assert "/content/drive/" not in value
     assert "C:/Users/" not in value
+
+
+def test_empty_results_scaffold_is_valid_but_unmanifested_artifacts_are_not(tmp_path):
+    results = tmp_path / "results"
+    results.mkdir()
+    (results / ".gitkeep").write_text("", encoding="utf-8")
+    (results / "README.md").write_text("# Published results\n", encoding="utf-8")
+    assert not validate_repo_results(results)
+    (results / "unexpected.csv").write_text("metric\n0.5\n", encoding="utf-8")
+    assert any(
+        "latest_result_manifest.json" in error
+        for error in validate_repo_results(results)
+    )
 
 
 def test_bundle_rejects_forbidden_and_oversized_artifacts(tmp_path):

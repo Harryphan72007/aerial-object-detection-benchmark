@@ -37,7 +37,7 @@ class RTDetrV2Adapter(DetectionModelAdapter):
 
         checkpoint = Path(checkpoint_path)
         base_source = str(
-            config.get("pretrained_model_name_or_path", "PekingU/rtdetr_v2_r50vd")
+            config.get("pretrained_model_name_or_path", "PekingU/rtdetr_v2_r101vd")
         )
         processor_kwargs: dict[str, Any] = {}
         resolution = config.get("input_resolution")

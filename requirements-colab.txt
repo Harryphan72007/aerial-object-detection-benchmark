@@ -1,17 +1,3 @@
--r requirements.txt
-# Install the CUDA-matched PyTorch build provided by Colab before these packages.
-openmim>=0.3.9
-mmengine>=0.10.3,<1
-mmdet==3.3.0
-transformers>=4.52
-accelerate>=1.0
-datasets>=3.0
-evaluate>=0.4
-albumentations>=1.4
-opencv-python-headless>=4.9
-onnx>=1.16
-onnxruntime-gpu>=1.18
-nvidia-ml-py>=12.535
-thop>=0.1.1.post2209072238
-# MMCV must be installed with a wheel matching the active torch/CUDA build:
-# mim install "mmcv>=2.0.0,<2.2.0"
+# Backward-compatible shared Colab entry point.
+# Model frameworks intentionally live in separate requirement files.
+-r requirements-dataset-colab.txt

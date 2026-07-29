@@ -8,7 +8,11 @@ The project has three storage layers.
 | Google Drive | VisDrone data, converted COCO annotations, pretrained files, resumable checkpoints, optimizer/scheduler/AMP state, complete histories/logs, raw predictions, profiling, Optuna, ONNX/TensorRT exports, complete reports, and result bundles |
 | Colab `/content` | Cloned source, framework trees, caches, compiled extensions, and temporary intermediates |
 
-The single Drive root is `/content/drive/MyDrive/visdrone_architecture_benchmark`. `src.paths.ProjectPaths` remains the canonical path builder. Command-line `--drive-root` overrides `project_config.yaml`.
+The single Drive root is `/content/drive/MyDrive/visdrone_architecture_benchmark`.
+VisDrone lives under
+`datasets/VisDrone2019-DET/{archives,raw,processed,manifests}`.
+`src.paths.ProjectPaths` remains the canonical path builder. Command-line
+`--drive-root` overrides `project_config.yaml`.
 
 Never commit `*.pth`, `*.pt`, `*.ckpt`, `*.safetensors`, `*.onnx`, `*.engine`, datasets, raw predictions, profiling traces, TensorBoard logs, credentials, or private absolute paths. Selected release checkpoints belong in a GitHub Release, Hugging Face, or Zenodo artifact, not normal Git history.
 

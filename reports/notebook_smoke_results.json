@@ -1,0 +1,91 @@
+{
+  "generated_at_utc": "2026-07-29T09:23:37.651959+00:00",
+  "kernel": "codex-visdrone",
+  "mode": "CPU synthetic VisDrone smoke test; training/tuning/publishing guarded",
+  "results": [
+    {
+      "code_cells": 14,
+      "duration_seconds": 26.531,
+      "notebook": "notebooks/00_visdrone_colab_setup.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 2,
+      "duration_seconds": 6.407,
+      "notebook": "notebooks/00_colab_repository_setup.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 2,
+      "duration_seconds": 7.875,
+      "notebook": "notebooks/00_environment_and_data_setup.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 4,
+      "duration_seconds": 19.312,
+      "notebook": "notebooks/01_dataset_analysis.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 8,
+      "duration_seconds": 18.828,
+      "notebook": "notebooks/02_train_resnet50_faster_rcnn.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 8,
+      "duration_seconds": 18.438,
+      "notebook": "notebooks/03_train_swin_t_faster_rcnn.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 8,
+      "duration_seconds": 16.515,
+      "notebook": "notebooks/04_train_vmamba_t_faster_rcnn.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 8,
+      "duration_seconds": 9.625,
+      "notebook": "notebooks/05_train_rtdetrv2_l.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 5,
+      "duration_seconds": 7.657,
+      "notebook": "notebooks/06_train_yolox_s_optional.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 5,
+      "duration_seconds": 11.0,
+      "notebook": "notebooks/07_evaluate_all_models.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 5,
+      "duration_seconds": 14.875,
+      "notebook": "notebooks/08_architecture_visualization.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 3,
+      "duration_seconds": 8.187,
+      "notebook": "notebooks/09_error_analysis.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 3,
+      "duration_seconds": 6.391,
+      "notebook": "notebooks/10_generate_final_report.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 7,
+      "duration_seconds": 6.484,
+      "notebook": "notebooks/11_sync_results_to_github.ipynb",
+      "status": "passed"
+    }
+  ]
+}

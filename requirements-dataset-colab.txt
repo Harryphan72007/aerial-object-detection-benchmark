@@ -1,0 +1,11 @@
+# Shared CPU/GPU-neutral dataset, conversion, visualization, and notebook stack.
+# Tested locally with Python 3.12.13; designed for Colab runtime 2026.04.
+Pillow==11.3.0
+PyYAML==6.0.2
+matplotlib==3.10.3
+numpy==2.0.2
+pandas==2.2.3
+psutil==7.0.0
+filelock==3.18.0
+pycocotools==2.0.10
+tqdm==4.67.1

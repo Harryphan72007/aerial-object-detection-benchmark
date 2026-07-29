@@ -1,0 +1,9 @@
+model_id: faster_rcnn_swin_t
+architecture_family: Transformer
+framework: mmdetection
+framework_config: configs/swin/mask-rcnn_swin-t-p4-w7_fpn_1x_coco.py
+external_root_env: MMDET_ROOT
+strip_mask_branch: true
+pretrained: official MMDetection/Swin initialization referenced by base config
+approx_gpu_vram_gb_1024_bs2: 16
+supports_amp: true

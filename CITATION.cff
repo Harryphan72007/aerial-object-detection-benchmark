@@ -1,10 +1,11 @@
 cff-version: 1.2.0
-message: "If you use this benchmark scaffold, cite this repository and the exact dataset/model artifacts used."
-title: "Aerial Object Detection Benchmark"
+title: Accuracy–Efficiency Trade-offs of CNN, Transformer, Mamba, and DETR Architectures for Dense Aerial Object Detection
+message: Please cite this repository, VisDrone, and all model/framework papers used.
 type: software
 authors:
   - family-names: Phan
     given-names: Minh
-repository-code: "https://github.com/Harryphan72007/aerial-object-detection-benchmark"
+year: 2026
+license: MIT
+repository-code: https://github.com/Harryphan72007/aerial-object-detection-benchmark
 version: 0.1.0
-date-released: 2026-07-27

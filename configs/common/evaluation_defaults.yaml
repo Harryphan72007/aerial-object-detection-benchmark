@@ -1,0 +1,13 @@
+confidence_threshold: 0.001
+matching_iou_threshold: 0.5
+resolutions: [640, 1024, 1280]
+warmup_iterations: 100
+timed_iterations: 500
+max_detections: [1, 10, 100, 300, 500]
+custom_area_ranges:
+  tiny: [0, 256]
+  small: [256, 1024]
+  medium: [1024, 9216]
+  large: [9216, null]
+bootstrap_samples: 1000
+confidence_level: 0.95

@@ -1,0 +1,17 @@
+track: 2class
+class_names: [person, vehicle]
+original_classes:
+  1: pedestrian
+  2: people
+  3: bicycle
+  4: car
+  5: van
+  6: truck
+  7: tricycle
+  8: awning-tricycle
+  9: bus
+  10: motor
+person_classes: [pedestrian, people]
+vehicle_classes: [bicycle, car, van, truck, tricycle, awning-tricycle, bus, motor]
+exclude_light_vehicles: false
+ignored_visdrone_categories: [0, 11]

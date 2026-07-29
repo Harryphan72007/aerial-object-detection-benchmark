@@ -1,42 +1,35 @@
 [build-system]
-requires = ["hatchling>=1.27"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "aerial-object-detection-benchmark"
+name = "visdrone-architecture-benchmark"
 version = "0.1.0"
-description = "Reproducible VisDrone evaluation and experiment plumbing"
+description = "Reproducible CNN, Transformer, Mamba, and RT-DETR benchmark for VisDrone"
+readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Minh Phan", email = "phan0368@umn.edu" }]
-dependencies = [
-  "PyYAML>=6.0,<7",
-]
+license = {text = "MIT"}
+dependencies = ["PyYAML>=6", "numpy>=1.24", "pandas>=2", "Pillow>=10", "psutil>=5.9", "filelock>=3.13"]
 
-[project.optional-dependencies]
-eval = [
-  "Pillow>=10,<13",
-  "pycocotools>=2.0.8,<3",
-]
-optimize = [
-  "optuna>=4,<5",
-]
-dev = [
-  "pytest>=8,<9",
-  "ruff>=0.9,<1",
-]
-
-[project.scripts]
-aerial-benchmark = "aerial_benchmark.cli:main"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/aerial_benchmark"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+exclude = ["notebooks"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E9", "F63", "F7", "F82"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+pythonpath = ["."]
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_ignores = true
+ignore_missing_imports = true

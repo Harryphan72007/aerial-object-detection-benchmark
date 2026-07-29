@@ -1,0 +1,21 @@
+name: validate-results
+
+on:
+  pull_request:
+    paths:
+      - "results/**"
+      - "benchmark_data/**"
+      - "scripts/validate_results.py"
+      - "src/result_export.py"
+      - ".github/workflows/validate-results.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - run: python scripts/validate_results.py --repo-results results/

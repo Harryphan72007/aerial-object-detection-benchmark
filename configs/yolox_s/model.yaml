@@ -1,0 +1,9 @@
+model_id: yolox_s
+architecture_family: CNN real-time control
+framework: yolox
+external_root_env: YOLOX_ROOT
+experiment_file: exps/default/yolox_s.py
+pretrained: official YOLOX-S release
+optional: true
+approx_gpu_vram_gb_1024_bs2: 10
+supports_amp: true

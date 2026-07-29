@@ -1,0 +1,1 @@
+method,architecture_family,backbone,detector,dataset_split,number_of_classes,input_resolution,mAP,AP50,AP75,APsmall,parameters,FLOPs,latency,latency_hardware,pretraining,external_data,test_time_augmentation,tiling,ensemble,paper_title,paper_year,source_url,notes

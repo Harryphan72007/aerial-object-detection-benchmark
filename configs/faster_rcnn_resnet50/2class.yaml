@@ -1,0 +1,11 @@
+model_id: faster_rcnn_resnet50
+dataset_track: 2class
+image_size: 1024
+batch_size: 2
+gradient_accumulation_steps: 8
+epochs: 100
+seed: 42
+use_amp: true
+max_detections_per_image: 500
+learning_rate: 0.0001
+weight_decay: 0.05

@@ -1,5 +1,0 @@
-model,family,seed,map,map_50,map_75,map_small,map_medium,map_large,latency_ms_batch1,throughput_batch8,peak_memory_mb,params_m,flops_g,status
-fasterrcnn_resnet50_fpn_v2,cnn,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,not_run
-detr_resnet50,transformer,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,not_run
-vim_tiny_detector,vision_mamba,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,not_run
-rt_detr_r50,real_time_transformer,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,TBD,not_run

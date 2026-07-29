@@ -1,0 +1,17 @@
+project:
+  github_username: "Harryphan72007"
+  repository_name: "aerial-object-detection-benchmark"
+  default_branch: "main"
+  results_branch: "experiment-results"
+
+colab:
+  repository_path: "/content/aerial-object-detection-benchmark"
+  drive_root: "/content/drive/MyDrive/visdrone_architecture_benchmark"
+
+storage:
+  save_checkpoints_to_drive: true
+  save_predictions_to_drive: true
+  save_logs_to_drive: true
+  commit_checkpoints_to_git: false
+  commit_dataset_to_git: false
+  max_git_file_size_mb: 20

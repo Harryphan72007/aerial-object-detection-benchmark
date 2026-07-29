@@ -1,0 +1,119 @@
+VISDRONE ARCHITECTURE BENCHMARK — REPOSITORY MANIFEST
+Generated: 2026-07-25T11:32:21.745575+00:00
+
+Validation performed:
+- Required path audit: PASS (77 required files present)
+- Python compilation: PASS
+- Lightweight unit tests: PASS (15 tests)
+- Notebook JSON validation: PASS (11 notebooks)
+- CLI import/help smoke test: PASS (8 public scripts)
+- Empty-results report smoke test: PASS (HTML, Markdown, CSV, JSON, decision matrix, PDF)
+- Figure export smoke test: PASS (20 PNG + 20 PDF)
+
+Important scope note:
+- GPU-heavy end-to-end training was not executed in this packaging environment.
+- The notebooks install and invoke the real external framework integrations.
+- No experimental accuracy/latency values are fabricated.
+
+Files (101 before this manifest):
+- .github/workflows/ci.yml
+- .gitignore
+- .pre-commit-config.yaml
+- CITATION.cff
+- CONTRIBUTING.md
+- LICENSE
+- LICENSES.md
+- Makefile
+- README.md
+- benchmark_data/README.md
+- benchmark_data/published_visdrone_results.csv
+- configs/common/dataset_10class.yaml
+- configs/common/dataset_2class.yaml
+- configs/common/evaluation_defaults.yaml
+- configs/common/training_defaults.yaml
+- configs/faster_rcnn_resnet50/10class.yaml
+- configs/faster_rcnn_resnet50/2class.yaml
+- configs/faster_rcnn_resnet50/model.yaml
+- configs/faster_rcnn_swin_t/10class.yaml
+- configs/faster_rcnn_swin_t/2class.yaml
+- configs/faster_rcnn_swin_t/model.yaml
+- configs/faster_rcnn_vmamba_t/10class.yaml
+- configs/faster_rcnn_vmamba_t/2class.yaml
+- configs/faster_rcnn_vmamba_t/UPSTREAM_CONFIG.md
+- configs/faster_rcnn_vmamba_t/model.yaml
+- configs/rtdetrv2_l/10class.yaml
+- configs/rtdetrv2_l/2class.yaml
+- configs/rtdetrv2_l/model.yaml
+- configs/yolox_s/10class.yaml
+- configs/yolox_s/2class.yaml
+- configs/yolox_s/model.yaml
+- docs/architecture_notes.md
+- docs/checkpoint_format.md
+- docs/evaluation_protocol.md
+- docs/experiment_protocol.md
+- notebooks/00_environment_and_data_setup.ipynb
+- notebooks/01_dataset_analysis.ipynb
+- notebooks/02_train_resnet50_faster_rcnn.ipynb
+- notebooks/03_train_swin_t_faster_rcnn.ipynb
+- notebooks/04_train_vmamba_t_faster_rcnn.ipynb
+- notebooks/05_train_rtdetrv2_l.ipynb
+- notebooks/06_train_yolox_s_optional.ipynb
+- notebooks/07_evaluate_all_models.ipynb
+- notebooks/08_architecture_visualization.ipynb
+- notebooks/09_error_analysis.ipynb
+- notebooks/10_generate_final_report.ipynb
+- pyproject.toml
+- requirements-colab.txt
+- requirements.txt
+- results/.gitkeep
+- scripts/build_registry.py
+- scripts/evaluate.py
+- scripts/export_onnx.py
+- scripts/generate_report.py
+- scripts/prepare_data.py
+- scripts/profile_model.py
+- scripts/run_mmdetection.py
+- scripts/run_rtdetr_training.py
+- scripts/train.py
+- scripts/tune.py
+- src/__init__.py
+- src/data/__init__.py
+- src/data/collapse_classes.py
+- src/data/convert_visdrone.py
+- src/data/dataloaders.py
+- src/data/download.py
+- src/data/statistics.py
+- src/data/validate_annotations.py
+- src/evaluation/__init__.py
+- src/evaluation/calibration.py
+- src/evaluation/coco_evaluator.py
+- src/evaluation/detection_metrics.py
+- src/evaluation/efficiency_metrics.py
+- src/evaluation/error_analysis.py
+- src/evaluation/mmdet_aerial_metric.py
+- src/evaluation/report_generator.py
+- src/evaluation/robustness.py
+- src/evaluation/visualization.py
+- src/models/__init__.py
+- src/models/base_adapter.py
+- src/models/mmdetection_adapter.py
+- src/models/registry.py
+- src/models/rtdetr_adapter.py
+- src/models/yolox_adapter.py
+- src/paths.py
+- src/reproducibility.py
+- src/training/__init__.py
+- src/training/callbacks.py
+- src/training/checkpointing.py
+- src/training/hyperparameter_search.py
+- src/training/profiling.py
+- src/training/trainer.py
+- src/utils/__init__.py
+- src/utils/environment.py
+- src/utils/logging.py
+- src/utils/serialization.py
+- tests/test_annotation_conversion.py
+- tests/test_checkpoint_registry.py
+- tests/test_class_mapping.py
+- tests/test_metric_calculation.py
+- tests/test_model_adapters.py

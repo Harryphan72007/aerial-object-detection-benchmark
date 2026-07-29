@@ -19,6 +19,16 @@ def main() -> None:
     parser.add_argument("--kernel", default="python3")
     parser.add_argument("--timeout", type=int, default=180)
     parser.add_argument("--output", default=".notebook-smoke/notebook_smoke_results.json")
+    parser.add_argument(
+        "--notebook",
+        choices=[
+            "00_prepare_visdrone.ipynb",
+            "01_run_model_day.ipynb",
+            "02_publish_results.ipynb",
+            "03_compare_all_models.ipynb",
+        ],
+        help="Execute one notebook so callers can enforce fresh harness processes.",
+    )
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     smoke_root = root / ".notebook-smoke"
@@ -27,17 +37,22 @@ def main() -> None:
             "SMOKE_TEST": "1",
             "SMOKE_TEST_SUBSET_SIZE": "8",
             "BENCHMARK_REPO_ROOT": str(root),
-            "VISDRONE_DRIVE_ROOT": str(smoke_root),
+            "VISDRONE_DRIVE_ROOT": str(smoke_root / "dataset"),
         }
     )
-    notebooks = [
-        root / "notebooks" / name
-        for name in (
+    notebook_names = (
+        [args.notebook]
+        if args.notebook
+        else [
             "00_prepare_visdrone.ipynb",
             "01_run_model_day.ipynb",
             "02_publish_results.ipynb",
             "03_compare_all_models.ipynb",
-        )
+        ]
+    )
+    notebooks = [
+        root / "notebooks" / name
+        for name in notebook_names
     ]
     results: list[dict[str, object]] = []
     for path in notebooks:

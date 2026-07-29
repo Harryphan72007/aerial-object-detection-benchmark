@@ -1,7 +1,34 @@
 # Model environments
 
 Notebook 01 determines the model family before installing or validating packages.
-The dataset notebook installs only `requirements-dataset-colab.txt`.
+Both notebook 00 and the fresh-session bootstrap in notebook 01 install only the
+CPU/GPU-neutral `requirements-dataset-colab.txt` before initial data/status
+inspection. Notebook 01 does not depend on notebook 00's Python process.
+
+## Drive persistence and local Colab cache
+
+The two ZIP files, extracted raw images/annotations, COCO JSON, extraction and
+conversion manifests, LR manifests, checkpoints, search state, metrics, and
+reports are persistent under `$DRIVE_ROOT`. Processed COCO directories do not
+contain image copies.
+
+In Colab, notebook 01 defaults to `DATA_ACCESS_MODE="local_cache"` and
+synchronizes only the required image and JSON read view to:
+
+```text
+/content/visdrone_cache/
+├── train/images/
+├── val/images/
+└── annotations/
+    ├── coco_2class/
+    └── lr_search/
+```
+
+The cache is verified against the persistent Drive image count and filename
+inventory, is rebuilt after runtime loss, and is never used for checkpoints or
+results. `DATA_ACCESS_MODE="drive_direct"` reads the same verified dataset
+directly. If local capacity is insufficient, the cache request stops and asks
+the user to switch explicitly; it never silently changes modes.
 
 ## RT-DETRv2
 

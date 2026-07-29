@@ -16,6 +16,7 @@ from src.benchmark_status import (
     find_selected_config,
 )
 from src.git_utils import git_commit
+from src.data.local_cache import DataAccessPaths, resolve_data_access
 from src.models.registry import load_model_config
 from src.paths import ProjectPaths
 from src.training.checkpointing import RunRegistry, make_run_id
@@ -62,15 +63,32 @@ def _image_count(path: Path) -> int:
 class LRControlledBenchmark:
     """Coordinate the deterministic LR search without registering search runs."""
 
-    def __init__(self, repo_root: str | Path, drive_root: str | Path):
+    def __init__(
+        self,
+        repo_root: str | Path,
+        drive_root: str | Path,
+        *,
+        data_access: DataAccessPaths | None = None,
+    ):
         self.repo_root = Path(repo_root).resolve()
         self.paths = ProjectPaths.from_value(drive_root).create()
+        self.data_access = data_access or resolve_data_access(
+            self.paths, "drive_direct"
+        )
         self.settings = FixedBenchmarkSettings()
         self.orchestrator = TrainingOrchestrator(self.repo_root, self.paths.root)
 
     @property
     def manifest_dir(self) -> Path:
-        return self.paths.lr_search_manifests
+        return self.data_access.lr_manifest_dir
+
+    @property
+    def train_images(self) -> Path:
+        return self.data_access.train_images
+
+    @property
+    def validation_images(self) -> Path:
+        return self.data_access.validation_images
 
     @property
     def repository_config_dir(self) -> Path:
@@ -85,7 +103,7 @@ class LRControlledBenchmark:
         return self.paths.root / "lr_search_configs"
 
     def prepare_manifests(self, *, force: bool = False) -> dict[str, Any]:
-        source = self.paths.coco("2class") / "annotations"
+        source = self.data_access.coco_annotation_dir
         required = [
             self.manifest_dir / "search_train_seed42.json",
             self.manifest_dir / "search_validation_seed42.json",
@@ -93,15 +111,43 @@ class LRControlledBenchmark:
             self.manifest_dir / "official_validation.json",
             self.manifest_dir / "split_summary.json",
         ]
-        if force or not all(path.exists() for path in required):
-            return create_lr_search_manifests(
-                source / "instances_train.json",
-                source / "instances_val.json",
-                self.manifest_dir,
-                seed=self.settings.seed,
+        train_json = source / "instances_train.json"
+        validation_json = source / "instances_val.json"
+        if not force and all(path.exists() for path in required):
+            try:
+                validate_lr_search_manifests(
+                    self.manifest_dir,
+                    official_train_json=train_json,
+                    official_validation_json=validation_json,
+                )
+                return read_json(self.manifest_dir / "split_summary.json")
+            except (
+                AssertionError,
+                FileNotFoundError,
+                KeyError,
+                json.JSONDecodeError,
+            ):
+                pass
+        if self.data_access.mode == "local_cache":
+            raise RuntimeError(
+                "Local LR manifests are stale or incomplete. Rebuild "
+                "DATA_ACCESS_MODE='local_cache' from the verified Drive dataset."
             )
-        validate_lr_search_manifests(self.manifest_dir)
-        return read_json(self.manifest_dir / "split_summary.json")
+        source_archives = {
+            split: str(
+                read_json(
+                    self.paths.dataset_manifests / f"{split}_extraction.json"
+                )["archive_sha256"]
+            )
+            for split in ("train", "val")
+        }
+        return create_lr_search_manifests(
+            train_json,
+            validation_json,
+            self.manifest_dir,
+            seed=self.settings.seed,
+            source_archive_identities=source_archives,
+        )
 
     def resolve_baseline(self, model_id: str) -> BaselineOptimizerAudit:
         return resolve_baseline_optimizer(model_id, self.repo_root)
@@ -163,8 +209,8 @@ class LRControlledBenchmark:
             validation_annotation_override=(
                 self.manifest_dir / "search_validation_seed42.json"
             ),
-            train_images_override=self.paths.images("train"),
-            validation_images_override=self.paths.images("train"),
+            train_images_override=self.train_images,
+            validation_images_override=self.train_images,
             explicit_run_dir=run_dir,
             explicit_run_id=run_id,
             register_run=False,
@@ -196,8 +242,8 @@ class LRControlledBenchmark:
             validation_annotation_override=(
                 self.manifest_dir / "search_validation_seed42.json"
             ),
-            train_images_override=self.paths.images("train"),
-            validation_images_override=self.paths.images("train"),
+            train_images_override=self.train_images,
+            validation_images_override=self.train_images,
             explicit_run_dir=run_dir,
             explicit_run_id=f"{model_id}__lr_range_test__seed42",
             register_run=False,
@@ -232,8 +278,8 @@ class LRControlledBenchmark:
             validation_annotation_override=(
                 self.manifest_dir / "search_validation_seed42.json"
             ),
-            train_images_override=self.paths.images("train"),
-            validation_images_override=self.paths.images("train"),
+            train_images_override=self.train_images,
+            validation_images_override=self.train_images,
             explicit_run_dir=run_dir,
             explicit_run_id=f"{model_id}__runtime_calibration__seed42",
             register_run=False,
@@ -773,8 +819,8 @@ class LRControlledBenchmark:
             validation_annotation_override=(
                 self.manifest_dir / "official_validation.json"
             ),
-            train_images_override=self.paths.images("train"),
-            validation_images_override=self.paths.images("val"),
+            train_images_override=self.train_images,
+            validation_images_override=self.validation_images,
             explicit_run_dir=run_dir,
             explicit_run_id=run_id,
             register_run=True,
@@ -798,6 +844,10 @@ class LRControlledBenchmark:
                     run_id,
                     "--resolutions",
                     str(self.settings.image_size),
+                    "--image-root",
+                    str(self.validation_images),
+                    "--annotation-file",
+                    str(self.data_access.coco_annotation_dir / "instances_val.json"),
                 ],
                 check=True,
                 cwd=self.repo_root,

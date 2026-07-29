@@ -31,6 +31,47 @@ YOLOX is not part of the controlled benchmark.
 
 See [docs/RUN.md](docs/RUN.md) for the complete student workflow.
 
+## Data contract and storage
+
+Notebook 00 verifies the archive bytes, atomic extraction inventories, COCO
+conversion provenance, and LR-search identities before printing `DATA CONTRACT
+VERIFIED: YES`. The persistent layout is:
+
+```text
+$DRIVE_ROOT/
+└── datasets/VisDrone2019-DET/
+    ├── archives/
+    │   ├── VisDrone2019-DET-train.zip
+    │   └── VisDrone2019-DET-val.zip
+    ├── raw/
+    │   ├── VisDrone2019-DET-train/
+    │   │   ├── images/
+    │   │   └── annotations/
+    │   └── VisDrone2019-DET-val/
+    │       ├── images/
+    │       └── annotations/
+    ├── processed/
+    │   └── coco_2class/
+    │       └── annotations/
+    │           ├── instances_train.json
+    │           ├── instances_val.json
+    │           ├── conversion_manifest_train.json
+    │           └── conversion_manifest_val.json
+    └── manifests/
+        ├── train_archive.json
+        ├── val_archive.json
+        ├── train_extraction.json
+        ├── val_extraction.json
+        └── lr_search/
+```
+
+ZIP files and extracted raw data persist on Drive. Processed COCO directories
+contain annotations and provenance, not copied images. Training and evaluation
+resolve the raw image roots through `ProjectPaths`. Notebook 01 can synchronize
+an ephemeral `/content/visdrone_cache` for faster Colab image reads; checkpoints,
+search state, selected configurations, metrics, and reports always remain on
+Drive.
+
 ## Required notebooks
 
 | Step | Notebook | Colab |

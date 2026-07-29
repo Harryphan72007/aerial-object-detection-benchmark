@@ -54,6 +54,12 @@ def parse_args() -> argparse.Namespace:
     run.add_argument("--start-expensive-stage", action="store_true")
     run.add_argument("--allow-over-budget-run", action="store_true")
     run.add_argument("--smoke-test", action="store_true")
+    run.add_argument(
+        "--data-access-mode",
+        choices=["local_cache", "drive_direct"],
+        default="drive_direct",
+    )
+    run.add_argument("--local-cache-root", default="/content/visdrone_cache")
 
     publish = commands.add_parser("publish", help="Validate/preview or publish results")
     _shared(publish)
@@ -94,6 +100,8 @@ def main() -> None:
                     start_expensive_stage=args.start_expensive_stage,
                     allow_over_budget_run=args.allow_over_budget_run,
                     smoke_test=args.smoke_test,
+                    data_access_mode=args.data_access_mode,
+                    local_cache_root=args.local_cache_root,
                 ),
             )
         )

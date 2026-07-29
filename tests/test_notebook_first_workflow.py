@@ -70,7 +70,7 @@ def _ready_dataset(paths: ProjectPaths) -> None:
             paths.coco("2class") / "annotations" / f"instances_{split}.json",
             payload,
         )
-        (paths.coco("2class") / split).mkdir(parents=True, exist_ok=True)
+        paths.images(split).mkdir(parents=True, exist_ok=True)
 
 
 def _selected(paths: ProjectPaths) -> None:

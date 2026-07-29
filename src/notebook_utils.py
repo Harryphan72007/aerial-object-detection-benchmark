@@ -60,7 +60,7 @@ def preflight_dataset(
 ) -> PreflightReport:
     ProjectPaths.validate_track(track)
     annotation_file = paths.coco(track) / "annotations" / f"instances_{split}.json"
-    image_dir = paths.coco(track) / split
+    image_dir = paths.images(split)
     errors: list[str] = []
     warnings: list[str] = []
     if not annotation_file.is_file():

@@ -19,7 +19,7 @@ def _valid_track(paths: ProjectPaths, track: str) -> bool:
         for split in ("train", "val"):
             report = validate_coco(
                 annotation_root / f"instances_{split}.json",
-                paths.coco(track) / split,
+                paths.images(split),
             )
             report.raise_for_errors()
     except (FileNotFoundError, KeyError, RuntimeError, ValueError):
@@ -77,7 +77,7 @@ def prepare_visdrone(
         for split in ("train", "val"):
             report = validate_coco(
                 paths.coco(track) / "annotations" / f"instances_{split}.json",
-                paths.coco(track) / split,
+                paths.images(split),
             )
             report.raise_for_errors()
             validation[track][split] = report.__dict__
@@ -86,6 +86,8 @@ def prepare_visdrone(
         "drive_root": str(paths.root),
         "official_train": str(paths.raw / "VisDrone2019-DET-train"),
         "official_validation": str(paths.raw / "VisDrone2019-DET-val"),
+        "train_images": str(paths.images("train")),
+        "validation_images": str(paths.images("val")),
         "coco_2class": str(paths.coco("2class")),
         "coco_10class": str(paths.coco("10class"))
         if prepare_10class_track

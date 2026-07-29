@@ -52,6 +52,15 @@ class ProjectPaths:
     def raw(self) -> Path:
         return self.visdrone / "raw"
 
+    def official_split(self, split: str) -> Path:
+        """Return the extracted official split without relying on Drive symlinks."""
+        if split not in {"train", "val"}:
+            raise ValueError(f"VisDrone split must be 'train' or 'val', got {split!r}")
+        return self.raw / f"VisDrone2019-DET-{split}"
+
+    def images(self, split: str) -> Path:
+        return self.official_split(split) / "images"
+
     @property
     def processed(self) -> Path:
         return self.visdrone / "processed"

@@ -32,8 +32,8 @@ def validate_dataset(paths: ProjectPaths, track: str) -> None:
     required = (
         dataset / "annotations" / "instances_train.json",
         dataset / "annotations" / "instances_val.json",
-        dataset / "train",
-        dataset / "val",
+        paths.images("train"),
+        paths.images("val"),
     )
     missing = [str(path) for path in required if not path.exists()]
     if missing:

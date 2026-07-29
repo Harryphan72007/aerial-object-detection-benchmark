@@ -128,7 +128,7 @@ def main() -> None:
         / "annotations"
         / f"instances_{args.split}.json"
     )
-    image_root = paths.coco(args.dataset_track) / args.split
+    image_root = paths.images(args.split)
     records = CocoDetectionRecords(image_root, full_annotation)
     count = (
         len(records)

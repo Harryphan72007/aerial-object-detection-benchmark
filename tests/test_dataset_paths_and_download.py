@@ -17,6 +17,9 @@ def test_dataset_path_resolution(tmp_path, monkeypatch):
     paths = ProjectPaths.from_value(tmp_path / "drive").create()
     assert paths.archives == paths.root / "datasets/VisDrone2019-DET/archives"
     assert paths.raw == paths.root / "datasets/VisDrone2019-DET/raw"
+    assert paths.images("train") == (
+        paths.root / "datasets/VisDrone2019-DET/raw/VisDrone2019-DET-train/images"
+    )
     assert paths.coco("2class") == (
         paths.root / "datasets/VisDrone2019-DET/processed/coco_2class"
     )
@@ -40,7 +43,7 @@ def test_archive_validation_and_idempotent_extraction(tmp_path):
 
 def test_preflight_detects_annotation_track_mismatch(tmp_path):
     paths = ProjectPaths.from_value(tmp_path / "drive").create()
-    image_dir = paths.coco("2class") / "train"
+    image_dir = paths.images("train")
     image_dir.mkdir(parents=True)
     annotation_dir = paths.coco("2class") / "annotations"
     annotation_dir.mkdir(parents=True, exist_ok=True)

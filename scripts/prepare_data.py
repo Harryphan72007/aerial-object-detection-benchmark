@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 
 from src.data.collapse_classes import ClassMapping
@@ -13,31 +12,6 @@ from src.data.download import ensure_visdrone_layout
 from src.data.statistics import compute_statistics
 from src.data.validate_annotations import validate_coco
 from src.paths import ProjectPaths
-
-
-def _link_images(source: Path, destination: Path) -> None:
-    """Create a persistent reference without replacing an existing directory."""
-    if destination.is_symlink():
-        if destination.resolve() != source.resolve():
-            raise RuntimeError(f"{destination} points to the wrong image directory")
-        return
-    if destination.exists():
-        if not destination.is_dir():
-            raise RuntimeError(f"image destination is not a directory: {destination}")
-        return
-    try:
-        destination.symlink_to(source.resolve(), target_is_directory=True)
-    except OSError:
-        # Some Drive/FUSE and Windows configurations cannot create symlinks.
-        destination.mkdir(parents=True)
-        for image in sorted(source.iterdir()):
-            if image.suffix.lower() not in {".jpg", ".jpeg", ".png"}:
-                continue
-            target = destination / image.name
-            try:
-                os.link(image, target)
-            except OSError:
-                target.symlink_to(image.resolve())
 
 
 def main() -> None:
@@ -69,8 +43,7 @@ def main() -> None:
             ("val", "VisDrone2019-DET-val"),
         ):
             source_root = raw / source
-            destination_images = output_root / split
-            _link_images(source_root / "images", destination_images)
+            destination_images = source_root / "images"
             annotation_file = annotation_root / f"instances_{split}.json"
             audit_file = annotation_root / f"conversion_audit_{split}.json"
             summary = convert_split(

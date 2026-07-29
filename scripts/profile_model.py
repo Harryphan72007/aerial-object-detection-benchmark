@@ -48,7 +48,7 @@ def main() -> None:
     image_path = (
         Path(args.image)
         if args.image
-        else next((paths.coco(run["dataset_track"]) / "val").glob("*"))
+        else next(paths.images("val").glob("*"))
     )
     image = Image.open(image_path).convert("RGB")
     adapter = create_adapter(run["model_id"], args.device)

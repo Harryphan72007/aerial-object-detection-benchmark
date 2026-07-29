@@ -163,8 +163,8 @@ class LRControlledBenchmark:
             validation_annotation_override=(
                 self.manifest_dir / "search_validation_seed42.json"
             ),
-            train_images_override=self.paths.coco("2class") / "train",
-            validation_images_override=self.paths.coco("2class") / "train",
+            train_images_override=self.paths.images("train"),
+            validation_images_override=self.paths.images("train"),
             explicit_run_dir=run_dir,
             explicit_run_id=run_id,
             register_run=False,
@@ -196,8 +196,8 @@ class LRControlledBenchmark:
             validation_annotation_override=(
                 self.manifest_dir / "search_validation_seed42.json"
             ),
-            train_images_override=self.paths.coco("2class") / "train",
-            validation_images_override=self.paths.coco("2class") / "train",
+            train_images_override=self.paths.images("train"),
+            validation_images_override=self.paths.images("train"),
             explicit_run_dir=run_dir,
             explicit_run_id=f"{model_id}__lr_range_test__seed42",
             register_run=False,
@@ -232,8 +232,8 @@ class LRControlledBenchmark:
             validation_annotation_override=(
                 self.manifest_dir / "search_validation_seed42.json"
             ),
-            train_images_override=self.paths.coco("2class") / "train",
-            validation_images_override=self.paths.coco("2class") / "train",
+            train_images_override=self.paths.images("train"),
+            validation_images_override=self.paths.images("train"),
             explicit_run_dir=run_dir,
             explicit_run_id=f"{model_id}__runtime_calibration__seed42",
             register_run=False,
@@ -773,8 +773,8 @@ class LRControlledBenchmark:
             validation_annotation_override=(
                 self.manifest_dir / "official_validation.json"
             ),
-            train_images_override=self.paths.coco("2class") / "train",
-            validation_images_override=self.paths.coco("2class") / "val",
+            train_images_override=self.paths.images("train"),
+            validation_images_override=self.paths.images("val"),
             explicit_run_dir=run_dir,
             explicit_run_id=run_id,
             register_run=True,

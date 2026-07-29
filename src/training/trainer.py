@@ -96,9 +96,11 @@ class TrainingOrchestrator:
         validation_annotation = Path(validation_annotation_override or (
             dataset_root / "annotations" / "instances_val.json"
         )).resolve()
-        train_images = Path(train_images_override or (dataset_root / "train")).resolve()
+        train_images = Path(
+            train_images_override or self.paths.images("train")
+        ).resolve()
         validation_images = Path(
-            validation_images_override or (dataset_root / "val")
+            validation_images_override or self.paths.images("val")
         ).resolve()
         for path in (
             train_annotation,

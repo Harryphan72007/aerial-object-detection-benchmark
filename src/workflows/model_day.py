@@ -54,8 +54,8 @@ def _dataset_ready(paths: ProjectPaths) -> bool:
         for path in (
             paths.coco("2class") / "annotations" / "instances_train.json",
             paths.coco("2class") / "annotations" / "instances_val.json",
-            paths.coco("2class") / "train",
-            paths.coco("2class") / "val",
+            paths.images("train"),
+            paths.images("val"),
         )
     )
 
@@ -125,6 +125,8 @@ def inspect_model_day(
         "dataset_validation": str(
             paths.coco("2class") / "annotations" / "instances_val.json"
         ),
+        "train_images": str(paths.images("train")),
+        "validation_images": str(paths.images("val")),
         "search_manifests": str(paths.lr_search_manifests),
         "search_state": str(
             paths.lr_search_checkpoints / model_id / "search_state.json"
@@ -204,8 +206,8 @@ def _adapter_smoke(
                 ),
                 train_annotation_override=train_manifest,
                 validation_annotation_override=val_manifest,
-                train_images_override=workflow.paths.coco("2class") / "train",
-                validation_images_override=workflow.paths.coco("2class") / "train",
+                train_images_override=workflow.paths.images("train"),
+                validation_images_override=workflow.paths.images("train"),
                 explicit_run_dir=run_dir,
                 explicit_run_id=f"{model_id}__adapter_smoke",
                 register_run=False,

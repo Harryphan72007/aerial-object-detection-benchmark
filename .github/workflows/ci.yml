@@ -1,6 +1,7 @@
 name: ci
 on:
   push:
+    branches: [main]
   pull_request:
 jobs:
   lightweight-tests:
@@ -10,6 +11,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -e . pytest ruff pyyaml numpy pandas pillow psutil
+      - run: pip install -e . -r requirements-notebook-test.txt ruff
       - run: ruff check src scripts tests
       - run: pytest -q
+      - run: python scripts/validate_notebooks.py
+      - run: python scripts/clean_notebooks.py --check notebooks
+      - run: python scripts/run_notebook_smoke.py --timeout 180
+      - run: python scripts/validate_doc_links.py
+      - run: python scripts/scan_repository_secrets.py
+      - run: python -m scripts.validate_results --repo-results results/

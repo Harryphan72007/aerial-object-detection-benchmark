@@ -66,7 +66,7 @@ def preflight_dataset(
     if not annotation_file.is_file():
         errors.append(
             f"missing {track} annotations: {annotation_file}; run "
-            "notebooks/00_visdrone_colab_setup.ipynb first"
+            "notebooks/00_prepare_visdrone.ipynb first"
         )
     if not image_dir.is_dir():
         errors.append(f"missing image directory: {image_dir}")

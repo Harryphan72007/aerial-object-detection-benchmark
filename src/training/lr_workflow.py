@@ -74,7 +74,11 @@ class LRControlledBenchmark:
 
     @property
     def repository_config_dir(self) -> Path:
-        return self.repo_root / "configs" / "lr_search"
+        # Search selections are generated experiment state, not repository source.
+        # Keeping them under the persistent root avoids making Colab clones dirty.
+        path = self.persistent_config_dir
+        path.mkdir(parents=True, exist_ok=True)
+        return path
 
     @property
     def persistent_config_dir(self) -> Path:
@@ -301,7 +305,9 @@ class LRControlledBenchmark:
 
     def _copy_config_artifact(self, source: Path) -> None:
         self.persistent_config_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, self.persistent_config_dir / source.name)
+        destination = self.persistent_config_dir / source.name
+        if source.resolve() != destination.resolve():
+            shutil.copy2(source, destination)
 
     def _candidate_state(
         self, model_id: str, candidates: list[float]
@@ -657,7 +663,7 @@ class LRControlledBenchmark:
             if discovered is None:
                 raise FileNotFoundError(
                     f"No selected LR config found for {model_id}. "
-                    "Complete notebook 12 first."
+                    "Complete notebook 01 first."
                 )
             selected_path = discovered
         else:

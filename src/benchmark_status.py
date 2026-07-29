@@ -103,6 +103,8 @@ def find_resumable_final_run(
             or int(config.get("image_size", -1)) != 640
             or int(config.get("seed", -1)) != 42
             or int(config.get("scheduler_horizon", -1)) != 25
+            or int(config.get("effective_batch_size", -1)) != 8
+            or not bool(config.get("use_amp"))
             or config.get("run_kind") != "final_complete_official_train"
         ):
             continue
@@ -225,7 +227,14 @@ def discover_model_status(
         else []
     )
     evaluation_status = "COMPLETE" if evaluation_files else "NOT_STARTED"
-    report_json = paths.reports / "final_results.json"
+    model_report_dir = (
+        paths.reports / "models" / model_id / str(run_id) if run_id else None
+    )
+    report_json = (
+        model_report_dir / "final_results.json"
+        if model_report_dir
+        else paths.reports / "models" / model_id / "_missing" / "final_results.json"
+    )
     report_status = (
         "COMPLETE"
         if _report_contains_run(report_json, run_id)
@@ -254,12 +263,26 @@ def discover_model_status(
         "final_training_status": final_status,
         "final_run_id": run_id,
         "final_run_dir": final_run.get("run_dir"),
+        "best_checkpoint": (
+            final_run.get("checkpoint_best_map")
+            or final_run.get("checkpoint_last")
+            or (
+                str(Path(str(final_run.get("run_dir"))) / "best_map.pth")
+                if final_run.get("run_dir")
+                and (Path(str(final_run.get("run_dir"))) / "best_map.pth").is_file()
+                else str(Path(str(final_run.get("run_dir"))) / "last.pth")
+                if final_run.get("run_dir")
+                else None
+            )
+        ),
         "evaluation_status": evaluation_status,
         "evaluation_files": [str(path) for path in evaluation_files],
         "report_status": report_status,
-        "report_path": str(paths.reports / "final_report.md")
-        if report_status == "COMPLETE"
-        else None,
+        "report_path": (
+            str(model_report_dir / "final_report.md")
+            if report_status == "COMPLETE" and model_report_dir
+            else None
+        ),
         "bundle_status": bundle_status,
         "bundle_id": bundle_path.name if bundle_path else None,
         "bundle_path": str(bundle_path) if bundle_path else None,
@@ -298,26 +321,26 @@ def recommended_next_step(status: dict[str, Any], drive_root: str | Path) -> str
     if not train_annotations.is_file():
         return "Open notebook 00 and prepare and validate VisDrone."
     if status["environment_preflight"] == "BLOCKED":
-        return "Fix the model environment preflight, then rerun notebook 12."
+        return "Fix the model environment preflight, then rerun notebook 01."
     if status["lr_search_status"] == "NOT_STARTED":
-        return "Open notebook 12 and start the LR search."
+        return "Open notebook 01 and start the LR search."
     if status["lr_search_status"] == "IN_PROGRESS":
-        return "Open notebook 12 and resume the LR search."
+        return "Open notebook 01 and resume the LR search."
     if status["lr_search_status"] in {"FAILED", "BLOCKED"}:
-        return "Inspect the saved search failure report before rerunning notebook 12."
+        return "Inspect the saved search failure report before rerunning notebook 01."
     if status["final_training_status"] == "NOT_STARTED":
-        return "LR search is complete. Open notebook 13 for full-dataset fine-tuning."
+        return "LR search is complete. Rerun notebook 01 for full-dataset fine-tuning."
     if status["final_training_status"] == "IN_PROGRESS":
-        return "Open notebook 13 and resume the compatible final-training run."
+        return "Rerun notebook 01 to resume the compatible final-training run."
     if status["final_training_status"] in {"FAILED", "BLOCKED"}:
-        return "Inspect the final run manifest and correct the failure before resuming notebook 13."
+        return "Inspect the final run manifest and correct the failure before rerunning notebook 01."
     if status["evaluation_status"] != "COMPLETE":
-        return "Final training is complete. Run notebook 07 for evaluation."
+        return "Final training is complete. Rerun notebook 01 for evaluation."
     if status["report_status"] != "COMPLETE":
-        return "Evaluation is complete. Run notebook 10 to generate the report."
+        return "Evaluation is complete. Rerun notebook 01 to generate the report."
     if status["bundle_status"] != "COMPLETE":
-        return "Results are ready. Open notebook 11 to create and validate a dry-run bundle."
-    return "Validated bundle is ready. Review notebook 11 and publish to experiment-results."
+        return "Results are ready. Open notebook 02 to create and validate a dry-run bundle."
+    return "Validated bundle is ready. Review notebook 02 and publish to experiment-results."
 
 
 def format_status_table(rows: list[dict[str, Any]]) -> str:

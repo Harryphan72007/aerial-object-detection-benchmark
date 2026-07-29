@@ -172,14 +172,14 @@ def test_bundle_rejects_mixed_track_and_secrets(tmp_path):
         encoding="utf-8",
     )
     (bundle / "reports" / "bad.md").write_text(
-        "token=ghp_abcdefghijklmnopqrstuvwxyz123456 /content/drive/private",
+        "token=example_secret_value_123456 /content/drive/private",
         encoding="utf-8",
     )
     errors = validate_bundle(bundle)
     assert any("mixed dataset tracks" in error for error in errors)
     assert any("secret-like" in error for error in errors)
     assert any("private absolute path" in error for error in errors)
-    assert find_secret_like_content("token=ghp_abcdefghijklmnopqrstuvwxyz123456")
+    assert find_secret_like_content("token=example_secret_value_123456")
 
 
 def test_export_is_portable_and_dry_run_does_not_write(tmp_path, monkeypatch):

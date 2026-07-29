@@ -1,7 +1,7 @@
-seeds: [17, 42, 3407]
-epochs: 100
+seeds: [42]
+epochs: 25
 batch_size: 2
-gradient_accumulation_steps: 8
+gradient_accumulation_steps: 4
 use_amp: true
 num_workers: 2
 learning_rate: 0.0001
@@ -11,4 +11,4 @@ max_grad_norm: 1.0
 save_every_epochs: 1
 validate_every_epochs: 1
 tracker: tensorboard
-architecture_recipe: shared_controlled
+architecture_recipe: lr_only_controlled

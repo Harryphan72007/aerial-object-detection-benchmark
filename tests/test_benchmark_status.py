@@ -50,6 +50,8 @@ def _final_run(
             "seed": 42,
             "epochs": 25,
             "scheduler_horizon": 25,
+            "effective_batch_size": 8,
+            "use_amp": True,
             "run_kind": "final_complete_official_train",
             "overrides": {"learning_rate": learning_rate},
         },
@@ -98,7 +100,7 @@ def test_search_in_progress_and_search_complete_states(tmp_path):
     status = discover_model_status(tmp_path, MODEL_ID, tmp_path)
     assert status["lr_search_status"] == "COMPLETE"
     assert status["selected_lr"] == 0.0001
-    assert "notebook 13" in recommended_next_step(status, tmp_path)
+    assert "notebook 01" in recommended_next_step(status, tmp_path)
 
 
 def test_final_and_evaluated_states(tmp_path):
@@ -108,7 +110,7 @@ def test_final_and_evaluated_states(tmp_path):
     _final_run(paths)
     status = discover_model_status(tmp_path, MODEL_ID, tmp_path)
     assert status["final_training_status"] == "COMPLETE"
-    assert "notebook 07" in recommended_next_step(status, tmp_path)
+    assert "notebook 01" in recommended_next_step(status, tmp_path)
 
     write_json(
         paths.evaluation / f"{RUN_ID}__res640__metrics.json",
@@ -121,12 +123,15 @@ def test_final_and_evaluated_states(tmp_path):
     )
     status = discover_model_status(tmp_path, MODEL_ID, tmp_path)
     assert status["evaluation_status"] == "COMPLETE"
-    assert "notebook 10" in recommended_next_step(status, tmp_path)
+    assert "notebook 01" in recommended_next_step(status, tmp_path)
 
-    write_json(paths.reports / "final_results.json", [{"run_id": RUN_ID}])
+    write_json(
+        paths.reports / "models" / MODEL_ID / RUN_ID / "final_results.json",
+        [{"run_id": RUN_ID}],
+    )
     status = discover_model_status(tmp_path, MODEL_ID, tmp_path)
     assert status["report_status"] == "COMPLETE"
-    assert "notebook 11" in recommended_next_step(status, tmp_path)
+    assert "notebook 02" in recommended_next_step(status, tmp_path)
 
 
 def test_final_resume_requires_compatible_selected_lr(tmp_path):

@@ -1,7 +1,7 @@
 ## Benchmark result publication
 
 - Result bundle:
-- Dataset track (`2class` or `10class`):
+- Dataset track (`2class` controlled workflow):
 - Class definition:
 - Selected run IDs:
 - Evaluated models:
@@ -13,9 +13,9 @@
 ### Reproduction
 
 ```text
-python scripts/evaluate.py --drive-root "<DRIVE_ROOT>" --dataset-track <TRACK> --best-per-model
-python scripts/create_results_manifest.py --drive-root "<DRIVE_ROOT>" --dataset-track <TRACK>
-python scripts/sync_results_to_repo.py --drive-root "<DRIVE_ROOT>" --bundle-id "<BUNDLE_ID>" --repo-root . --validate --dry-run
+python -m scripts.benchmark status
+python -m scripts.benchmark publish --model-id <MODEL_ID> --dry-run
+python -m scripts.validate_results --repo-results results/
 ```
 
 Checkpoints, raw predictions, datasets, logs, and private Drive paths remain outside Git.

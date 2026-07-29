@@ -920,7 +920,11 @@ def create_result_bundle(
     report = "\n".join(report_lines)
     (output / "reports" / "model_report.md").write_text(report, encoding="utf-8")
     (output / "README.md").write_text(report, encoding="utf-8")
-    figure_sources = list(paths.reports.glob("figures/*.png"))
+    figure_sources = list(
+        (
+            paths.reports / "models" / model_id / run_id / "figures"
+        ).glob("*.png")
+    )
     for figure in figure_sources:
         if figure.stat().st_size <= 20 * 1024 * 1024:
             shutil.copy2(figure, output / "reports" / "figures" / figure.name)

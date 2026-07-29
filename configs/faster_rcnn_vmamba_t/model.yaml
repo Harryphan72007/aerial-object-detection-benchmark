@@ -5,8 +5,8 @@ framework_config: detection/configs/vssm/mask_rcnn_vssm_fpn_coco_tiny.py
 external_root_env: VMAMBA_ROOT
 strip_mask_branch: true
 registration_import: model
-pretrained: optional official VMamba-T checkpoint; set VMAMBA_T_PRETRAINED to a verified local .pth file
+pretrained: canonical official VMamba-T checkpoint; set VMAMBA_T_PRETRAINED to a verified local .pth file
 pretrained_weight_env: VMAMBA_T_PRETRAINED
-allow_scratch_without_pretrained: true
+allow_scratch_without_pretrained: false
 approx_gpu_vram_gb_1024_bs2: 16
 supports_amp: true

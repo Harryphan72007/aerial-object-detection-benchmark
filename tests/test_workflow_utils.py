@@ -42,7 +42,7 @@ def test_atomic_checkpoint_replacement(tmp_path):
 
 def test_sanitization_and_secret_detection():
     assert "/content/drive/" not in sanitize_text("/content/drive/MyDrive/private/file.json")
-    assert find_secret_like_content("token=ghp_abcdefghijklmnopqrstuvwxyz123456")
+    assert find_secret_like_content("token=example_secret_value_123456")
     assert validate_metric_value("mAP", 1.2)
     assert not validate_metric_value("latency_ms", 2.0)
 

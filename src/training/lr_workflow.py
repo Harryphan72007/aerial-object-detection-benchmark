@@ -6,7 +6,6 @@ import math
 import os
 import shutil
 import subprocess
-import sys
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -19,6 +18,7 @@ from src.git_utils import git_commit
 from src.data.local_cache import DataAccessPaths, resolve_data_access
 from src.models.registry import load_model_config
 from src.paths import ProjectPaths
+from src.subprocess_utils import python_module_command
 from src.training.checkpointing import RunRegistry, make_run_id
 from src.training.lr_search import (
     PROMOTION_RUNGS,
@@ -831,9 +831,8 @@ class LRControlledBenchmark:
         )
         if run_common_evaluation:
             subprocess.run(
-                [
-                    sys.executable,
-                    str(self.repo_root / "scripts" / "evaluate.py"),
+                python_module_command(
+                    "scripts.evaluate",
                     "--drive-root",
                     str(self.paths.root),
                     "--dataset-track",
@@ -848,7 +847,7 @@ class LRControlledBenchmark:
                     str(self.validation_images),
                     "--annotation-file",
                     str(self.data_access.coco_annotation_dir / "instances_val.json"),
-                ],
+                ),
                 check=True,
                 cwd=self.repo_root,
             )

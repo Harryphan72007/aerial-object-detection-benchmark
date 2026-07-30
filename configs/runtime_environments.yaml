@@ -1,0 +1,49 @@
+schema_version: 1
+provisioner:
+  package: uv
+  version: 0.8.15
+  source: https://github.com/astral-sh/uv
+  license: MIT OR Apache-2.0
+
+rtdetr:
+  python: "3.11.13"
+  torch: "2.7.1+cu128"
+  torchvision: "0.22.1+cu128"
+  torch_index: https://download.pytorch.org/whl/cu128
+  requirements: requirements-rtdetr-colab.txt
+  sources:
+    - name: RT-DETR
+      url: https://github.com/lyuwenyu/RT-DETR
+      revision: a21d516aca15da57e65f35c47659c7535ad2b6b3
+      license: Apache-2.0
+    - name: PekingU/rtdetr_v2_r101vd
+      url: https://huggingface.co/PekingU/rtdetr_v2_r101vd
+      revision: a558a4798734af61997652ec97d9b82961c92450
+      license: Apache-2.0
+
+openmmlab:
+  python: "3.10.16"
+  torch: "2.1.0+cu118"
+  torchvision: "0.16.0+cu118"
+  torch_index: https://download.pytorch.org/whl/cu118
+  requirements: requirements-openmmlab-py310-cu118.txt
+  mmcv:
+    version: "2.1.0"
+    wheel_index: https://download.openmmlab.com/mmcv/dist/cu118/torch2.1/index.html
+  sources:
+    - name: MMDetection
+      url: https://github.com/open-mmlab/mmdetection.git
+      revision: 44ebd17b145c2372c4b700bfb9cb20dbd28ab64a
+      license: Apache-2.0
+
+vmamba:
+  extends: openmmlab
+  sources:
+    - name: VMamba
+      url: https://github.com/MzeroMiko/VMamba.git
+      revision: 2ed52ead062a51a64521ed3871d52914bf532876
+      license: MIT
+  pretrained:
+    filename: vmamba_tiny_e292.pth
+    required: true
+    train_from_scratch: false

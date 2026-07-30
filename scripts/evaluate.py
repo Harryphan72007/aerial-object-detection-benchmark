@@ -19,6 +19,14 @@ from src.training.checkpointing import RunRegistry
 from src.utils.serialization import read_yaml, write_json
 
 
+def require_successful_evaluation(failures: list[dict[str, Any]]) -> None:
+    if failures:
+        failed = ", ".join(
+            f"{row['run_id']} ({row['exception_type']})" for row in failures
+        )
+        raise RuntimeError(f"Evaluation failed for selected run(s): {failed}")
+
+
 def discover_evaluation_dataset(
     paths: ProjectPaths,
     dataset_track: str,
@@ -297,5 +305,9 @@ def main() -> None:
         / f"comparison_{args.dataset_track}_{args.split}.json",
         results,
     )
+    write_json(paths.evaluation / "evaluation_failures.json", failed_models)
+    require_successful_evaluation(failed_models)
+
+
 if __name__ == "__main__":
     main()

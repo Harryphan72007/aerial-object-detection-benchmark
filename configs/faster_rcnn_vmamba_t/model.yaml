@@ -1,6 +1,8 @@
 model_id: faster_rcnn_vmamba_t
 architecture_family: Mamba
 framework: vmamba_mmdetection
+source_revision: 2ed52ead062a51a64521ed3871d52914bf532876
+source_license: MIT
 framework_config: detection/configs/vssm/mask_rcnn_vssm_fpn_coco_tiny.py
 external_root_env: VMAMBA_ROOT
 strip_mask_branch: true

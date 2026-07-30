@@ -1,113 +1,83 @@
 # Aerial Object Detection Benchmark
 
-## Project purpose
+Student-friendly, resumable VisDrone experiments for four detector families:
 
-This repository compares four detector families on VisDrone with one controlled,
-learning-rate-only protocol. It provides deterministic dataset preparation,
-resumable successive halving, full-official-train fine-tuning, common evaluation,
-profiling, reporting, and safe lightweight result publishing.
-
-No benchmark metrics are placeholders. The repository stays empty of results until
-measured, compatible runs are published.
-
-## Models
-
-| `MODEL_ID` | Architecture |
+| `MODEL_ID` | Family |
 |---|---|
 | `faster_rcnn_resnet50` | Faster R-CNN + ResNet-50-FPN |
 | `faster_rcnn_swin_t` | Faster R-CNN + Swin-T-FPN |
 | `faster_rcnn_vmamba_t` | Faster R-CNN + VMamba-T-FPN |
 | `rtdetrv2_l` | RT-DETRv2 R101 |
 
-YOLOX is not part of the controlled benchmark.
+YOLOX is excluded. No benchmark metric in this repository is a placeholder.
 
-## Run the benchmark
+## Start in Colab
 
-1. Run dataset setup once.
-2. Choose one `MODEL_ID` in notebook 01.
-3. Rerun notebook 01 after interruptions; it resumes the next compatible stage.
-4. Dry-run and publish that model with notebook 02.
-5. After at least two models finish, compare them with notebook 03.
+1. Run [`00_prepare_visdrone.ipynb`](notebooks/00_prepare_visdrone.ipynb).
+2. Choose either the preserved LR workflow (01 → 02 → 03) or one model’s HPO
+   and final pair below.
+3. Change only the small parameter cell and run all cells.
+4. After interruption, reopen the same notebook and run all cells again.
 
-See [docs/RUN.md](docs/RUN.md) for the complete student workflow.
+All artifacts are discovered automatically under
+`/content/drive/MyDrive/visdrone_architecture_benchmark`; users never copy a
+checkpoint path, run ID, study name, or configuration between notebooks.
 
-## Data contract and storage
-
-Notebook 00 verifies the archive bytes, atomic extraction inventories, COCO
-conversion provenance, and LR-search identities before printing `DATA CONTRACT
-VERIFIED: YES`. The persistent layout is:
-
-```text
-$DRIVE_ROOT/
-└── datasets/VisDrone2019-DET/
-    ├── archives/
-    │   ├── VisDrone2019-DET-train.zip
-    │   └── VisDrone2019-DET-val.zip
-    ├── raw/
-    │   ├── VisDrone2019-DET-train/
-    │   │   ├── images/
-    │   │   └── annotations/
-    │   └── VisDrone2019-DET-val/
-    │       ├── images/
-    │       └── annotations/
-    ├── processed/
-    │   └── coco_2class/
-    │       └── annotations/
-    │           ├── instances_train.json
-    │           ├── instances_val.json
-    │           ├── conversion_manifest_train.json
-    │           └── conversion_manifest_val.json
-    └── manifests/
-        ├── train_archive.json
-        ├── val_archive.json
-        ├── train_extraction.json
-        ├── val_extraction.json
-        └── lr_search/
-```
-
-ZIP files and extracted raw data persist on Drive. Processed COCO directories
-contain annotations and provenance, not copied images. Training and evaluation
-resolve the raw image roots through `ProjectPaths`. Notebook 01 can synchronize
-an ephemeral `/content/visdrone_cache` for faster Colab image reads; checkpoints,
-search state, selected configurations, metrics, and reports always remain on
-Drive.
-
-## Required notebooks
-
-| Step | Notebook | Colab |
+| Model | HPO | Baseline + tuned final runs |
 |---|---|---|
-| 0 | [`00_prepare_visdrone.ipynb`](notebooks/00_prepare_visdrone.ipynb) | [Open in Colab](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/00_prepare_visdrone.ipynb) |
-| 1 | [`01_run_model_day.ipynb`](notebooks/01_run_model_day.ipynb) | [Open in Colab](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/01_run_model_day.ipynb) |
-| 2 | [`02_publish_results.ipynb`](notebooks/02_publish_results.ipynb) | [Open in Colab](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/02_publish_results.ipynb) |
-| 3 | [`03_compare_all_models.ipynb`](notebooks/03_compare_all_models.ipynb) | [Open in Colab](https://colab.research.google.com/github/Harryphan72007/aerial-object-detection-benchmark/blob/main/notebooks/03_compare_all_models.ipynb) |
+| ResNet-50 | [`10_hpo_resnet50.ipynb`](notebooks/10_hpo_resnet50.ipynb) | [`20_finetune_resnet50.ipynb`](notebooks/20_finetune_resnet50.ipynb) |
+| Swin-T | [`11_hpo_swin_t.ipynb`](notebooks/11_hpo_swin_t.ipynb) | [`21_finetune_swin_t.ipynb`](notebooks/21_finetune_swin_t.ipynb) |
+| VMamba-T | [`12_hpo_vmamba_t.ipynb`](notebooks/12_hpo_vmamba_t.ipynb) | [`22_finetune_vmamba_t.ipynb`](notebooks/22_finetune_vmamba_t.ipynb) |
+| RT-DETRv2 | [`13_hpo_rtdetrv2.ipynb`](notebooks/13_hpo_rtdetrv2.ipynb) | [`23_finetune_rtdetrv2.ipynb`](notebooks/23_finetune_rtdetrv2.ipynb) |
 
-Optional analysis notebooks live under [`notebooks/optional/`](notebooks/optional/)
-and are not required to complete the benchmark.
+Then use [`30_evaluate_all_models.ipynb`](notebooks/30_evaluate_all_models.ipynb)
+and [`31_publish_results.ipynb`](notebooks/31_publish_results.ipynb).
 
-## Current status
+## Protocols and tracks
 
-The code and CPU synthetic journey are testable in CI. Full model construction,
-CUDA training, VMamba selective-scan compilation, and benchmark metrics require
-the documented GPU runtimes and have not been fabricated by repository tests.
+- `lr_controlled_v1` preserves the seed-42, LR-only workflow in notebooks 01–03.
+- `two_stage_random_hpo_v1` runs five broad and five refined random trials, then
+  baseline and tuned final recipes at seeds 17, 42, and 3407.
+- Track A (`2class`) preserves the PERSON/VEHICLE collapse. Track B (`10class`)
+  preserves the original ten classes. Their mAP values are never compared.
 
-The same discovery layer is available from one CLI:
+## Hosted Colab environments
+
+Each model family receives a pinned, content-addressed environment below
+`/content/visdrone_model_envs`; one family cannot overwrite another. Exact
+versions, revisions, and licenses are in
+[`configs/runtime_environments.yaml`](configs/runtime_environments.yaml).
+
+VMamba requires `$DRIVE_ROOT/pretrained/vmamba_tiny_e292.pth`; training it from
+scratch is disabled. CPU repository tests do not claim GPU compatibility. The
+real model must pass construction, one-small-batch train/predict, checkpoint
+save, and checkpoint reload before search.
+
+## Persistent artifacts
+
+Drive stores datasets, environment manifests, Optuna studies, selected configs,
+checkpoints, registry files, predictions, evaluation, profiling, reports, and
+result bundles. Datasets, checkpoints, predictions, logs, credentials, and
+executed notebook outputs are never committed.
+
+See [`docs/RUN.md`](docs/RUN.md), [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md),
+[`docs/METHODOLOGY.md`](docs/METHODOLOGY.md), and
+[`docs/RESULTS.md`](docs/RESULTS.md).
+
+## Verification
 
 ```bash
-python -m scripts.benchmark status
-python -m scripts.benchmark next --model-id rtdetrv2_l
-python -m scripts.benchmark run-model-day --model-id rtdetrv2_l
-python -m scripts.benchmark publish --model-id rtdetrv2_l --dry-run
-python -m scripts.benchmark compare
+ruff check src scripts tests
+pytest -q
+python -m compileall -q src scripts tests
+python scripts/validate_notebooks.py
+python scripts/clean_notebooks.py --check notebooks
+python scripts/run_notebook_smoke.py --timeout 180
+python scripts/validate_doc_links.py
+python scripts/scan_repository_secrets.py
+python -m scripts.validate_results --repo-results results/
 ```
 
-## Results
-
-Only validated lightweight bundles belong under `results/bundles/`. Datasets,
-checkpoints, raw predictions, training logs, and credentials remain outside Git.
-See [docs/RESULTS.md](docs/RESULTS.md).
-
-## Licenses and citation
-
-Project code is MIT licensed. VisDrone and upstream model/framework assets retain
-their own terms; review [LICENSES.md](LICENSES.md). Cite this repository using
-[CITATION.cff](CITATION.cff).
+Project code is MIT licensed. Upstream assets retain their own terms; see
+[`LICENSES.md`](LICENSES.md). Treat VisDrone use and derived results as
+research-only unless separate permission is confirmed.

@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import sys
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
@@ -12,12 +11,19 @@ from typing import Any
 
 from src.benchmark_status import discover_model_status, find_selected_config
 from src.data.contract import verify_complete_data_contract
+from src.data.image_files import first_supported_image
 from src.data.local_cache import DataAccessPaths, resolve_data_access
 from src.models.registry import create_adapter, load_model_config
 from src.paths import ProjectPaths
+from src.subprocess_utils import python_module_command
 from src.training.lr_search import resolve_batch_policy
 from src.training.lr_workflow import LRControlledBenchmark
 from src.utils.serialization import read_json, read_yaml, write_json
+from src.workflows.adapter_gate import (
+    adapter_fingerprint,
+    adapter_gate_decision,
+    print_gate_decision,
+)
 from src.workflows.contract import BENCHMARK_CONTRACT, require_primary_model
 from src.workflows.environment import ensure_model_environment
 
@@ -78,6 +84,19 @@ def _report_contains_run(path: Path, run_id: str | None) -> bool:
     return isinstance(rows, list) and any(row.get("run_id") == run_id for row in rows)
 
 
+def _profile_complete(path: Path | None) -> bool:
+    if not path or not path.is_file():
+        return False
+    try:
+        profile = read_json(path)
+    except (OSError, json.JSONDecodeError):
+        return False
+    return any(
+        int(row.get("batch_size", -1)) == 1 and row.get("status") == "completed"
+        for row in profile.get("profiles", [])
+    )
+
+
 def inspect_model_day(
     drive_root: str | Path,
     model_id: str,
@@ -110,10 +129,14 @@ def inspect_model_day(
     run_id = status.get("final_run_id")
     gate_path = paths.lr_search_checkpoints / model_id / "adapter_smoke.json"
     gate = read_json(gate_path) if gate_path.is_file() else {}
-    if gate.get("status") in {"FAILED_ENVIRONMENT", "FAILED_ADAPTER", "FAILED_OOM"}:
+    fingerprint = adapter_fingerprint(model_id, repo_root)
+    gate_decision, gate_reasons = adapter_gate_decision(gate, fingerprint)
+    if gate_decision == "blocked":
         status["environment_preflight"] = "BLOCKED"
+    elif gate_decision in {"invalidate", "retry", "run"}:
+        status["environment_preflight"] = "NOT_STARTED"
     profile_path = paths.evaluation / f"{run_id}__profile.json" if run_id else None
-    profile_complete = bool(profile_path and profile_path.is_file())
+    profile_complete = _profile_complete(profile_path)
     model_report_dir = (
         paths.reports / "models" / model_id / str(run_id) if run_id else None
     )
@@ -126,7 +149,7 @@ def inspect_model_day(
     if not dataset_ready:
         stage = Stage.DATA
     elif (
-        gate.get("status") != "READY"
+        gate_decision != "reuse"
         and status["lr_search_status"] == "NOT_STARTED"
         and status["final_training_status"] == "NOT_STARTED"
     ):
@@ -169,7 +192,12 @@ def inspect_model_day(
         "recommended_bundle": (
             f"{model_id}__2class__{run_id}" if run_id else None
         ),
-        "adapter_gate": gate,
+        "adapter_gate": {
+            **gate,
+            "current_fingerprint": fingerprint,
+            "decision": gate_decision,
+            "decision_reasons": gate_reasons,
+        },
         "contract": BENCHMARK_CONTRACT,
         "data_contract": data_contract_payload,
     }
@@ -200,10 +228,14 @@ def _adapter_smoke(
 ) -> dict[str, Any]:
     """Exercise construction, train/backward/step, validation, save, and reload."""
     gate_path = workflow.paths.lr_search_checkpoints / model_id / "adapter_smoke.json"
-    if gate_path.is_file():
-        gate = read_json(gate_path)
-        if gate.get("status") == "READY":
-            return gate
+    gate = read_json(gate_path) if gate_path.is_file() else {}
+    fingerprint = adapter_fingerprint(model_id, workflow.repo_root)
+    decision, reasons = adapter_gate_decision(gate, fingerprint)
+    print_gate_decision(decision, reasons)
+    if decision == "reuse":
+        return gate
+    if decision == "blocked":
+        raise RuntimeError("; ".join(reasons))
     workflow.prepare_manifests()
     smoke_root = workflow.paths.lr_search_checkpoints / model_id / "_adapter_smoke"
     smoke_root.mkdir(parents=True, exist_ok=True)
@@ -258,6 +290,7 @@ def _adapter_smoke(
             gate = {
                 "status": "READY",
                 "model_id": model_id,
+                "fingerprint": fingerprint,
                 "batch_policy": policy,
                 "checks": {
                     "model_construction": True,
@@ -285,11 +318,17 @@ def _adapter_smoke(
                 gate = {
                     "status": "FAILED_ADAPTER",
                     "model_id": model_id,
+                    "fingerprint": fingerprint,
                     "failures": failures,
                 }
                 write_json(gate_path, gate)
                 raise
-    gate = {"status": "FAILED_OOM", "model_id": model_id, "failures": failures}
+    gate = {
+        "status": "FAILED_OOM",
+        "model_id": model_id,
+        "fingerprint": fingerprint,
+        "failures": failures,
+    }
     write_json(gate_path, gate)
     raise RuntimeError("FAILED_OOM: batch 2/accumulation 4 and batch 1/accumulation 8 failed")
 
@@ -302,8 +341,12 @@ def _batch_policy(state: dict[str, Any]) -> tuple[int, int]:
     return batch, accumulation
 
 
-def _run_command(repo: Path, *arguments: str) -> None:
-    subprocess.run([sys.executable, *arguments], check=True, cwd=repo)
+def _run_module(repo: Path, module: str, *arguments: str) -> None:
+    subprocess.run(
+        python_module_command(module, *arguments),
+        check=True,
+        cwd=repo,
+    )
 
 
 def run_model_day(
@@ -379,11 +422,13 @@ def run_model_day(
                     options.model_id, repo, paths.root, install_missing=True
                 )
             except Exception as error:
+                fingerprint = adapter_fingerprint(options.model_id, repo)
                 write_json(
                     gate_path,
                     {
                         "status": "FAILED_ENVIRONMENT",
                         "model_id": options.model_id,
+                        "fingerprint": fingerprint,
                         "error": repr(error),
                     },
                 )
@@ -497,9 +542,9 @@ def run_model_day(
             history.append("FINAL_TRAINING:COMPLETE")
             continue
         if stage == Stage.EVALUATION:
-            _run_command(
+            _run_module(
                 repo,
-                str(repo / "scripts" / "evaluate.py"),
+                "scripts.evaluate",
                 "--drive-root",
                 str(paths.root),
                 "--dataset-track",
@@ -520,7 +565,6 @@ def run_model_day(
             continue
         if stage == Stage.PROFILING:
             profile_args = [
-                str(repo / "scripts" / "profile_model.py"),
                 "--drive-root",
                 str(paths.root),
                 "--run-id",
@@ -530,9 +574,9 @@ def run_model_day(
             ]
             if options.smoke_test:
                 profile_args.extend(["--warmup", "1", "--iterations", "1"])
-            profile_image = next(workflow.validation_images.glob("*"))
+            profile_image = first_supported_image(workflow.validation_images)
             profile_args.extend(["--image", str(profile_image)])
-            _run_command(repo, *profile_args)
+            _run_module(repo, "scripts.profile_model", *profile_args)
             history.append("PROFILING:COMPLETE")
             continue
         if stage == Stage.REPORT:

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 
 import nbformat
@@ -10,17 +12,29 @@ import nbformat
 
 TRANSIENT_CELL_METADATA = {
     "collapsed",
+    "colab",
     "execution",
     "jupyter",
     "outputId",
     "scrolled",
 }
-TRANSIENT_NOTEBOOK_METADATA = {"widgets", "varInspector"}
+TRANSIENT_NOTEBOOK_METADATA = {"colab", "widgets", "varInspector"}
 
 
 def clean_notebook(path: str | Path, *, check: bool = False) -> bool:
     notebook_path = Path(path)
-    notebook = nbformat.read(notebook_path, as_version=4)
+    raw = json.loads(notebook_path.read_text(encoding="utf-8"))
+    missing_id = False
+    for index, cell in enumerate(raw.get("cells", [])):
+        if not cell.get("id"):
+            identity = hashlib.sha256(
+                f"{index}:{cell.get('cell_type')}:{cell.get('source')}".encode(
+                    "utf-8"
+                )
+            ).hexdigest()[:12]
+            cell["id"] = f"cell-{identity}"
+            missing_id = True
+    notebook = nbformat.from_dict(raw)
     original = nbformat.writes(notebook)
     for key in TRANSIENT_NOTEBOOK_METADATA:
         notebook.metadata.pop(key, None)
@@ -31,7 +45,7 @@ def clean_notebook(path: str | Path, *, check: bool = False) -> bool:
             cell.outputs = []
             cell.execution_count = None
     cleaned = nbformat.writes(notebook)
-    changed = cleaned != original
+    changed = missing_id or cleaned != original
     if changed and not check:
         nbformat.write(notebook, notebook_path)
     return changed

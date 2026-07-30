@@ -9,6 +9,7 @@ import pytest
 
 from src.paths import ProjectPaths
 from src.utils.serialization import write_json, write_yaml
+from src.workflows.adapter_gate import adapter_fingerprint
 from src.workflows.contract import BENCHMARK_CONTRACT, validate_final_config
 from src.workflows.model_day import Stage, inspect_model_day
 
@@ -20,6 +21,16 @@ PRIMARY = {
     "01_run_model_day.ipynb",
     "02_publish_results.ipynb",
     "03_compare_all_models.ipynb",
+    "10_hpo_resnet50.ipynb",
+    "11_hpo_swin_t.ipynb",
+    "12_hpo_vmamba_t.ipynb",
+    "13_hpo_rtdetrv2.ipynb",
+    "20_finetune_resnet50.ipynb",
+    "21_finetune_swin_t.ipynb",
+    "22_finetune_vmamba_t.ipynb",
+    "23_finetune_rtdetrv2.ipynb",
+    "30_evaluate_all_models.ipynb",
+    "31_publish_results.ipynb",
 }
 LEGACY = {
     "00_colab_repository_setup.ipynb",
@@ -113,7 +124,7 @@ def _run(paths: ProjectPaths, status: str = "completed") -> Path:
     return run_dir
 
 
-def test_exactly_four_primary_notebooks_and_no_legacy_notebooks():
+def test_expected_primary_notebooks_and_no_legacy_notebooks():
     actual = {path.name for path in (ROOT / "notebooks").glob("*.ipynb")}
     assert actual == PRIMARY
     assert not any((ROOT / "notebooks" / name).exists() for name in LEGACY)
@@ -138,11 +149,52 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "DATA_ACCESS_MODE",
         },
         "02_publish_results.ipynb": {"MODEL_ID", "PUBLISH_RESULTS", "DRY_RUN"},
+        "10_hpo_resnet50.ipynb": {"DATASET_TRACK", "START_HPO"},
+        "11_hpo_swin_t.ipynb": {"DATASET_TRACK", "START_HPO"},
+        "12_hpo_vmamba_t.ipynb": {"DATASET_TRACK", "START_HPO"},
+        "13_hpo_rtdetrv2.ipynb": {"DATASET_TRACK", "START_HPO"},
+        "20_finetune_resnet50.ipynb": {
+            "DATASET_TRACK",
+            "START_FINETUNING",
+        },
+        "21_finetune_swin_t.ipynb": {
+            "DATASET_TRACK",
+            "START_FINETUNING",
+        },
+        "22_finetune_vmamba_t.ipynb": {
+            "DATASET_TRACK",
+            "START_FINETUNING",
+        },
+        "23_finetune_rtdetrv2.ipynb": {
+            "DATASET_TRACK",
+            "START_FINETUNING",
+        },
+        "30_evaluate_all_models.ipynb": {
+            "DATASET_TRACK",
+            "EVALUATE_MISSING",
+        },
+        "31_publish_results.ipynb": {
+            "MODEL_ID",
+            "DATASET_TRACK",
+            "PUBLISH_RESULTS",
+            "DRY_RUN",
+        },
     }
     for path in (ROOT / "notebooks").rglob("*.ipynb"):
         notebook = nbformat.read(path, as_version=4)
         nbformat.validate(notebook)
+        assert not {"colab", "varInspector", "widgets"}.intersection(
+            notebook.metadata
+        )
         for cell in notebook.cells:
+            assert not {
+                "collapsed",
+                "colab",
+                "execution",
+                "jupyter",
+                "outputId",
+                "scrolled",
+            }.intersection(cell.metadata)
             if cell.cell_type == "code":
                 assert cell.outputs == []
                 assert cell.execution_count is None
@@ -163,7 +215,14 @@ def test_auto_stage_detection_skips_completed_stages(tmp_path):
     )
     write_json(
         paths.lr_search_checkpoints / MODEL_ID / "adapter_smoke.json",
-        {"status": "READY", "batch_policy": {"per_device_batch_size": 2, "gradient_accumulation_steps": 4}},
+        {
+            "status": "READY",
+            "fingerprint": adapter_fingerprint(MODEL_ID, ROOT),
+            "batch_policy": {
+                "per_device_batch_size": 2,
+                "gradient_accumulation_steps": 4,
+            },
+        },
     )
     assert (
         inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
@@ -187,7 +246,10 @@ def test_auto_stage_detection_skips_completed_stages(tmp_path):
         inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
         == Stage.PROFILING
     )
-    write_json(paths.evaluation / f"{RUN_ID}__profile.json", {"profiles": []})
+    write_json(
+        paths.evaluation / f"{RUN_ID}__profile.json",
+        {"profiles": [{"batch_size": 1, "status": "completed"}]},
+    )
     assert (
         inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
         == Stage.REPORT

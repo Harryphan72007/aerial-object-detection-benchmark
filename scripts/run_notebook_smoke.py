@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,6 +14,23 @@ from pathlib import Path
 import nbformat
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
+
+PRIMARY_NOTEBOOKS = [
+    "00_prepare_visdrone.ipynb",
+    "01_run_model_day.ipynb",
+    "02_publish_results.ipynb",
+    "03_compare_all_models.ipynb",
+    "10_hpo_resnet50.ipynb",
+    "11_hpo_swin_t.ipynb",
+    "12_hpo_vmamba_t.ipynb",
+    "13_hpo_rtdetrv2.ipynb",
+    "20_finetune_resnet50.ipynb",
+    "21_finetune_swin_t.ipynb",
+    "22_finetune_vmamba_t.ipynb",
+    "23_finetune_rtdetrv2.ipynb",
+    "30_evaluate_all_models.ipynb",
+    "31_publish_results.ipynb",
+]
 
 
 def main() -> None:
@@ -21,17 +40,53 @@ def main() -> None:
     parser.add_argument("--output", default=".notebook-smoke/notebook_smoke_results.json")
     parser.add_argument(
         "--notebook",
-        choices=[
-            "00_prepare_visdrone.ipynb",
-            "01_run_model_day.ipynb",
-            "02_publish_results.ipynb",
-            "03_compare_all_models.ipynb",
-        ],
+        choices=PRIMARY_NOTEBOOKS,
         help="Execute one notebook so callers can enforce fresh harness processes.",
     )
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     smoke_root = root / ".notebook-smoke"
+    if args.notebook is None:
+        results: list[dict[str, object]] = []
+        for name in PRIMARY_NOTEBOOKS:
+            part = (
+                smoke_root
+                / "parts"
+                / f"{Path(name).stem}.json"
+            )
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(__file__).resolve()),
+                    "--kernel",
+                    args.kernel,
+                    "--timeout",
+                    str(args.timeout),
+                    "--output",
+                    str(part.relative_to(root)),
+                    "--notebook",
+                    name,
+                ],
+                cwd=root,
+                check=True,
+            )
+            results.extend(json.loads(part.read_text(encoding="utf-8"))["results"])
+        payload = {
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "mode": (
+                "CPU synthetic VisDrone smoke test; "
+                "training/tuning/publishing guarded"
+            ),
+            "kernel": args.kernel,
+            "results": results,
+        }
+        output = root / args.output
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return
     os.environ.update(
         {
             "SMOKE_TEST": "1",
@@ -43,12 +98,7 @@ def main() -> None:
     notebook_names = (
         [args.notebook]
         if args.notebook
-        else [
-            "00_prepare_visdrone.ipynb",
-            "01_run_model_day.ipynb",
-            "02_publish_results.ipynb",
-            "03_compare_all_models.ipynb",
-        ]
+        else PRIMARY_NOTEBOOKS
     )
     notebooks = [
         root / "notebooks" / name

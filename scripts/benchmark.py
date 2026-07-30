@@ -64,6 +64,9 @@ def parse_args() -> argparse.Namespace:
     publish = commands.add_parser("publish", help="Validate/preview or publish results")
     _shared(publish)
     publish.add_argument("--model-id", choices=PRIMARY_MODELS, required=True)
+    publish.add_argument(
+        "--dataset-track", choices=("2class", "10class"), default="2class"
+    )
     publish.add_argument("--publish-results", action="store_true")
     publish.add_argument("--dry-run", action=argparse.BooleanOptionalAction, default=True)
 
@@ -112,6 +115,7 @@ def main() -> None:
                 REPOSITORY_ROOT,
                 drive_root,
                 args.model_id,
+                dataset_track=args.dataset_track,
                 publish_results=args.publish_results,
                 dry_run=args.dry_run,
             )

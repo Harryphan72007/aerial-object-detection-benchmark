@@ -1,38 +1,28 @@
 # Result storage and publishing
 
-Persistent runtime artifacts live under the configured Drive root:
+Runtime artifacts remain under `$DRIVE_ROOT`: datasets, HPO studies, checkpoints,
+registry files, predictions, evaluation, profiling, reports, and result bundles.
+
+Git publication permits only:
 
 ```text
-datasets/             raw and converted data
-checkpoints/lr_search candidate state and checkpoints
-checkpoints/final/    resumable final runs
-predictions/          raw COCO predictions
-evaluation/           measured metrics and profiling
-reports/              generated reports and figures
-result_bundles/       lightweight validated bundles
+results/bundles/<bundle-id>/**
+results/manifests/latest_result_manifest.json
 ```
 
-None of these runtime directories belongs in Git.
+Before commit, the publisher rejects secrets, private paths, oversized files,
+datasets, checkpoints, raw predictions, archives, credentials, and unexpected
+staged paths. It validates the complete staged result tree and displays staged
+filenames and diff statistics.
 
-The only approved repository result path is:
+Publishing requires a clean `main` source checkout, `GH_TOKEN` authentication,
+and verified push permission. Work happens in a separately configured temporary
+clone. A missing `experiment-results` branch starts safely from `origin/main`;
+an existing branch is fetched and fast-forwarded. Force-push is never used.
 
-```text
-results/bundles/<bundle-id>/
-```
-
-Bundles contain selected/final configs, search rankings and promotions, measured
-metrics, small figures, environment and dataset hashes, and Git provenance.
-They reject datasets, checkpoints, optimizer/scheduler states, raw predictions,
-logs, credentials, private paths, secret-like content, and oversized files.
-
-Notebook 02 defaults to `PUBLISH_RESULTS=False` and `DRY_RUN=True`. The dry-run
-may create a persistent bundle but must leave Git byte-for-byte unchanged.
-Explicit publishing switches to `experiment-results`, exports and stages only the
-approved bundle path, shows staged names/statistics, commits, pushes, and opens or
-reports a pull request to `main`.
-
-Validate repository bundles with:
+Dry-run needs no authentication and leaves Git unchanged:
 
 ```bash
+python -m scripts.benchmark publish --model-id rtdetrv2_l --dry-run
 python -m scripts.validate_results --repo-results results/
 ```

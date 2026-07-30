@@ -11,6 +11,7 @@ PRIMARY_MODELS = (
 )
 
 BENCHMARK_CONTRACT: dict[str, Any] = {
+    "protocol_id": "lr_controlled_v1",
     "dataset_track": "2class",
     "search_seed": 42,
     "image_size": 640,
@@ -40,6 +41,7 @@ def require_primary_model(model_id: str) -> None:
 def validate_final_config(config: Mapping[str, Any], *, selected_lr: float | None = None) -> None:
     """Reject a run that is not the controlled final-training protocol."""
     expected = {
+        "protocol_id": BENCHMARK_CONTRACT["protocol_id"],
         "dataset_track": BENCHMARK_CONTRACT["dataset_track"],
         "image_size": BENCHMARK_CONTRACT["image_size"],
         "seed": BENCHMARK_CONTRACT["search_seed"],
@@ -51,7 +53,12 @@ def validate_final_config(config: Mapping[str, Any], *, selected_lr: float | Non
     changed = {
         key: (config.get(key), value)
         for key, value in expected.items()
-        if config.get(key) != value
+        if (
+            config.get(key, "lr_controlled_v1")
+            if key == "protocol_id"
+            else config.get(key)
+        )
+        != value
     }
     if changed:
         raise ValueError(f"Incompatible final run: {changed}")

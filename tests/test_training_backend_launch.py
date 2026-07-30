@@ -2,7 +2,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+from src.subprocess_utils import python_module_command
 from src.training.trainer import TrainingOrchestrator
+from src.workflows import model_day
 
 
 def test_rtdetr_backend_is_launched_as_repository_module(tmp_path: Path) -> None:
@@ -20,7 +24,11 @@ def test_rtdetr_backend_is_launched_as_repository_module(tmp_path: Path) -> None
     orchestrator._run_backend_process = capture
     result = orchestrator._run_rtdetr(
         run_dir,
-        {"pretrained_model_name_or_path": "example/model"},
+        {
+            "model_id": "rtdetrv2_l",
+            "pretrained_model_name_or_path": "example/model",
+            "pretrained_revision": "abc123",
+        },
         {
             "epochs": 1,
             "scheduler_horizon": 1,
@@ -106,9 +114,20 @@ def test_mmdetection_backend_is_launched_as_repository_module(
     assert launched["cwd"] == tmp_path
 
 
-def test_rtdetr_module_entrypoint_can_import_project() -> None:
+@pytest.mark.parametrize(
+    ("module", "expected_flag"),
+    [
+        ("scripts.run_rtdetr_training", "--run-dir"),
+        ("scripts.run_mmdetection", "--base-config"),
+        ("scripts.evaluate", "--drive-root"),
+        ("scripts.profile_model", "--drive-root"),
+    ],
+)
+def test_backend_module_entrypoint_can_import_project(
+    module: str, expected_flag: str
+) -> None:
     repo_root = Path(__file__).resolve().parents[1]
-    command = [sys.executable, "-m", "scripts.run_rtdetr_training", "--help"]
+    command = python_module_command(module, "--help")
 
     completed = subprocess.run(
         command,
@@ -119,4 +138,31 @@ def test_rtdetr_module_entrypoint_can_import_project() -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
-    assert "--run-dir" in completed.stdout
+    assert expected_flag in completed.stdout
+
+
+@pytest.mark.parametrize("module", ["scripts.evaluate", "scripts.profile_model"])
+def test_model_day_downstream_stage_is_launched_as_module(
+    module: str, tmp_path: Path, monkeypatch
+) -> None:
+    launched: dict[str, object] = {}
+
+    def capture(command: list[str], *, check: bool, cwd: Path) -> None:
+        launched.update(command=command, check=check, cwd=cwd)
+
+    monkeypatch.setattr(model_day.subprocess, "run", capture)
+    model_day._run_module(tmp_path, module, "--help")
+
+    assert launched == {
+        "command": [sys.executable, "-m", module, "--help"],
+        "check": True,
+        "cwd": tmp_path,
+    }
+
+
+@pytest.mark.parametrize(
+    "invalid", ["scripts/evaluate.py", "scripts\\evaluate.py", "evaluate.py", ""]
+)
+def test_repository_module_command_rejects_filepaths(invalid: str) -> None:
+    with pytest.raises(ValueError, match="dotted module names"):
+        python_module_command(invalid)

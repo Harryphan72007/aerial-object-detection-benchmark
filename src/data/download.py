@@ -297,30 +297,29 @@ def ensure_archive(
     return ArchiveEnsureResult(manifest, "downloaded")
 
 
-def _inventory(split_root: Path) -> dict[str, int | str]:
-    files = sorted(
-        (path for path in split_root.rglob("*") if path.is_file()),
-        key=lambda path: path.relative_to(split_root).as_posix(),
-    )
-    names = [path.relative_to(split_root).as_posix() for path in files]
+def _inventory_summary(
+    relative_files: list[tuple[str, int]],
+) -> dict[str, int | str]:
+    relative_files = sorted(relative_files, key=lambda item: item[0])
+    names = [name for name, _ in relative_files]
     inventory_hash = hashlib.sha256(
         ("\n".join(names) + ("\n" if names else "")).encode("utf-8")
     ).hexdigest()
     images = [
-        path
-        for path in files
-        if path.parent == split_root / "images"
-        and path.suffix.lower() in {".jpg", ".jpeg", ".png"}
+        name
+        for name in names
+        if Path(name).parent.as_posix() == "images"
+        and Path(name).suffix.lower() in {".jpg", ".jpeg", ".png"}
     ]
     annotations = [
-        path
-        for path in files
-        if path.parent == split_root / "annotations" and path.suffix.lower() == ".txt"
+        name
+        for name in names
+        if Path(name).parent.as_posix() == "annotations"
+        and Path(name).suffix.lower() == ".txt"
     ]
-    image_names = [path.relative_to(split_root / "images").as_posix() for path in images]
+    image_names = [name.removeprefix("images/") for name in images]
     annotation_names = [
-        path.relative_to(split_root / "annotations").as_posix()
-        for path in annotations
+        name.removeprefix("annotations/") for name in annotations
     ]
     names_hash = lambda values: hashlib.sha256(
         ("\n".join(values) + ("\n" if values else "")).encode("utf-8")
@@ -331,8 +330,45 @@ def _inventory(split_root: Path) -> dict[str, int | str]:
         "relative_filename_inventory_sha256": inventory_hash,
         "image_filename_inventory_sha256": names_hash(image_names),
         "annotation_filename_inventory_sha256": names_hash(annotation_names),
-        "total_extracted_bytes": sum(path.stat().st_size for path in files),
+        "total_extracted_bytes": sum(size for _, size in relative_files),
     }
+
+
+def _inventory(split_root: Path) -> dict[str, int | str]:
+    return _inventory_summary(
+        [
+            (path.relative_to(split_root).as_posix(), path.stat().st_size)
+            for path in split_root.rglob("*")
+            if path.is_file()
+        ]
+    )
+
+
+def _archive_inventory(
+    archive_path: Path,
+    expected_folder: str,
+) -> dict[str, int | str]:
+    prefix = f"{expected_folder}/"
+    with zipfile.ZipFile(archive_path) as archive:
+        relative_files = [
+            (member.filename[len(prefix) :], member.file_size)
+            for member in archive.infolist()
+            if not member.is_dir()
+            and member.filename.startswith(prefix)
+            and member.filename != prefix
+        ]
+    return _inventory_summary(relative_files)
+
+
+def _matches_archive_inventory(
+    split_root: Path,
+    archive_inventory: dict[str, int | str],
+) -> bool:
+    if not (split_root / "images").is_dir() or not (
+        split_root / "annotations"
+    ).is_dir():
+        return False
+    return _inventory(split_root) == archive_inventory
 
 
 def write_extraction_manifest(
@@ -484,10 +520,46 @@ def extract_idempotent(
 
     raw_root.mkdir(parents=True, exist_ok=True)
     staging = raw_root / f".{expected_folder}.extracting"
+    archive_inventory = _archive_inventory(archive_path, expected_folder)
+
+    def record_and_verify(action: str) -> tuple[Path, str]:
+        write_extraction_manifest(
+            split=split,
+            archive_path=archive_path,
+            split_root=destination,
+            expected_folder=expected_folder,
+            manifest_path=manifest_path,
+            verified_archive_sha256=verified_archive_sha256,
+            verified_archive_size_bytes=verified_archive_size_bytes,
+        )
+        verified = verify_extraction_manifest(
+            split=split,
+            archive_path=archive_path,
+            split_root=destination,
+            expected_folder=expected_folder,
+            manifest_path=manifest_path,
+            verified_archive_sha256=verified_archive_sha256,
+            verified_archive_size_bytes=verified_archive_size_bytes,
+        )
+        if not verified["valid"]:
+            raise RuntimeError(
+                f"atomic extraction verification failed: {verified['errors']}"
+            )
+        return destination, action
+
     if staging.exists():
+        staged_split = staging / expected_folder
+        if _matches_archive_inventory(staged_split, archive_inventory):
+            if destination.exists():
+                shutil.rmtree(destination)
+            staged_split.replace(destination)
+            shutil.rmtree(staging)
+            return record_and_verify("recovered_staging")
         shutil.rmtree(staging)
-    if destination.exists():
-        shutil.rmtree(destination)
+
+    if _matches_archive_inventory(destination, archive_inventory):
+        return record_and_verify("manifest_adopted")
+
     staging.mkdir(parents=True)
     with zipfile.ZipFile(archive_path) as archive:
         staging_resolved = staging.resolve()
@@ -499,33 +571,15 @@ def extract_idempotent(
                 raise ValueError(f"unsafe path in ZIP archive: {member.filename}")
         archive.extractall(staging)
     extracted = staging / expected_folder
-    if not (extracted / "images").is_dir() or not (extracted / "annotations").is_dir():
+    if not _matches_archive_inventory(extracted, archive_inventory):
         raise ValueError(
-            f"archive extracted without the expected images/annotations layout: {archive_path}"
+            f"archive extraction inventory does not match the ZIP: {archive_path}"
         )
+    if destination.exists():
+        shutil.rmtree(destination)
     extracted.replace(destination)
     shutil.rmtree(staging)
-    write_extraction_manifest(
-        split=split,
-        archive_path=archive_path,
-        split_root=destination,
-        expected_folder=expected_folder,
-        manifest_path=manifest_path,
-        verified_archive_sha256=verified_archive_sha256,
-        verified_archive_size_bytes=verified_archive_size_bytes,
-    )
-    verified = verify_extraction_manifest(
-        split=split,
-        archive_path=archive_path,
-        split_root=destination,
-        expected_folder=expected_folder,
-        manifest_path=manifest_path,
-        verified_archive_sha256=verified_archive_sha256,
-        verified_archive_size_bytes=verified_archive_size_bytes,
-    )
-    if not verified["valid"]:
-        raise RuntimeError(f"atomic extraction verification failed: {verified['errors']}")
-    return destination, "extracted"
+    return record_and_verify("extracted")
 
 
 def dataset_split_ready(

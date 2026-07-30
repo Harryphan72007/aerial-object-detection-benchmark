@@ -75,7 +75,7 @@ def prepare_visdrone(
             verified_archive_sha256=ensured.manifest.sha256,
             verified_archive_size_bytes=ensured.manifest.size_bytes,
         )
-        if extraction_action == "extracted":
+        if extraction_action in {"extracted", "recovered_staging"}:
             operations["extractions"].append(split)
 
     tracks = ["2class", *(["10class"] if prepare_10class_track else [])]

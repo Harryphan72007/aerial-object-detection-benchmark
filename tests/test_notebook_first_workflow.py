@@ -232,3 +232,15 @@ def test_publishing_configuration_defaults_to_dry_run():
     exec(compile(parameter.source, "<parameters>", "exec"), {}, values)
     assert values["PUBLISH_RESULTS"] is False
     assert values["DRY_RUN"] is True
+
+
+def test_notebook_one_gives_concise_interrupted_setup_recovery_instruction():
+    notebook = nbformat.read(
+        ROOT / "notebooks" / "01_run_model_day.ipynb", as_version=4
+    )
+    source = "\n".join(
+        cell.source for cell in notebook.cells if cell.cell_type == "code"
+    )
+    assert "Dataset setup is incomplete or was interrupted." in source
+    assert "notebook 00 will recover or rebuild it" in source
+    assert "stopped safely before caching or training" in source

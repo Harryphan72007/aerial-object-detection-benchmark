@@ -70,6 +70,87 @@ def test_archive_validation_and_idempotent_extraction(tmp_path):
     assert payload["total_extracted_bytes"] > 0
 
 
+def test_complete_legacy_extraction_is_adopted_without_reextracting(tmp_path):
+    archive = tmp_path / "split.zip"
+    expected = "VisDrone2019-DET-train"
+    with zipfile.ZipFile(archive, "w") as output:
+        output.writestr(f"{expected}/images/0001.jpg", b"image")
+        output.writestr(f"{expected}/annotations/0001.txt", b"annotation")
+    destination = tmp_path / "raw" / expected
+    (destination / "images").mkdir(parents=True)
+    (destination / "annotations").mkdir()
+    (destination / "images" / "0001.jpg").write_bytes(b"image")
+    (destination / "annotations" / "0001.txt").write_bytes(b"annotation")
+
+    resolved, action = extract_idempotent(
+        archive,
+        tmp_path / "raw",
+        expected,
+        split="train",
+        manifest_path=tmp_path / "train_extraction.json",
+    )
+
+    assert resolved == destination
+    assert action == "manifest_adopted"
+    assert (destination / "images" / "0001.jpg").read_bytes() == b"image"
+
+
+def test_completed_staging_directory_is_recovered_after_disconnect(tmp_path):
+    archive = tmp_path / "split.zip"
+    expected = "VisDrone2019-DET-train"
+    with zipfile.ZipFile(archive, "w") as output:
+        output.writestr(f"{expected}/images/0001.jpg", b"image")
+        output.writestr(f"{expected}/annotations/0001.txt", b"annotation")
+    raw = tmp_path / "raw"
+    staging = raw / f".{expected}.extracting"
+    staging.mkdir(parents=True)
+    with zipfile.ZipFile(archive) as source:
+        source.extractall(staging)
+
+    destination, action = extract_idempotent(
+        archive,
+        raw,
+        expected,
+        split="train",
+        manifest_path=tmp_path / "train_extraction.json",
+    )
+
+    assert action == "recovered_staging"
+    assert (destination / "images" / "0001.jpg").is_file()
+    assert not staging.exists()
+
+
+def test_failed_reextraction_preserves_existing_destination(tmp_path, monkeypatch):
+    archive = tmp_path / "split.zip"
+    expected = "VisDrone2019-DET-train"
+    with zipfile.ZipFile(archive, "w") as output:
+        output.writestr(f"{expected}/images/new.jpg", b"new-image")
+        output.writestr(f"{expected}/annotations/new.txt", b"new-annotation")
+    destination = tmp_path / "raw" / expected
+    (destination / "images").mkdir(parents=True)
+    (destination / "annotations").mkdir()
+    old_image = destination / "images" / "old.jpg"
+    old_annotation = destination / "annotations" / "old.txt"
+    old_image.write_bytes(b"old-image")
+    old_annotation.write_bytes(b"old-annotation")
+
+    def interrupted_extract(*args, **kwargs):
+        raise RuntimeError("simulated extraction interruption")
+
+    monkeypatch.setattr(zipfile.ZipFile, "extractall", interrupted_extract)
+    with pytest.raises(RuntimeError, match="simulated extraction interruption"):
+        extract_idempotent(
+            archive,
+            tmp_path / "raw",
+            expected,
+            split="train",
+            manifest_path=tmp_path / "train_extraction.json",
+        )
+
+    assert old_image.read_bytes() == b"old-image"
+    assert old_annotation.read_bytes() == b"old-annotation"
+
+
 def test_manual_archive_mode_prints_exact_placement_contract(tmp_path):
     with pytest.raises(ManualArchiveRequired) as error:
         ensure_archive(

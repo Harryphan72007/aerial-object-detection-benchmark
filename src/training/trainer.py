@@ -344,7 +344,8 @@ class TrainingOrchestrator:
         upstream_config = self._resolve_upstream_config(model_config)
         command = [
             sys.executable,
-            str(self.repo_root / "scripts" / "run_mmdetection.py"),
+            "-m",
+            "scripts.run_mmdetection",
             "--base-config",
             str(upstream_config),
             "--run-dir",
@@ -444,7 +445,8 @@ class TrainingOrchestrator:
     ) -> dict[str, Any]:
         command = [
             sys.executable,
-            str(self.repo_root / "scripts" / "run_rtdetr_training.py"),
+            "-m",
+            "scripts.run_rtdetr_training",
             "--run-dir",
             str(run_dir),
             "--model-name",

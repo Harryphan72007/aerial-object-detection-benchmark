@@ -1,8 +1,12 @@
 """Persistent two-phase Optuna random search on official-train-only subsets."""
 from __future__ import annotations
 
+import gc
 import hashlib
 import json
+import math
+import os
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -22,6 +26,16 @@ from src.hpo.search_spaces import broad_search_space, refined_search_space
 HPO_PROTOCOL_ID = "two_stage_random_hpo_v1"
 SEARCH_SEED = 42
 PHASE_TRIALS = 5
+MAX_ATTEMPT_MULTIPLIER = 4
+DIVERGENCE_MARKERS = (
+    "nan",
+    "non-finite",
+    "not finite",
+    "infinite",
+    "boxes1 must be",
+    "boxes2 must be",
+)
+OOM_MARKERS = ("cuda out of memory", "out of memory")
 TrialRunner = Callable[[str, int, dict[str, Any], Path], tuple[float, float]]
 
 
@@ -46,6 +60,27 @@ def _sample(trial: Any, space: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return parameters
 
 
+def _failure_kind(error: BaseException) -> str | None:
+    message = str(error).lower()
+    if any(marker in message for marker in OOM_MARKERS):
+        return "out_of_memory"
+    if any(marker in message for marker in DIVERGENCE_MARKERS):
+        return "numerical_divergence"
+    return None
+
+
+def _cleanup_accelerator_memory() -> None:
+    """Release parent-process references after every isolated training run."""
+    gc.collect()
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except (ImportError, RuntimeError):
+        pass
+
+
 class TwoStageRandomHPO:
     def __init__(
         self,
@@ -62,19 +97,30 @@ class TwoStageRandomHPO:
         self.paths = ProjectPaths.from_value(drive_root).create()
         self.model_id = model_id
         self.dataset_track = dataset_track
+        self.smoke_test = os.environ.get("SMOKE_TEST", "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
         load_model_config(model_id, self.repo_root)
-        self.root = (
+        full_root = (
             self.paths.root
             / "hpo"
             / HPO_PROTOCOL_ID
             / model_id
             / dataset_track
         )
+        self.root = full_root / "smoke_test" if self.smoke_test else full_root
         self.root.mkdir(parents=True, exist_ok=True)
         self.manifest_dir = (
             self.paths.dataset_manifests / "hpo" / dataset_track
         )
         self.trial_runner = trial_runner or self._run_training_trial
+
+    @property
+    def study_path(self) -> Path:
+        filename = "study_smoke.db" if self.smoke_test else "study.db"
+        return self.root / filename
 
     def prepare_manifests(self) -> dict[str, Any]:
         train = (
@@ -164,6 +210,7 @@ class TwoStageRandomHPO:
                 f"{self.model_id}__{self.dataset_track}__{HPO_PROTOCOL_ID}"
                 f"__{phase}__trial{trial_number:02d}"
             ),
+            resume_run_id=None,
             register_run=False,
             scheduler_horizon=epochs,
             validation_interval=1,
@@ -179,9 +226,13 @@ class TwoStageRandomHPO:
     def _study(self, metadata: dict[str, Any]):
         import optuna
 
-        storage = f"sqlite:///{(self.root / 'study.db').as_posix()}"
+        self.study_path.parent.mkdir(parents=True, exist_ok=True)
+        storage = f"sqlite:///{self.study_path.as_posix()}"
+        suffix = "__smoke" if self.smoke_test else ""
         study = optuna.create_study(
-            study_name=f"{self.model_id}__{self.dataset_track}__{HPO_PROTOCOL_ID}",
+            study_name=(
+                f"{self.model_id}__{self.dataset_track}__{HPO_PROTOCOL_ID}{suffix}"
+            ),
             storage=storage,
             sampler=optuna.samplers.RandomSampler(seed=SEARCH_SEED),
             directions=["maximize", "maximize"],
@@ -189,10 +240,28 @@ class TwoStageRandomHPO:
         )
         existing = study.user_attrs.get("metadata")
         if existing and existing != metadata:
-            raise RuntimeError(
-                "Persisted HPO study metadata is incompatible with the current "
-                "dataset, source, environment, or objective."
+            immutable_keys = (
+                "model_id",
+                "dataset_track",
+                "protocol_id",
+                "search_seed",
+                "dataset_hashes",
+                "objective",
             )
+            changed = {
+                key: (existing.get(key), metadata.get(key))
+                for key in immutable_keys
+                if existing.get(key) != metadata.get(key)
+            }
+            if changed:
+                raise RuntimeError(
+                    "Persisted HPO study is incompatible with the current "
+                    f"scientific contract: {changed}"
+                )
+            history = list(study.user_attrs.get("metadata_history", []))
+            if existing not in history:
+                history.append(existing)
+            study.set_user_attr("metadata_history", history)
         study.set_user_attr("metadata", metadata)
         return study
 
@@ -202,34 +271,92 @@ class TwoStageRandomHPO:
         phase: str,
         space: dict[str, dict[str, Any]],
     ) -> None:
-        completed = sum(
-            1
-            for trial in study.trials
-            if trial.user_attrs.get("phase") == phase
-            and str(trial.state.name) == "COMPLETE"
-        )
-        remaining = max(0, PHASE_TRIALS - completed)
-        if not remaining:
+        def completed_count() -> int:
+            return sum(
+                1
+                for trial in study.trials
+                if trial.user_attrs.get("phase") == phase
+                and str(trial.state.name) == "COMPLETE"
+                and trial.values
+                and all(math.isfinite(float(value)) for value in trial.values)
+            )
+
+        completed_before = completed_count()
+        if completed_before >= PHASE_TRIALS:
             return
+
+        missing = PHASE_TRIALS - completed_before
+        attempt_limit = max(missing + 2, missing * MAX_ATTEMPT_MULTIPLIER)
+        attempts = 0
 
         def objective(trial: Any) -> tuple[float, float]:
             trial.set_user_attr("phase", phase)
-            trial.set_user_attr("resume_metadata", {"resumed": completed > 0})
+            trial.set_user_attr("resume", False)
             parameters = _sample(trial, space)
+            learning_rate = float(parameters["learning_rate"])
+            trial.set_user_attr("learning_rate", learning_rate)
+            trial.set_user_attr("diverged", False)
+            trial.set_user_attr("out_of_memory", False)
             run_dir = self.root / "trials" / phase / f"trial_{trial.number:03d}"
+            run_dir.mkdir(parents=True, exist_ok=True)
+            started = time.perf_counter()
             try:
                 values = self.trial_runner(
                     phase, trial.number, parameters, run_dir
                 )
+                if not all(math.isfinite(float(value)) for value in values):
+                    raise FloatingPointError(
+                        f"non-finite validation objectives: {values}"
+                    )
+            except (RuntimeError, ValueError, FloatingPointError) as error:
+                failure_kind = _failure_kind(error)
+                elapsed = time.perf_counter() - started
+                trial.set_user_attr("failure_type", type(error).__name__)
+                trial.set_user_attr("failure_reason", str(error))
+                trial.set_user_attr("training_time_sec", elapsed)
+                if failure_kind == "out_of_memory":
+                    trial.set_user_attr("out_of_memory", True)
+                elif (
+                    failure_kind == "numerical_divergence"
+                    and self.model_id == "rtdetrv2_l"
+                ):
+                    trial.set_user_attr("diverged", True)
+                    trial.set_user_attr("divergence_learning_rate", learning_rate)
+                else:
+                    trial.set_user_attr("trial_status", "FAILED")
+                    raise
+                trial.set_user_attr("trial_status", "PRUNED")
+                import optuna
+
+                raise optuna.TrialPruned(str(error)) from error
             except Exception as error:
                 trial.set_user_attr("trial_status", "FAILED")
-                trial.set_user_attr("failure", repr(error))
+                trial.set_user_attr("failure_type", type(error).__name__)
+                trial.set_user_attr("failure_reason", str(error))
                 raise
+            finally:
+                trial.set_user_attr(
+                    "training_time_sec", time.perf_counter() - started
+                )
+                _cleanup_accelerator_memory()
             trial.set_user_attr("trial_status", "COMPLETE")
             trial.set_user_attr("run_dir", str(run_dir))
+            trial.set_user_attr("validation_map", float(values[0]))
+            trial.set_user_attr("validation_aptiny", float(values[1]))
+            trial.set_user_attr("metrics_path", str(run_dir / "final_metrics.json"))
+            trial.set_user_attr("checkpoint_path", str(run_dir / "best_map.pth"))
             return values
 
-        study.optimize(objective, n_trials=remaining, catch=(Exception,))
+        while completed_count() < PHASE_TRIALS and attempts < attempt_limit:
+            study.optimize(objective, n_trials=1)
+            attempts += 1
+        completed_after = completed_count()
+        if completed_after < PHASE_TRIALS:
+            raise RuntimeError(
+                f"{phase} reached its attempt limit ({attempt_limit}) with "
+                f"{completed_after}/{PHASE_TRIALS} finite completed trials. "
+                "Inspect the persisted PRUNED/FAIL trials before resuming."
+            )
 
     @staticmethod
     def _strongest_phase_a(study: Any) -> list[Any]:
@@ -268,7 +395,9 @@ class TwoStageRandomHPO:
         valid = [
             trial
             for trial in study.trials
-            if str(trial.state.name) == "COMPLETE" and trial.values
+            if str(trial.state.name) == "COMPLETE"
+            and trial.values
+            and all(math.isfinite(float(value)) for value in trial.values)
         ]
         if not valid:
             raise RuntimeError("HPO completed without a valid trial")
@@ -308,11 +437,14 @@ class TwoStageRandomHPO:
         )
         summary = {
             **metadata,
-            "study_db": str(self.root / "study.db"),
+            "study_db": str(self.study_path),
             "search_space_hash": search_space_hash,
             "completed_trials": len(valid),
             "failed_trials": sum(
                 str(trial.state.name) == "FAIL" for trial in study.trials
+            ),
+            "pruned_trials": sum(
+                str(trial.state.name) == "PRUNED" for trial in study.trials
             ),
             "best_config": str(self.root / "best_config.yaml"),
             "resume_metadata": {
@@ -330,7 +462,7 @@ class TwoStageRandomHPO:
         preview = {
             **metadata,
             "stage": "HPO",
-            "study_db": str(self.root / "study.db"),
+            "study_db": str(self.study_path),
             "phase_a_trials": PHASE_TRIALS,
             "phase_b_trials": PHASE_TRIALS,
             "search_space": broad,
@@ -346,8 +478,15 @@ class TwoStageRandomHPO:
         strongest = self._strongest_phase_a(study)
         if not strongest:
             raise RuntimeError("Phase A produced no valid trials; Phase B not started")
-        refined = refined_search_space(
-            broad, [dict(trial.params) for trial in strongest]
+        # The observed RT-DETR range is a controlled contract. Phase B samples
+        # the same 1e-6..5e-4 interval rather than narrowing away divergent or
+        # unexplored regions after only five short trials.
+        refined = (
+            broad
+            if self.model_id == "rtdetrv2_l"
+            else refined_search_space(
+                broad, [dict(trial.params) for trial in strongest]
+            )
         )
         self._run_phase(study, "phase_b", refined)
         return self._export(study, broad, refined, metadata)

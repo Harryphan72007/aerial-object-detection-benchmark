@@ -13,7 +13,7 @@ from src.hpo.final_workflow import (
     configuration_hash,
 )
 from src.hpo.search_spaces import broad_search_space, refined_search_space
-from src.hpo.workflow import HPO_PROTOCOL_ID
+from src.hpo.workflow import HPO_PROTOCOL_ID, TwoStageRandomHPO, _failure_kind
 from src.result_export import HPO_REQUIRED_BUNDLE_FILES, validate_bundle
 from src.training.trainer import TrainingOrchestrator
 from src.utils.serialization import read_json, write_json, write_yaml
@@ -81,8 +81,93 @@ def test_model_specific_spaces_refine_only_observed_values():
         }
     ]
     refined = refined_search_space(broad, strongest)
-    assert refined["num_queries"]["choices"] == [200]
-    assert set(refined) == set(broad)
+    assert set(refined) == {"learning_rate"}
+    assert set(broad) == {"learning_rate"}
+    assert broad["learning_rate"]["low"] == 1e-6
+    assert broad["learning_rate"]["high"] == 5e-4
+
+
+def test_rtdetr_divergence_is_pruned_and_missing_successes_are_replaced(tmp_path):
+    optuna = pytest.importorskip("optuna")
+    workflow = object.__new__(TwoStageRandomHPO)
+    workflow.model_id = MODEL_ID
+    workflow.root = tmp_path
+    calls = 0
+
+    def runner(phase, trial_number, parameters, run_dir):
+        nonlocal calls
+        calls += 1
+        assert set(parameters) == {"learning_rate"}
+        assert run_dir.is_dir()
+        if calls == 1:
+            raise ValueError("boxes1 must be valid, but got NaN values")
+        return 0.1 + calls / 1000, 0.05
+
+    workflow.trial_runner = runner
+    study = optuna.create_study(
+        sampler=optuna.samplers.RandomSampler(seed=42),
+        directions=["maximize", "maximize"],
+    )
+    workflow._run_phase(study, "phase_a", broad_search_space(MODEL_ID))
+
+    assert calls == 6
+    assert sum(trial.state.name == "COMPLETE" for trial in study.trials) == 5
+    pruned = next(trial for trial in study.trials if trial.state.name == "PRUNED")
+    assert pruned.user_attrs["diverged"] is True
+    assert pruned.user_attrs["trial_status"] == "PRUNED"
+    assert pruned.user_attrs["failure_type"] == "ValueError"
+    assert pruned.user_attrs["divergence_learning_rate"] == pruned.params[
+        "learning_rate"
+    ]
+    assert all(trial.user_attrs["resume"] is False for trial in study.trials)
+
+
+def test_unexpected_hpo_error_is_not_pruned(tmp_path):
+    optuna = pytest.importorskip("optuna")
+    workflow = object.__new__(TwoStageRandomHPO)
+    workflow.model_id = MODEL_ID
+    workflow.root = tmp_path
+
+    def runner(*_args):
+        raise RuntimeError("implementation contract is broken")
+
+    workflow.trial_runner = runner
+    study = optuna.create_study(directions=["maximize", "maximize"])
+    with pytest.raises(RuntimeError, match="implementation contract"):
+        workflow._run_phase(study, "phase_a", broad_search_space(MODEL_ID))
+    assert study.trials[0].state.name == "FAIL"
+    assert study.trials[0].user_attrs["trial_status"] == "FAILED"
+
+
+def test_failure_classifier_recognizes_cuda_oom_and_numerical_markers():
+    assert _failure_kind(RuntimeError("CUDA out of memory")) == "out_of_memory"
+    assert (
+        _failure_kind(ValueError("boxes2 must be valid; got infinite values"))
+        == "numerical_divergence"
+    )
+
+
+def test_smoke_and_full_hpo_storage_are_isolated(tmp_path, monkeypatch):
+    monkeypatch.delenv("SMOKE_TEST", raising=False)
+    full = TwoStageRandomHPO(ROOT, tmp_path, MODEL_ID, "2class")
+    monkeypatch.setenv("SMOKE_TEST", "1")
+    smoke = TwoStageRandomHPO(ROOT, tmp_path, MODEL_ID, "2class")
+
+    assert full.study_path.name == "study.db"
+    assert smoke.study_path.name == "study_smoke.db"
+    assert smoke.study_path.parent == full.root / "smoke_test"
+    assert smoke.study_path != full.study_path
+
+
+def test_final_checkpoint_compatibility_aliases_preserve_canonical_files(tmp_path):
+    (tmp_path / "last.pth").write_bytes(b"latest")
+    (tmp_path / "best_map.pth").write_bytes(b"best")
+    FinalExperimentWorkflow._materialize_expected_aliases(tmp_path)
+
+    assert (tmp_path / "latest.pt").read_bytes() == b"latest"
+    assert (tmp_path / "best.pt").read_bytes() == b"best"
+    assert (tmp_path / "last.pth").read_bytes() == b"latest"
+    assert (tmp_path / "best_map.pth").read_bytes() == b"best"
 
 
 def test_final_workflow_automatically_runs_two_recipes_and_three_seeds(tmp_path):

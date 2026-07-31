@@ -11,6 +11,39 @@ Student-friendly, resumable VisDrone experiments for four detector families:
 
 YOLOX is excluded. No benchmark metric in this repository is a placeholder.
 
+## Current progress
+
+- Swin-T uses the official MMDetection backbone and the runtime data pipeline is
+  rewritten to the selected experiment resolution. The retired timm adapter's
+  fixed 224-pixel/NHWC path is not used; smoke and full workflows remain 320- and
+  640-pixel capable where selected by the workflow.
+- VMamba-T uses the pinned official VMamba package registration path. The retired
+  single-file `vmamba_official` dynamic loader (and its partial-import failure
+  mode) is not used by the current notebooks.
+- Smoke artifacts and Optuna storage are isolated from full experiments. Studies
+  are persistent, use `load_if_exists=True`, and retain completed trials across
+  interruptions.
+- Learning rate is the only Optuna-suggested value. Every trial launches a fresh
+  model, optimizer, scheduler, and scaler with resume disabled.
+- RT-DETRv2 keeps the full `1e-6` to `5e-4` LR interval in both search phases.
+  Expected numerical divergence and CUDA OOM candidates are recorded as
+  `PRUNED`; unexpected implementation failures still stop the workflow.
+- The pretrained 80-class COCO classification layers are replaced by newly
+  initialized heads for the selected VisDrone track. Track A uses two heads
+  (`person`, `vehicle`); Track B uses ten heads.
+
+High LR candidates can be pruned because numerical divergence is a valid search
+outcome, not evidence that annotations are invalid. Full GPU execution has not
+been claimed by the repository's CPU smoke tests and must still be completed by
+the researcher.
+
+For a data smoke validation, set `SMOKE_TEST = True` in notebook 00 and keep
+resume disabled. For the full HPO path, use `SMOKE_TEST = False`, run notebook 00,
+then set `START_HPO = True` in the matching 10-13 notebook and
+`START_FINETUNING = True` in its matching 20-23 notebook. New final runs begin
+from pretrained weights; an interrupted final run resumes only when its complete
+configuration contract matches.
+
 ## Start in Colab
 
 1. Run [`00_prepare_visdrone.ipynb`](notebooks/00_prepare_visdrone.ipynb).
@@ -36,8 +69,10 @@ and [`31_publish_results.ipynb`](notebooks/31_publish_results.ipynb).
 ## Protocols and tracks
 
 - `lr_controlled_v1` preserves the seed-42, LR-only workflow in notebooks 01–03.
-- `two_stage_random_hpo_v1` runs five broad and five refined random trials, then
-  baseline and tuned final recipes at seeds 17, 42, and 3407.
+- `two_stage_random_hpo_v1` runs five Phase A and five Phase B LR-only random
+  trials, then baseline and tuned final recipes at seeds 17, 42, and 3407.
+  RT-DETRv2 retains `1e-6` to `5e-4` in both phases; other models refine Phase B
+  around the strongest finite Phase A candidates.
 - Track A (`2class`) preserves the PERSON/VEHICLE collapse. Track B (`10class`)
   preserves the original ten classes. Their mAP values are never compared.
 
@@ -62,7 +97,8 @@ executed notebook outputs are never committed.
 
 See [`docs/RUN.md`](docs/RUN.md), [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md),
 [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md), and
-[`docs/RESULTS.md`](docs/RESULTS.md).
+[`docs/RESULTS.md`](docs/RESULTS.md). Current repair and GPU follow-up status is
+tracked in [`docs/CURRENT_PROGRESS.md`](docs/CURRENT_PROGRESS.md).
 
 ## Verification
 

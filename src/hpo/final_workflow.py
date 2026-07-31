@@ -7,10 +7,10 @@ import os
 from pathlib import Path
 from typing import Any
 
-from src.hpo.workflow import HPO_PROTOCOL_ID
+from src.hpo.workflow import HPO_PROTOCOL_ID, _cleanup_accelerator_memory
 from src.models.registry import load_model_config
 from src.paths import ProjectPaths
-from src.training.checkpointing import make_run_id
+from src.training.checkpointing import make_run_id, materialize_checkpoint_alias
 from src.training.trainer import TrainingOrchestrator
 from src.utils.serialization import read_json, read_yaml, write_json
 
@@ -157,6 +157,17 @@ class FinalExperimentWorkflow:
             "official_validation_used_for_tuning": False,
         }
 
+    @staticmethod
+    def _materialize_expected_aliases(run_dir: Path) -> None:
+        """Keep legacy notebook consumers compatible with canonical checkpoints."""
+        aliases = (
+            (run_dir / "last.pth", run_dir / "latest.pt"),
+            (run_dir / "best_map.pth", run_dir / "best.pt"),
+        )
+        for source, destination in aliases:
+            if source.is_file():
+                materialize_checkpoint_alias(source, destination)
+
     def run(
         self,
         *,
@@ -183,37 +194,42 @@ class FinalExperimentWorkflow:
                 )
                 run_id, run_dir, resume = self._resumable(contract)
                 if resume == "completed":
+                    self._materialize_expected_aliases(run_dir)
                     manifests.append(read_json(run_dir / "run_manifest.json"))
                     continue
                 run_dir.mkdir(parents=True, exist_ok=True)
                 write_json(run_dir / "resume_contract.json", contract)
-                manifest = self.orchestrator.run(
-                    self.model_id,
-                    dataset_track=self.dataset_track,
-                    image_size=IMAGE_SIZE,
-                    batch_size=batch_size,
-                    gradient_accumulation_steps=accumulation,
-                    epochs=FINAL_EPOCHS,
-                    seed=seed,
-                    use_amp=True,
-                    resume_run_id=resume,
-                    overrides=parameters,
-                    train_annotation_override=(
-                        annotation_root / "instances_train.json"
-                    ),
-                    validation_annotation_override=(
-                        annotation_root / "instances_val.json"
-                    ),
-                    train_images_override=self.paths.images("train"),
-                    validation_images_override=self.paths.images("val"),
-                    explicit_run_dir=run_dir,
-                    explicit_run_id=run_id,
-                    register_run=True,
-                    scheduler_horizon=FINAL_EPOCHS,
-                    validation_interval=1,
-                    run_kind="final_complete_official_train",
-                    protocol_id=HPO_PROTOCOL_ID,
-                    baseline_or_tuned=recipe,
-                )
+                try:
+                    manifest = self.orchestrator.run(
+                        self.model_id,
+                        dataset_track=self.dataset_track,
+                        image_size=IMAGE_SIZE,
+                        batch_size=batch_size,
+                        gradient_accumulation_steps=accumulation,
+                        epochs=FINAL_EPOCHS,
+                        seed=seed,
+                        use_amp=True,
+                        resume_run_id=resume,
+                        overrides=parameters,
+                        train_annotation_override=(
+                            annotation_root / "instances_train.json"
+                        ),
+                        validation_annotation_override=(
+                            annotation_root / "instances_val.json"
+                        ),
+                        train_images_override=self.paths.images("train"),
+                        validation_images_override=self.paths.images("val"),
+                        explicit_run_dir=run_dir,
+                        explicit_run_id=run_id,
+                        register_run=True,
+                        scheduler_horizon=FINAL_EPOCHS,
+                        validation_interval=1,
+                        run_kind="final_complete_official_train",
+                        protocol_id=HPO_PROTOCOL_ID,
+                        baseline_or_tuned=recipe,
+                    )
+                finally:
+                    _cleanup_accelerator_memory()
+                self._materialize_expected_aliases(run_dir)
                 manifests.append(manifest)
         return {**preview, "preview": False, "runs": manifests}

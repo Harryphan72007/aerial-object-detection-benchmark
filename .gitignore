@@ -43,6 +43,7 @@ VisDrone*/
 tensorboard/
 mlruns/
 optuna/*.db
+*.db
 /local_artifacts/*
 !/local_artifacts/.gitkeep
 *.trt
@@ -60,6 +61,13 @@ optuna/*.db
 wandb/
 runs/
 lightning_logs/
+checkpoints/
+weights/
+predictions/
+data/raw/
+data/processed/
+plots/generated/
+*.log
 
 # Secrets and local paths
 .env*

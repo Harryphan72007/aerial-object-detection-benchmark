@@ -8,10 +8,16 @@ classes. The tracks are stored, discovered, evaluated, and reported separately.
 effective-batch-8, LR-only successive-halving workflow.
 
 `two_stage_random_hpo_v1` uses search seed 42, primary mAP50-95 and APtiny
-tie-break. Phase A runs five broad model-specific random trials. Phase B derives
-narrower ranges from the strongest valid Phase A trials and runs five more. A
-trial fails if any sampled parameter is unsupported, ignored, or changed by the
-backend.
+tie-break. Learning rate is the only suggested parameter. Phase A runs five
+broad model-specific random trials. Phase B runs five more; it derives a narrower
+range from the strongest valid Phase A trials except for RT-DETRv2, whose
+controlled `1e-6` to `5e-4` range remains unchanged in both phases. A trial fails
+if the requested LR is unsupported, ignored, or changed by the backend.
+
+Every trial starts in a distinct directory with resume disabled, so model,
+optimizer, scheduler, and scaler state cannot leak between LR candidates.
+RT-DETRv2 numerical divergence and CUDA OOM are persisted as `PRUNED` trials.
+Other runtime or implementation errors remain fatal.
 
 Search train and validation are deterministic subsets of official train.
 Official validation never tunes a model. The selected config is frozen once.

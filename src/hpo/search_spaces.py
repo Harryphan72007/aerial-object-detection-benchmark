@@ -7,49 +7,15 @@ from typing import Any
 SEARCH_SPACES: dict[str, dict[str, dict[str, Any]]] = {
     "faster_rcnn_resnet50": {
         "learning_rate": {"kind": "float", "low": 1e-5, "high": 5e-4, "log": True},
-        "weight_decay": {"kind": "float", "low": 1e-5, "high": 0.1, "log": True},
-        "backbone_lr_multiplier": {
-            "kind": "float",
-            "low": 0.05,
-            "high": 0.5,
-        },
-        "rpn_nms_threshold": {"kind": "float", "low": 0.5, "high": 0.9},
-        "rpn_proposals": {"kind": "categorical", "choices": [1000, 2000, 3000]},
-        "roi_nms_threshold": {"kind": "float", "low": 0.3, "high": 0.7},
-        "p2_enabled": {"kind": "categorical", "choices": [True, False]},
     },
     "faster_rcnn_swin_t": {
         "learning_rate": {"kind": "float", "low": 5e-6, "high": 2e-4, "log": True},
-        "weight_decay": {"kind": "float", "low": 1e-4, "high": 0.2, "log": True},
-        "backbone_lr_multiplier": {
-            "kind": "float",
-            "low": 0.03,
-            "high": 0.3,
-        },
-        "drop_path_rate": {"kind": "float", "low": 0.0, "high": 0.3},
-        "roi_nms_threshold": {"kind": "float", "low": 0.3, "high": 0.7},
-        "p2_enabled": {"kind": "categorical", "choices": [True, False]},
     },
     "faster_rcnn_vmamba_t": {
         "learning_rate": {"kind": "float", "low": 5e-6, "high": 2e-4, "log": True},
-        "weight_decay": {"kind": "float", "low": 1e-4, "high": 0.2, "log": True},
-        "backbone_lr_multiplier": {
-            "kind": "float",
-            "low": 0.03,
-            "high": 0.3,
-        },
-        "drop_path_rate": {"kind": "float", "low": 0.0, "high": 0.3},
-        "roi_nms_threshold": {"kind": "float", "low": 0.3, "high": 0.7},
-        "p2_enabled": {"kind": "categorical", "choices": [True, False]},
     },
     "rtdetrv2_l": {
-        "learning_rate": {"kind": "float", "low": 1e-6, "high": 2e-4, "log": True},
-        "weight_decay": {"kind": "float", "low": 1e-5, "high": 0.1, "log": True},
-        "gradient_clip": {"kind": "float", "low": 0.05, "high": 1.0},
-        "num_queries": {"kind": "categorical", "choices": [200, 300, 500]},
-        "decoder_layers": {"kind": "categorical", "choices": [4, 6]},
-        "num_denoising": {"kind": "categorical", "choices": [50, 100, 200]},
-        "dropout": {"kind": "float", "low": 0.0, "high": 0.2},
+        "learning_rate": {"kind": "float", "low": 1e-6, "high": 5e-4, "log": True},
     },
 }
 

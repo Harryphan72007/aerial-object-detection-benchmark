@@ -1,0 +1,19 @@
+schema_version: 1
+benchmark_track: controlled
+output_namespace: controlled
+comparison_table: controlled_summary
+model_ids:
+  - faster_rcnn_resnet50
+  - faster_rcnn_swin_t
+  - faster_rcnn_vmamba_t
+  - rtdetrv2_l
+allowed_options:
+  - input_resolution
+  - batch_size
+  - gradient_accumulation_steps
+  - use_amp
+defaults:
+  input_resolution: 640
+  batch_size: 1
+  gradient_accumulation_steps: 8
+  use_amp: true

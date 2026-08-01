@@ -43,6 +43,22 @@ The controlled RT-DETRv2 range remains `1e-6` through `5e-4` in both phases. No
 local database or GPU artifact was available in this checkout to independently
 verify the reported trial values, and no full GPU completion is claimed.
 
+## External RT-DETR training observation
+
+A researcher-provided legacy notebook snapshot contains 40 completed epochs of
+a two-class RT-DETRv2 R50/L run at seed 42. Validation mAP peaked at 0.211 after
+the first epoch and declined to 0.127 by epoch 39; execution was manually
+interrupted during epoch 40. The persistent 39.7% decline is consistent with
+over-fine-tuning, although the absent training-loss output prevents a conclusive
+classic-overfitting diagnosis.
+
+This observation is **not a project benchmark result**. It uses the R50vd
+checkpoint rather than the repository's R101 `rtdetrv2_l`, batch size 2 rather
+than the controlled effective batch 8, one final seed rather than three, and
+official validation for repeated checkpoint selection. It must not be published
+under `results/` or compared with canonical runs. See the full
+[compatibility, evaluation, and disposition note](reference/rtdetrv2_legacy_training_status.md).
+
 ## Optuna states
 
 - `COMPLETE`: training returned finite validation mAP and APtiny objectives.

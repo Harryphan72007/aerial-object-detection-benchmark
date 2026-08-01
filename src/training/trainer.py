@@ -2,23 +2,24 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import subprocess
-import sys
 import time
 from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from src.drive_sync import validate_dataset, validate_drive_writable
+from src.git_utils import write_git_provenance
 from src.models.registry import load_model_config
 from src.paths import ProjectPaths
 from src.reproducibility import framework_versions, seed_everything
-from src.drive_sync import validate_dataset, validate_drive_writable
-from src.git_utils import write_git_provenance
+from src.subprocess_utils import model_python_executable, python_module_command
 from src.training.checkpointing import RunRegistry, initialize_run
 from src.utils.environment import collect_environment
-from src.utils.serialization import read_yaml, write_json, write_yaml
+from src.utils.serialization import read_json, read_yaml, write_json, write_yaml
 
 
 class TrainingOrchestrator:
@@ -53,6 +54,8 @@ class TrainingOrchestrator:
         scheduler_horizon: int | None = None,
         validation_interval: int = 1,
         run_kind: str = "benchmark",
+        protocol_id: str = "lr_controlled_v1",
+        baseline_or_tuned: str = "controlled",
         lr_range_test_steps: int = 0,
         lr_range_output: str | Path | None = None,
     ) -> dict[str, Any]:
@@ -132,6 +135,8 @@ class TrainingOrchestrator:
             "resume_run_id": resume_run_id,
             "overrides": overrides or {},
             "run_kind": run_kind,
+            "protocol_id": protocol_id,
+            "baseline_or_tuned": baseline_or_tuned,
             "register_run": register_run,
             "lr_range_test_steps": lr_range_test_steps,
             "lr_range_output": str(lr_range_output) if lr_range_output else None,
@@ -140,6 +145,13 @@ class TrainingOrchestrator:
             "train_images": str(train_images),
             "validation_images": str(validation_images),
         }
+        run_config["configuration_hash"] = hashlib.sha256(
+            json.dumps(
+                run_config["overrides"],
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
         write_yaml(run_dir / "training_config.yaml", run_config)
         write_yaml(run_dir / "resolved_config.yaml", run_config)
         write_yaml(run_dir / "model_config.yaml", model_config)
@@ -155,7 +167,7 @@ class TrainingOrchestrator:
         write_json(run_dir / "git_provenance.json", provenance)
         try:
             frozen = subprocess.check_output(
-                [sys.executable, "-m", "pip", "freeze"], text=True
+                [model_python_executable(), "-m", "pip", "freeze"], text=True
             )
             (run_dir / "pip_freeze.txt").write_text(frozen, encoding="utf-8")
         except Exception:
@@ -210,6 +222,22 @@ class TrainingOrchestrator:
                     "training integration is not enabled for "
                     f"{model_config['framework']}"
                 )
+            runtime_manifest_path = run_dir / "runtime_environment.json"
+            if runtime_manifest_path.is_file():
+                runtime_manifest = read_json(runtime_manifest_path)
+                runtime_environment = runtime_manifest.get("environment", {})
+                manifest.update(
+                    {
+                        "runtime_environment_manifest": str(
+                            runtime_manifest_path
+                        ),
+                        "pytorch_version": runtime_environment.get(
+                            "pytorch_version"
+                        ),
+                        "cuda_version": runtime_environment.get("cuda_version"),
+                        "gpu_name": runtime_environment.get("gpu_name"),
+                    }
+                )
             manifest.update(summary)
             manifest["status"] = "completed"
         except Exception as error:
@@ -248,7 +276,13 @@ class TrainingOrchestrator:
             "dataset_track": run_config["dataset_track"],
             "class_names": dataset_config["class_names"],
             "seed": run_config["seed"],
+            "protocol_id": run_config["protocol_id"],
+            "run_kind": run_config["run_kind"],
+            "baseline_or_tuned": run_config["baseline_or_tuned"],
             "input_resolution": run_config["image_size"],
+            "effective_batch_size": run_config["effective_batch_size"],
+            "scheduler_horizon": run_config["scheduler_horizon"],
+            "configuration_hash": run_config["configuration_hash"],
             "checkpoint_best_map": str(run_dir / "best_map.pth"),
             "checkpoint_best_aptiny": str(run_dir / "best_aptiny.pth"),
             "checkpoint_last": str(run_dir / "last.pth"),
@@ -287,19 +321,36 @@ class TrainingOrchestrator:
     def _validate_controlled_overrides(
         run_dir: Path, run_config: dict[str, Any]
     ) -> None:
-        if run_config.get("run_kind") not in {
+        run_kind = str(run_config.get("run_kind", ""))
+        if run_kind not in {
             "lr_search_candidate",
             "lr_range_test_non_promotable",
             "runtime_calibration_non_promotable",
             "final_complete_official_train",
-        }:
+        } and not run_kind.startswith("hpo_"):
             return
         report_path = run_dir / "applied_overrides.json"
+        if not report_path.is_file():
+            raise RuntimeError(
+                "controlled benchmark did not produce applied_overrides.json"
+            )
         report = json.loads(report_path.read_text(encoding="utf-8"))
         unsupported = report.get("unsupported", {})
         if unsupported:
             raise RuntimeError(
                 f"controlled benchmark override was not applied: {unsupported}"
+            )
+        requested = run_config.get("overrides", {})
+        applied = report.get("applied", {})
+        missing = {
+            key: value
+            for key, value in requested.items()
+            if key not in applied or applied[key] != value
+        }
+        if missing:
+            raise RuntimeError(
+                "controlled benchmark requested parameters were ignored or "
+                f"changed by the backend: {missing}"
             )
 
     @staticmethod
@@ -342,9 +393,10 @@ class TrainingOrchestrator:
         validation_images: Path,
     ) -> dict[str, Any]:
         upstream_config = self._resolve_upstream_config(model_config)
-        command = [
-            sys.executable,
-            str(self.repo_root / "scripts" / "run_mmdetection.py"),
+        command = python_module_command(
+            "scripts.run_mmdetection",
+            "--model-id",
+            str(model_config["model_id"]),
             "--base-config",
             str(upstream_config),
             "--run-dir",
@@ -377,7 +429,7 @@ class TrainingOrchestrator:
             str(run_config["seed"]),
             "--overrides",
             json.dumps(run_config.get("overrides", {})),
-        ]
+        )
         if model_config.get("strip_mask_branch"):
             command.append("--strip-mask-branch")
         if model_config.get("registration_import"):
@@ -442,13 +494,16 @@ class TrainingOrchestrator:
         train_images: Path,
         validation_images: Path,
     ) -> dict[str, Any]:
-        command = [
-            sys.executable,
-            str(self.repo_root / "scripts" / "run_rtdetr_training.py"),
+        command = python_module_command(
+            "scripts.run_rtdetr_training",
+            "--model-id",
+            str(model_config["model_id"]),
             "--run-dir",
             str(run_dir),
             "--model-name",
             str(model_config["pretrained_model_name_or_path"]),
+            "--model-revision",
+            str(model_config["pretrained_revision"]),
             "--train-ann",
             str(train_annotation),
             "--val-ann",
@@ -473,7 +528,7 @@ class TrainingOrchestrator:
             str(run_config["seed"]),
             "--overrides",
             json.dumps(run_config.get("overrides", {})),
-        ]
+        )
         if run_config["use_amp"]:
             command.append("--amp")
         if run_config.get("resume_run_id"):

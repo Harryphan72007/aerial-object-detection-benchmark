@@ -16,6 +16,7 @@ from src.training.callbacks import (
     EpochHistoryWriter,
     save_training_curves,
 )
+from src.runtime_manifest import write_runtime_environment_manifest
 from src.training.checkpointing import atomic_torch_save, materialize_checkpoint_alias
 from src.training.recipes import (
     RTDETR_BASELINE_LR,
@@ -29,7 +30,9 @@ from src.training.recipes import (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", required=True)
+    parser.add_argument("--model-id", required=True)
     parser.add_argument("--model-name", required=True)
+    parser.add_argument("--model-revision", required=True)
     parser.add_argument("--train-ann", required=True)
     parser.add_argument("--val-ann", required=True)
     parser.add_argument("--train-images", required=True)
@@ -79,6 +82,7 @@ def main() -> None:
         raise ValueError("--validation-interval must be non-negative")
     run_dir = Path(args.run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
+    write_runtime_environment_manifest(run_dir, args.model_id, Path.cwd())
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_data = json.loads(Path(args.train_ann).read_text(encoding="utf-8"))
     validation_data = json.loads(
@@ -90,9 +94,12 @@ def main() -> None:
     overrides = json.loads(args.overrides)
     processor = RTDetrImageProcessor.from_pretrained(
         args.model_name,
+        revision=args.model_revision,
         size={"height": args.image_size, "width": args.image_size},
     )
-    model_configuration = RTDetrV2Config.from_pretrained(args.model_name)
+    model_configuration = RTDetrV2Config.from_pretrained(
+        args.model_name, revision=args.model_revision
+    )
     supported_configuration_keys = {
         "num_queries",
         "decoder_layers",
@@ -126,6 +133,7 @@ def main() -> None:
     model_configuration.label2id = label2id
     model = RTDetrV2ForObjectDetection.from_pretrained(
         args.model_name,
+        revision=args.model_revision,
         config=model_configuration,
         ignore_mismatched_sizes=True,
     ).to(device)
@@ -560,6 +568,7 @@ def main() -> None:
         "time_to_best_aptiny_seconds": time_to_best_tiny,
         "framework_training_seconds": time.perf_counter() - started,
         "pretrained_model_name_or_path": args.model_name,
+        "pretrained_revision": args.model_revision,
         "num_queries": int(model.config.num_queries),
         "hyperparameter_overrides": override_report,
     }

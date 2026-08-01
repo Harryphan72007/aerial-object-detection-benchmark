@@ -18,6 +18,15 @@ PRIVATE_PATHS = (
 SECRET_ASSIGNMENT = re.compile(
     r"(?i)(api[_-]?key|access[_-]?token|password|secret)\s*=\s*['\"][^'\"]+"
 )
+TRANSIENT_NOTEBOOK_METADATA = {"colab", "varInspector", "widgets"}
+TRANSIENT_CELL_METADATA = {
+    "collapsed",
+    "colab",
+    "execution",
+    "jupyter",
+    "outputId",
+    "scrolled",
+}
 
 
 def main() -> None:
@@ -29,7 +38,21 @@ def main() -> None:
             nbformat.validate(notebook)
         except Exception as error:
             errors.append(f"{path}: nbformat: {error}")
+        notebook_metadata = TRANSIENT_NOTEBOOK_METADATA.intersection(
+            notebook.metadata
+        )
+        if notebook_metadata:
+            errors.append(
+                f"{path}: transient notebook metadata: "
+                + ", ".join(sorted(notebook_metadata))
+            )
         for index, cell in enumerate(notebook.cells):
+            cell_metadata = TRANSIENT_CELL_METADATA.intersection(cell.metadata)
+            if cell_metadata:
+                errors.append(
+                    f"{path}: cell {index} transient metadata: "
+                    + ", ".join(sorted(cell_metadata))
+                )
             if cell.cell_type != "code":
                 continue
             if cell.outputs:

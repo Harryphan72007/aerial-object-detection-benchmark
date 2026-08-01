@@ -39,7 +39,11 @@ class RTDetrV2Adapter(DetectionModelAdapter):
         base_source = str(
             config.get("pretrained_model_name_or_path", "PekingU/rtdetr_v2_r101vd")
         )
-        processor_kwargs: dict[str, Any] = {}
+        revision = config.get("pretrained_revision")
+        processor_kwargs: dict[str, Any] = (
+            {"revision": str(revision)} if revision else {}
+        )
+        model_source_kwargs: dict[str, Any] = dict(processor_kwargs)
         resolution = config.get("input_resolution")
         if resolution:
             processor_kwargs["size"] = {
@@ -62,6 +66,7 @@ class RTDetrV2Adapter(DetectionModelAdapter):
             )
             self.model = RTDetrV2ForObjectDetection.from_pretrained(
                 base_source,
+                **model_source_kwargs,
                 id2label=id2label,
                 label2id=label2id,
                 ignore_mismatched_sizes=True,
@@ -79,7 +84,9 @@ class RTDetrV2Adapter(DetectionModelAdapter):
             self.processor = RTDetrImageProcessor.from_pretrained(
                 source, **processor_kwargs
             )
-            self.model = RTDetrV2ForObjectDetection.from_pretrained(source)
+            self.model = RTDetrV2ForObjectDetection.from_pretrained(
+                source, **model_source_kwargs
+            )
 
         self.device = self.device or (
             "cuda" if torch.cuda.is_available() else "cpu"

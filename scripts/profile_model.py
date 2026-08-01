@@ -8,10 +8,18 @@ from pathlib import Path
 
 from PIL import Image
 
+from src.data.image_files import first_supported_image
 from src.models.registry import create_adapter
 from src.paths import ProjectPaths
 from src.training.checkpointing import RunRegistry
 from src.utils.serialization import read_yaml, write_json
+
+
+def required_profile_succeeded(profiles: list[dict]) -> bool:
+    return any(
+        int(row.get("batch_size", -1)) == 1 and row.get("status") == "completed"
+        for row in profiles
+    )
 
 
 def main() -> None:
@@ -48,7 +56,7 @@ def main() -> None:
     image_path = (
         Path(args.image)
         if args.image
-        else next(paths.images("val").glob("*"))
+        else first_supported_image(paths.images("val"))
     )
     image = Image.open(image_path).convert("RGB")
     adapter = create_adapter(run["model_id"], args.device)
@@ -80,6 +88,9 @@ def main() -> None:
     output = {
         "run_id": args.run_id,
         "model_id": run["model_id"],
+        "status": (
+            "completed" if required_profile_succeeded(profiles) else "failed"
+        ),
         "image": str(image_path),
         "warmup_iterations": args.warmup,
         "timed_iterations": args.iterations,
@@ -87,6 +98,10 @@ def main() -> None:
     }
     write_json(paths.evaluation / f"{args.run_id}__profile.json", output)
     print(json.dumps(output, indent=2))
+    if output["status"] != "completed":
+        raise RuntimeError(
+            "Required batch-size-one profiling failed; profile remains incomplete."
+        )
 
 
 if __name__ == "__main__":

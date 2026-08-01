@@ -13,6 +13,7 @@ from typing import Any
 
 from src.training.callbacks import save_training_curves
 from src.training.checkpointing import materialize_checkpoint_alias
+from src.runtime_manifest import write_runtime_environment_manifest
 
 
 def update_resize(pipeline: Any, image_size: int) -> Any:
@@ -226,6 +227,7 @@ def apply_overrides(cfg: Any, overrides: dict[str, Any]) -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model-id", required=True)
     parser.add_argument("--base-config", required=True)
     parser.add_argument("--run-dir", required=True)
     parser.add_argument("--train-ann", required=True)
@@ -272,6 +274,7 @@ def main() -> None:
     base_config = Path(args.base_config).resolve()
     run_dir = Path(args.run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
+    write_runtime_environment_manifest(run_dir, args.model_id, Path.cwd())
     # Both the official MMDetection and VMamba detection layouts put configs two
     # directories below the import root.
     detection_root = base_config.parents[2]

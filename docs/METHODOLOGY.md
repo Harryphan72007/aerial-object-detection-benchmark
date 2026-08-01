@@ -1,87 +1,32 @@
-# Controlled benchmark methodology
+# Benchmark methodology
 
-This cleanup does not change the benchmark design.
+Track A (`2class`) maps pedestrian+people to PERSON and the eight vehicle-like
+classes to VEHICLE. Track B (`10class`) preserves the original ten VisDrone
+classes. The tracks are stored, discovered, evaluated, and reported separately.
 
-```yaml
-dataset_track: 2class
-search_seed: 42
-image_size: 640
-effective_batch_size: 8
-amp: true
+`lr_controlled_v1` preserves the existing seed-42, 640-pixel,
+effective-batch-8, LR-only successive-halving workflow.
 
-learning_rate_candidates: 9
-search_rungs:
-  - {epoch: 2, keep: 5}
-  - {epoch: 5, keep: 3}
-  - {epoch: 10, keep: 2}
-  - {epoch: 15, keep: 1}
+`two_stage_random_hpo_v1` uses search seed 42, primary mAP50-95 and APtiny
+tie-break. Learning rate is the only suggested parameter. Phase A runs five
+broad model-specific random trials. Phase B runs five more; it derives a narrower
+range from the strongest valid Phase A trials except for RT-DETRv2, whose
+controlled `1e-6` to `5e-4` range remains unchanged in both phases. A trial fails
+if the requested LR is unsupported, ignored, or changed by the backend.
 
-final_epochs: 25
-primary_metric: mAP_50_95
-secondary_metric: APtiny
-```
+Every trial starts in a distinct directory with resume disabled, so model,
+optimizer, scheduler, and scaler state cannot leak between LR candidates.
+RT-DETRv2 numerical divergence and CUDA OOM are persisted as `PRUNED` trials.
+Other runtime or implementation errors remain fatal.
 
-Only learning rate changes between candidates. The optional range test informs
-the logarithmic nine-value grid but does not become a promotable candidate.
-Successive halving resumes each candidate from its own checkpoint, retains a
-15-epoch scheduler horizon, ranks moving-window mAP50–95, and breaks ties with
-APtiny.
+Search train and validation are deterministic subsets of official train.
+Official validation never tunes a model. The selected config is frozen once.
+Baseline and tuned recipes restart from original pretrained weights, use full
+official train, and run seeds 17, 42, and 3407. Final manifests record
+`protocol_id`, `run_kind`, and `baseline_or_tuned`.
 
-Search train and validation are deterministic, seed-42 subsets drawn only from
-official train. Final fine-tuning discards search weights, reloads the original
-pretrained model, uses every official training image for 25 epochs, and excludes
-every official validation image.
-
-`assert_final_training_uses_official_train` and the authoritative data preflight
-retain globally remapped numeric validation IDs and also compare stable identity:
-`file_name`, `original_split`, and source archive SHA-256. They prove search
-train/search validation filename disjointness, membership in official train,
-complete final-train identity, and exclusion of every official validation image
-before training. These assertions are saved in `split_summary.json`. A compatible
-final run records
-`run_kind=final_complete_official_train`.
-
-Evaluation uses the complete official validation split, common COCO metrics,
-per-class and object-size metrics, and standardized synchronized profiling. YOLOX
-and multidimensional Optuna search are outside this controlled benchmark.
-
-## Data provenance without methodology changes
-
-Each extraction manifest binds image/annotation counts and the sorted relative
-filename inventory to the archive SHA-256 and byte size. Each conversion
-manifest binds its output hash and counts to that extraction inventory, class
-mapping, light-vehicle policy, converter schema, and repository commit. Existing
-artifacts are reused only when these fields remain current.
-
-The persistent source images are always:
-
-```text
-$DRIVE_ROOT/datasets/VisDrone2019-DET/raw/VisDrone2019-DET-train/images
-$DRIVE_ROOT/datasets/VisDrone2019-DET/raw/VisDrone2019-DET-val/images
-```
-
-Processed COCO storage contains annotations rather than copied images. An
-optional verified local Colab cache changes only read performance; it does not
-change any split, sample, metric, hyperparameter, checkpoint location, or result
-location.
-
-## End-to-end path audit
-
-| Transition | Authoritative artifact or read root |
-|---|---|
-| download → archive storage | `$DRIVE_ROOT/datasets/VisDrone2019-DET/archives/*.zip` |
-| archive validation | size, ZIP layout, CRC, SHA-256, and `manifests/{train,val}_archive.json` |
-| extraction → raw storage | `raw/VisDrone2019-DET-{train,val}/{images,annotations}` |
-| extraction validation | `manifests/{train,val}_extraction.json` |
-| COCO conversion | `processed/coco_2class/annotations/instances_{train,val}.json` |
-| conversion validation | adjacent `conversion_manifest_{train,val}.json` and audit JSON |
-| LR-search manifest generation | `manifests/lr_search/` |
-| adapter smoke and LR search | train images from official raw train; both search JSONs from `manifests/lr_search/` |
-| final full-dataset training | complete official-train JSON plus official raw train images |
-| final evaluation | official-validation JSON plus official raw validation images |
-
-When local caching is enabled, only the image and JSON read roots in the last
-three rows are replaced by their verified `/content/visdrone_cache` mirrors.
-Adapter gates, candidate checkpoints, search state, final checkpoints,
-predictions, metrics, profiling, and reports continue to write under
-`$DRIVE_ROOT`.
+Evaluation includes COCO AP, AP50/AP75, size and per-class metrics,
+precision/recall/F1 and PR curves, calibration, error decomposition, training
+and convergence facts, parameters, checkpoint size, valid FLOPs/MACs, memory,
+latency percentiles, FPS, throughput, and resolution scaling when measured.
+Nothing is fabricated when a model, run, or measurement is missing.

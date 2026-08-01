@@ -42,6 +42,17 @@ REQUIRED_BUNDLE_FILES = {
 REQUIRED_BUNDLE_DIRECTORIES = {
     "configs", "search", "metrics", "reports", "reports/figures", "provenance"
 }
+HPO_REQUIRED_BUNDLE_FILES = {
+    "bundle_manifest.json",
+    "README.md",
+    "configs/best_config.yaml",
+    "search/search_summary.json",
+    "metrics/comparison.json",
+    "reports/model_report.md",
+    "provenance/environment_summary.json",
+    "provenance/dataset_hashes.json",
+    "provenance/git_commit.txt",
+}
 REQUIRED_MANIFEST_FIELDS = {
     "schema_version",
     "result_bundle_id",
@@ -212,6 +223,8 @@ def validate_bundle(bundle_dir: str | Path, max_file_size_mb: float = 20) -> lis
         manifest = read_json(manifest_path)
     except (OSError, json.JSONDecodeError) as exc:
         return [f"invalid bundle manifest: {exc}"]
+    if int(manifest.get("schema_version", 0)) >= 3:
+        return _validate_hpo_bundle(root, manifest, max_file_size_mb)
     errors.extend(
         f"missing required bundle file: {relative}"
         for relative in sorted(REQUIRED_BUNDLE_FILES)
@@ -391,6 +404,134 @@ def validate_bundle(bundle_dir: str | Path, max_file_size_mb: float = 20) -> lis
     return sorted(set(errors))
 
 
+def _validate_hpo_bundle(
+    root: Path,
+    manifest: dict[str, Any],
+    max_file_size_mb: float,
+) -> list[str]:
+    """Validate a measured multi-seed HPO bundle without LR-only assumptions."""
+    errors = [
+        f"missing required HPO bundle file: {relative}"
+        for relative in sorted(HPO_REQUIRED_BUNDLE_FILES)
+        if not (root / relative).is_file()
+    ]
+    required_fields = {
+        "schema_version",
+        "result_bundle_id",
+        "created_at",
+        "model_id",
+        "architecture_family",
+        "dataset_track",
+        "class_names",
+        "protocol_id",
+        "run_ids",
+        "seeds",
+        "seed_status",
+        "checkpoint_sha256",
+        "annotation_sha256",
+        "official_full_train_verified",
+        "evaluation_git_commit",
+        "training_git_commits",
+        "generated_files",
+        "intentionally_excluded_files",
+        "export_status",
+    }
+    errors.extend(
+        f"manifest missing field: {field}"
+        for field in sorted(required_fields - set(manifest))
+    )
+    model_id = str(manifest.get("model_id", ""))
+    track = str(manifest.get("dataset_track", ""))
+    if model_id not in MODEL_CONFIGS:
+        errors.append(f"manifest has unrecognized model_id: {model_id}")
+    if track not in {"2class", "10class"}:
+        errors.append("manifest has invalid dataset_track")
+    if manifest.get("result_bundle_id") != root.name:
+        errors.append("bundle directory name does not match result_bundle_id")
+    if model_id and model_id not in root.name:
+        errors.append("bundle ID does not include model_id")
+    if track and track not in root.name:
+        errors.append("bundle ID does not include dataset_track")
+    if manifest.get("protocol_id") != "two_stage_random_hpo_v1":
+        errors.append("HPO bundle has incompatible protocol_id")
+    if manifest.get("seed_status") != "multi-seed":
+        errors.append("HPO bundle must state multi-seed")
+    if sorted(manifest.get("seeds", [])) != [17, 42, 3407]:
+        errors.append("HPO bundle must contain seeds 17, 42, and 3407")
+    if len(manifest.get("run_ids", [])) != 6:
+        errors.append("HPO bundle must contain six baseline/tuned run IDs")
+    if manifest.get("official_full_train_verified") is not True:
+        errors.append("full official train identity is not verified")
+    if not COMMIT_PATTERN.fullmatch(
+        str(manifest.get("evaluation_git_commit", ""))
+    ):
+        errors.append("evaluation_git_commit is missing or invalid")
+    if not manifest.get("training_git_commits") or any(
+        not COMMIT_PATTERN.fullmatch(str(value))
+        for value in manifest.get("training_git_commits", [])
+    ):
+        errors.append("training_git_commits are missing or invalid")
+    hashes = manifest.get("checkpoint_sha256", [])
+    if len(hashes) != 6 or any(
+        not re.fullmatch(r"[0-9a-f]{64}", str(value), re.I)
+        for value in hashes
+    ):
+        errors.append("checkpoint_sha256 must contain six valid hashes")
+    if not re.fullmatch(
+        r"[0-9a-f]{64}", str(manifest.get("annotation_sha256", "")), re.I
+    ):
+        errors.append("annotation_sha256 is missing or invalid")
+    generated = set(manifest.get("generated_files", []))
+    for relative in HPO_REQUIRED_BUNDLE_FILES - generated:
+        errors.append(f"manifest generated_files missing: {relative}")
+    for file in root.rglob("*"):
+        if not file.is_file():
+            continue
+        relative = file.relative_to(root).as_posix()
+        parts = {part.lower() for part in file.relative_to(root).parts}
+        if (
+            file.suffix.lower() not in APPROVED_EXTENSIONS
+            or file.suffix.lower() in EXCLUDED_EXTENSIONS
+            or parts & EXCLUDED_PARTS
+        ):
+            errors.append(f"excluded or unapproved artifact: {relative}")
+        if file.stat().st_size > max_file_size_mb * 1024 * 1024:
+            errors.append(f"oversized file: {relative}")
+        try:
+            text = file.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        if "/content/drive/" in text or re.search(
+            r"[A-Za-z]:[\\/]Users[\\/]", text
+        ):
+            errors.append(f"private absolute path in {relative}")
+        errors.extend(
+            f"secret-like content in {relative}: {pattern}"
+            for pattern in find_secret_like_content(text)
+        )
+        try:
+            if file.suffix.lower() == ".json":
+                json.loads(text)
+            elif file.suffix.lower() in {".yaml", ".yml"}:
+                read_yaml(file)
+        except (json.JSONDecodeError, ValueError) as error:
+            errors.append(f"invalid structured file {relative}: {error}")
+    comparison = root / "metrics" / "comparison.json"
+    if comparison.is_file():
+        groups = read_json(comparison).get("groups", [])
+        selected = [
+            group
+            for group in groups
+            if group.get("model_id") == model_id
+            and group.get("dataset_track") == track
+        ]
+        if len(selected) != 2 or any(
+            group.get("status") != "COMPLETE" for group in selected
+        ):
+            errors.append("comparison lacks complete baseline and tuned groups")
+    return sorted(set(errors))
+
+
 def _copy_approved(
     source: Path,
     destination: Path,
@@ -478,7 +619,9 @@ def export_bundle(
                     "bundle_path": f"bundles/{bundle_id}",
                     "model_id": bundle_manifest["model_id"],
                     "dataset_track": bundle_manifest["dataset_track"],
-                    "run_id": bundle_manifest["run_id"],
+                    "run_id": bundle_manifest.get("run_id"),
+                    "run_ids": bundle_manifest.get("run_ids"),
+                    "protocol_id": bundle_manifest.get("protocol_id"),
                     "seed_status": bundle_manifest["seed_status"],
                     "exported_at": datetime.now(timezone.utc).isoformat(),
                     "file_count": len(copied),
@@ -520,7 +663,33 @@ def _verify_bundle_registry(drive_root: Path, bundle: Path) -> list[str]:
     registry_path = drive_root / "experiment_registry" / "checkpoint_registry.json"
     if not registry_path.is_file():
         return [f"missing registry: {registry_path}"]
-    run = read_json(registry_path).get("runs", {}).get(manifest.get("run_id"))
+    registered = read_json(registry_path).get("runs", {})
+    if manifest.get("run_ids"):
+        errors: list[str] = []
+        expected_hashes = manifest.get("checkpoint_sha256", [])
+        for index, run_id in enumerate(manifest["run_ids"]):
+            run = registered.get(run_id)
+            if not run:
+                errors.append(f"selected run is absent from registry: {run_id}")
+                continue
+            if (
+                run.get("status") != "completed"
+                or run.get("model_id") != manifest.get("model_id")
+                or run.get("dataset_track") != manifest.get("dataset_track")
+                or run.get("protocol_id") != manifest.get("protocol_id")
+            ):
+                errors.append(f"selected run is incompatible: {run_id}")
+                continue
+            checkpoint = Path(str(run.get("checkpoint_best_map", "")))
+            if not checkpoint.is_file():
+                errors.append(f"selected checkpoint is missing: {checkpoint}")
+            elif (
+                index >= len(expected_hashes)
+                or sha256_file(checkpoint) != expected_hashes[index]
+            ):
+                errors.append(f"checkpoint hash mismatch: {run_id}")
+        return errors
+    run = registered.get(manifest.get("run_id"))
     if not run:
         return [f"selected run is absent from registry: {manifest.get('run_id')}"]
     errors: list[str] = []

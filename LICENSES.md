@@ -1,15 +1,20 @@
 # Third-party license review
 
-Verified on **2026-07-25**. Re-check every source repository and every weight artifact before redistribution or commercial deployment. This project is a research benchmark; it does **not** claim that VisDrone2019-DET is commercially usable.
+Verified 2026-07-30. Source-code licenses and pretrained-artifact terms are
+separate; re-check both before redistribution or commercial deployment.
 
-| Model | Implementation repository | Source-code license | Pretrained-weight source | Weight notes | Verified |
-|---|---|---|---|---|---|
-| Faster R-CNN ResNet-50-FPN | `open-mmlab/mmdetection` | Apache-2.0 | MMDetection model zoo / TorchVision ImageNet initialization | Preserve notices; verify the exact weight-host terms and training-data constraints before redistribution. | 2026-07-25 |
-| Faster R-CNN Swin-T-FPN | `open-mmlab/mmdetection`, backbone derived from `microsoft/Swin-Transformer` | Apache-2.0 / MIT | MMDetection or Microsoft Swin release assets | The code license and a weight artifact's permitted uses are separate questions. Record the exact URL and checksum in each run manifest. | 2026-07-25 |
-| Faster R-CNN VMamba-T-FPN | `MzeroMiko/VMamba` detection tree | MIT | User-supplied, locally verified VMamba classification checkpoint | Set `VMAMBA_T_PRETRAINED` to the local file. When unset, the project clears the stale upstream path, trains from scratch, and writes `PRETRAINING_WARNING.txt`. VMamba's detection directory is based on MMDetection 3.3.0; check transitive CUDA-extension licenses and weight provenance. | 2026-07-25 |
-| RT-DETRv2-L | `lyuwenyu/RT-DETR`; compatible `huggingface/transformers` integration | Apache-2.0 | `PekingU/rtdetr_v2_r50vd` or another explicitly configured official conversion | The public naming uses backbone variants rather than a literal “L” checkpoint in every integration. This benchmark records the exact model ID and architecture fields; do not silently substitute variants. | 2026-07-25 |
-| YOLOX-S (optional control) | `Megvii-BaseDetection/YOLOX` | Apache-2.0 | Official YOLOX-S release | Verify the specific checkpoint artifact and any deployment runtime separately. | 2026-07-25 |
+| Family | Exact source | Source license | Pretrained artifact |
+|---|---|---|---|
+| ResNet-50 Faster R-CNN | MMDetection `44ebd17b145c2372c4b700bfb9cb20dbd28ab64a` | Apache-2.0 | MMDetection model-zoo initialization recorded by each run |
+| Swin-T Faster R-CNN | Same MMDetection revision; Swin-derived backbone | Apache-2.0 / MIT | Exact resolved artifact recorded by each run |
+| VMamba-T Faster R-CNN | VMamba `2ed52ead062a51a64521ed3871d52914bf532876`; same MMDetection revision | MIT / Apache-2.0 | Required local `vmamba_tiny_e292.pth`; scratch training disabled |
+| RT-DETRv2 R101 | RT-DETR `a21d516aca15da57e65f35c47659c7535ad2b6b3` | Apache-2.0 | `PekingU/rtdetr_v2_r101vd` revision `a558a4798734af61997652ec97d9b82961c92450`, Apache-2.0 |
+
+The environment provisioner is uv 0.8.15 (MIT OR Apache-2.0). Runtime manifests
+record the selected implementation, revision, artifact, and package/GPU facts.
 
 ## Dataset warning
 
-VisDrone2019-DET is downloaded separately. The repository does not redistribute images or annotations. Review the dataset's official terms, citation requirements, and restrictions yourself. Treat this project and all produced results as **research-only** unless you obtain independent permission for another use.
+VisDrone2019-DET is downloaded separately and is not redistributed here. Treat
+the dataset and all derived results as research-only unless separate permission
+is confirmed. Follow the official citation and usage terms.

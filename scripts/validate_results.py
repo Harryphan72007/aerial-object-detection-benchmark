@@ -50,8 +50,8 @@ def validate_repo_results(results_root: str | Path, max_file_size_mb: float = 20
     model_id = manifest.get("model_id")
     if model_id not in MODEL_CONFIGS:
         errors.append(f"unrecognized model ID in latest manifest: {model_id}")
-    if not manifest.get("run_id"):
-        errors.append("latest manifest has no run_id")
+    if not manifest.get("run_id") and not manifest.get("run_ids"):
+        errors.append("latest manifest has no run_id or run_ids")
     for file in root.rglob("*"):
         if not file.is_file():
             continue

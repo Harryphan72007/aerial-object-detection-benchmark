@@ -433,6 +433,7 @@ def create_lr_search_manifests(
     official_validation_json: str | Path,
     output_dir: str | Path,
     *,
+    dataset_track: str = "2class",
     seed: int = 42,
     search_train_fraction: float = 0.20,
     search_validation_fraction: float = 0.05,
@@ -459,8 +460,18 @@ def create_lr_search_manifests(
         original_split="val",
         source_archive_identity=validation_identity,
     )
-    if [category["id"] for category in train.get("categories", [])] != [1, 2]:
-        raise ValueError("LR search requires the 2class track with category IDs [1, 2]")
+    expected_category_ids = (
+        [1, 2] if dataset_track == "2class" else list(range(1, 11))
+    )
+    if dataset_track not in {"2class", "10class"}:
+        raise ValueError(f"unsupported dataset track: {dataset_track}")
+    if [
+        int(category["id"]) for category in train.get("categories", [])
+    ] != expected_category_ids:
+        raise ValueError(
+            f"{dataset_track} search requires category IDs "
+            f"{expected_category_ids}"
+        )
     features, _ = _image_features(train)
     all_ids = sorted(int(image["id"]) for image in train["images"])
     train_count = round(len(all_ids) * search_train_fraction)
@@ -500,6 +511,7 @@ def create_lr_search_manifests(
         paths[filename] = str(path)
     verification = validate_lr_search_manifests(output_dir)
     summary = {
+        "dataset_track": dataset_track,
         "seed": seed,
         "fractions": {
             "search_train": search_train_fraction,

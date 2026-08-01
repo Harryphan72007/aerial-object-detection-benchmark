@@ -68,7 +68,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/00_bootstrap_colab.ipynb",
-      "sha256": "d7ce5393f9b2e37aaaad0aaf11c55d96dd507d08110db4323b735a6e458c62a4"
+      "sha256": "fcfe1f79485b1052c08695b265b588381ff8b3879ceba959106bebf42f79675e"
     },
     {
       "artifact_references": [
@@ -259,7 +259,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/00_prepare_visdrone.ipynb",
-      "sha256": "4d04c495aebade6b7172ba2a5d5adc73f1fe27e8bf123990ccf8999da7e46571"
+      "sha256": "7feb99954289e4a02d7dda0a84e140f1408c0c9722281a9d113909833d4db3c4"
     },
     {
       "artifact_references": [
@@ -532,7 +532,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "d89715bc0f11bb5f547a0dc44009ad1a3925aa57c07961ddd2d4d1dbed980f08"
+      "sha256": "c95044f9bbd718c0275e34e9029f187b2c6a179b34366f00c272ced60f4ca254"
     },
     {
       "artifact_references": [
@@ -674,7 +674,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/02_publish_results.ipynb",
-      "sha256": "cbb06c74f07cabe4beb0f8ee103873b5f57136b5104e84a8294a963a98337e02"
+      "sha256": "2b2b7e9dea0436893590fc1766bf22ab11b8715c1049a13539ff4ca767178014"
     },
     {
       "artifact_references": [
@@ -760,7 +760,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/03_compare_all_models.ipynb",
-      "sha256": "7d7cad3bb99dc3c2ecbf1bd80b1df5a1a5fdcaf48c3d9e24a9e3c7dfc66a2569"
+      "sha256": "636cc17fcd5dcb4a23420c694505a012bfd56c1c36ee58e1a2d04048b6730f04"
     },
     {
       "artifact_references": [
@@ -817,7 +817,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/07_performance_tiling.ipynb",
-      "sha256": "f8f1e164c5006021fac25a07e7b0d98fcf800b861ba53f6ce0e8ee4d2592acca"
+      "sha256": "3b884aa8dfbccb69f0cd1aba5541e0d2072ee3935ca7c6423a1a6609c2da97dc"
     },
     {
       "artifact_references": [
@@ -890,7 +890,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/10_hpo_resnet50.ipynb",
-      "sha256": "a7b6a71b81c2d9a2f12e3b873709a39c2d117a0312dac12571584588bd8f18f5"
+      "sha256": "7362252b0fd08a326122f600f34de02b9ceb99ae53380e613b66d1a7a5458695"
     },
     {
       "artifact_references": [
@@ -963,7 +963,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/11_hpo_swin_t.ipynb",
-      "sha256": "0b0b5426876d138d9f3c8c5b4dce84d7d2f5f15b969b540765d4df82f5000661"
+      "sha256": "079ee0369d6746612a8c18d6d2efa2fdbbfa257b6cfea4413fffa23dc9023e85"
     },
     {
       "artifact_references": [
@@ -1036,7 +1036,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/12_hpo_vmamba_t.ipynb",
-      "sha256": "9beb8d331d5a755bfa31837bc844743c5f78f5dae94e76d9009a5898cc5ebb8e"
+      "sha256": "78bf46460b46d3cb783e12cf4a124b100546fd91dc4eb5a543bd9ff08e50a133"
     },
     {
       "artifact_references": [
@@ -1109,7 +1109,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "e0e88435525c3fc53a5a842bb2ceaa3d758d266d87408d17e4631675669d5b23"
+      "sha256": "3c24f9fe2cd2b8d7ce88c60a4e208743da274a28e708d2ddc84cee5573de93c4"
     },
     {
       "artifact_references": [
@@ -1171,7 +1171,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/20_finetune_resnet50.ipynb",
-      "sha256": "b6184c8a840b7de5bd26d0e10a7de4bbef8d2c9944e609a58653014b3d062d16"
+      "sha256": "487f241bf81f105a469c1cf403b963b6e34841f37a1a53e98369f7642e2d1563"
     },
     {
       "artifact_references": [
@@ -1234,7 +1234,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "f855c199c55c9752425505b5653c518b22671bf9c2995bc54805f69c3be82ee9"
+      "sha256": "9aaf50f46cbde692972c28319c71e44eb7046843bab8f19d7220af9f1d2b1cd6"
     },
     {
       "artifact_references": [
@@ -1297,7 +1297,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "40b19b608649357e8103c80d8a58e0c38d03bb9d58f12146c6827d298817f586"
+      "sha256": "1f59d7f490a2e45d9ccfd27143a3ac7afbaa0d042bb57bbe9388453a48c9a465"
     },
     {
       "artifact_references": [
@@ -1360,7 +1360,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "911eb6efa5469942d66165b058d3080cdfb25ebc45e4e0d5ef8b30cb41e03a92"
+      "sha256": "c92ea2a677ebfb3af4df204715e8f903806fd9f34d50c1f63840c971d327a740"
     },
     {
       "artifact_references": [
@@ -1444,7 +1444,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "5b35cafdfed0fc06e8a32b9f0df025f80d78636ac2faaadfcfad6146b819a119"
+      "sha256": "16bd15e2231080a337fe5e90c8e8f18122042613763ffe9cd5d09263fdb0c0ec"
     },
     {
       "artifact_references": [
@@ -1524,7 +1524,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/31_publish_results.ipynb",
-      "sha256": "4d4102695494a76e70bf02a0d65f6247d7dc85e3b49b0c42ad9494758b4d1abc"
+      "sha256": "07bd0f48bfa1a7bcdb0cad736ae4a9e9cf760cffaf445e2491ae4dcd9899fffe"
     },
     {
       "artifact_references": [
@@ -1712,7 +1712,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/optional/architecture_visualization.ipynb",
-      "sha256": "1214e292fba3f8110d9764cb9d79211ee7c5f0ef18eea37fd4bd03eb03ee7e21"
+      "sha256": "46113665cede90627cd39382a498bd3d0841ffd14bf8eae3a516ea85fc18e9b2"
     },
     {
       "artifact_references": [
@@ -1804,7 +1804,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/optional/dataset_analysis.ipynb",
-      "sha256": "f9feaecc52e442185e0f5f4d33b5e0565e3d4369d91a9a5ec91e81a35c9461a6"
+      "sha256": "a136a651f7f0956d809b2f2698b208944d2c681f37f8bfcae9f162357d63652f"
     },
     {
       "artifact_references": [
@@ -1884,10 +1884,10 @@
       ],
       "nbformat": 4,
       "path": "notebooks/optional/error_analysis.ipynb",
-      "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
+      "sha256": "b0f201d8d5d4b86e493835c1caea12c81f3ece6cdad40f4721ed21156ef88c73"
     }
   ],
-  "python_source_count": 95,
+  "python_source_count": 96,
   "python_sources": [
     {
       "artifact_references": [
@@ -3829,7 +3829,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 35,
+          "line": 76,
           "literals": [],
           "operations": [
             "discover"
@@ -3846,7 +3846,7 @@
         "re"
       ],
       "path": "scripts/validate_notebooks.py",
-      "sha256": "319f944a2927195ca606bd7af8ea9c31fa8fbe8885959474cbaab14be875f16a"
+      "sha256": "55cf9cd72cfb3b4ab9646bc522c913ffef23c0140c7b0754f727f44b0fad089e"
     },
     {
       "artifact_references": [
@@ -4489,16 +4489,34 @@
         },
         {
           "cell": 0,
-          "line": 154,
+          "line": 92,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "return json.dumps("
+        },
+        {
+          "cell": 0,
+          "line": 100,
           "literals": [],
           "operations": [
             "read"
           ],
-          "source": "notebook = json.loads(raw.decode(\"utf-8\"))"
+          "source": "return path.read_text(encoding=\"utf-8\").replace(\"\\r\\n\", \"\\n\").replace(\"\\r\", \"\\n\")"
         },
         {
           "cell": 0,
-          "line": 197,
+          "line": 167,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "notebook = json.loads(path.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 209,
           "literals": [],
           "operations": [
             "discover"
@@ -4507,7 +4525,7 @@
         },
         {
           "cell": 0,
-          "line": 205,
+          "line": 217,
           "literals": [],
           "operations": [
             "discover"
@@ -4516,7 +4534,7 @@
         },
         {
           "cell": 0,
-          "line": 255,
+          "line": 267,
           "literals": [],
           "operations": [
             "write"
@@ -4525,7 +4543,7 @@
         },
         {
           "cell": 0,
-          "line": 257,
+          "line": 269,
           "literals": [],
           "operations": [
             "read"
@@ -4534,7 +4552,7 @@
         },
         {
           "cell": 0,
-          "line": 268,
+          "line": 280,
           "literals": [],
           "operations": [
             "write"
@@ -4553,7 +4571,73 @@
         "typing"
       ],
       "path": "scripts/validation/inventory_legacy_artifacts.py",
-      "sha256": "c03e3f11b12f20efc9e46cefbb36ad647eef76bc5a1768216bb51dfb26df2ee0"
+      "sha256": "dd08ee3309433d6c7093a5c065a993f66cbdd4d3e8d6d88cdc5e67a3e061cc45"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 17,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = yaml.safe_load(path.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 26,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = json.loads(path.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 36,
+          "literals": [
+            "*.yaml"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "for path in sorted((root / \"configs\").rglob(\"*.yaml\")):"
+        },
+        {
+          "cell": 0,
+          "line": 41,
+          "literals": [
+            "*.json"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "for path in sorted((root / \"schemas\").rglob(\"*.json\")):"
+        },
+        {
+          "cell": 0,
+          "line": 47,
+          "literals": [
+            "*.yaml"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "for path in sorted((root / \"configs\" / mode).glob(\"*.yaml\")):"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "pathlib",
+        "src.config.benchmark_tracks",
+        "src.config.experiment",
+        "yaml"
+      ],
+      "path": "scripts/validation/validate_ci_contract.py",
+      "sha256": "33118564f6cbf43abb8f922c9a568b561c6313b4d77f13fa2be56a0e8c3ef93f"
     },
     {
       "artifact_references": [

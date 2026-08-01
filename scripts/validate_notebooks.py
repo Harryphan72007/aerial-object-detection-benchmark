@@ -29,45 +29,52 @@ TRANSIENT_CELL_METADATA = {
 }
 
 
-def main() -> None:
+def validate_notebook(path: Path) -> list[str]:
     transformer = TransformerManager()
     errors: list[str] = []
-    for path in sorted((ROOT / "notebooks").rglob("*.ipynb")):
+    try:
         notebook = nbformat.read(path, as_version=4)
-        try:
-            nbformat.validate(notebook)
-        except Exception as error:
-            errors.append(f"{path}: nbformat: {error}")
-        notebook_metadata = TRANSIENT_NOTEBOOK_METADATA.intersection(
-            notebook.metadata
+    except Exception as error:
+        return [f"{path}: unreadable notebook: {error}"]
+    try:
+        nbformat.validate(notebook)
+    except Exception as error:
+        errors.append(f"{path}: nbformat: {error}")
+    notebook_metadata = TRANSIENT_NOTEBOOK_METADATA.intersection(notebook.metadata)
+    if notebook_metadata:
+        errors.append(
+            f"{path}: transient notebook metadata: "
+            + ", ".join(sorted(notebook_metadata))
         )
-        if notebook_metadata:
+    for index, cell in enumerate(notebook.cells):
+        cell_metadata = TRANSIENT_CELL_METADATA.intersection(cell.metadata)
+        if cell_metadata:
             errors.append(
-                f"{path}: transient notebook metadata: "
-                + ", ".join(sorted(notebook_metadata))
+                f"{path}: cell {index} transient metadata: "
+                + ", ".join(sorted(cell_metadata))
             )
-        for index, cell in enumerate(notebook.cells):
-            cell_metadata = TRANSIENT_CELL_METADATA.intersection(cell.metadata)
-            if cell_metadata:
-                errors.append(
-                    f"{path}: cell {index} transient metadata: "
-                    + ", ".join(sorted(cell_metadata))
-                )
-            if cell.cell_type != "code":
-                continue
-            if cell.outputs:
-                errors.append(f"{path}: cell {index} has outputs")
-            if cell.execution_count is not None:
-                errors.append(f"{path}: cell {index} has execution_count")
-            try:
-                ast.parse(transformer.transform_cell(cell.source))
-            except SyntaxError as error:
-                errors.append(f"{path}: cell {index} syntax: {error}")
-            if SECRET_ASSIGNMENT.search(cell.source):
-                errors.append(f"{path}: cell {index} contains a secret-like assignment")
-            for pattern in PRIVATE_PATHS:
-                if pattern.search(cell.source):
-                    errors.append(f"{path}: cell {index} contains a private path")
+        if cell.cell_type != "code":
+            continue
+        if cell.outputs:
+            errors.append(f"{path}: cell {index} has outputs")
+        if cell.execution_count is not None:
+            errors.append(f"{path}: cell {index} has execution_count")
+        try:
+            ast.parse(transformer.transform_cell(cell.source))
+        except SyntaxError as error:
+            errors.append(f"{path}: cell {index} syntax: {error}")
+        if SECRET_ASSIGNMENT.search(cell.source):
+            errors.append(f"{path}: cell {index} contains a secret-like assignment")
+        for pattern in PRIVATE_PATHS:
+            if pattern.search(cell.source):
+                errors.append(f"{path}: cell {index} contains a private path")
+    return errors
+
+
+def main() -> None:
+    errors: list[str] = []
+    for path in sorted((ROOT / "notebooks").rglob("*.ipynb")):
+        errors.extend(validate_notebook(path))
     if errors:
         raise SystemExit("\n".join(errors))
     print("Notebook validation passed.")

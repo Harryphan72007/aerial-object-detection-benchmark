@@ -808,6 +808,29 @@ resolved SHA.
 - Compatibility effect: additive evaluator v2; legacy files remain readable through adapter
 - Deviation: canonical notebooks 30 and 03 replace nonexistent planned notebooks 05–06
 - Rollback: revert PR 26 and restore original evaluation/comparison notebook calls
+- Commit SHA: `09ec7fed7e08226b0c5b6a38ac9a4d7164692936`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/38
+- Remaining risks: external metrics with unsupported fields require explicit adapters
+
+## PR 27 — CI and release policy
+
+- Status: completed with manual GPU/Colab validation deferred by policy
+- Dependencies: PR 1–26
+- Files changed: four required-check workflows; configuration/schema validator;
+  notebook validation API; PR template; GPU checklist; release policy; tests/cross-platform inventory
+- Conceptual change: make static, CPU, notebook, schema, artifact, and security
+  validation explicit, independently visible pull-request checks
+- Preserved behavior: existing umbrella CI and result validation remain available
+- Tests executed: malformed config, prohibited artifact, malformed notebook;
+  configuration/schema, notebook, Ruff, compile, and full CPU suite
+- Observed result: 225 passed, 2 skipped because PyTorch was unavailable; all
+  static, config/schema, artifact, secret, and notebook validation passed
+- Validation level: local CPU/static parity with GitHub Actions commands
+- Unverified: protected-branch administrator settings and manual GPU/Colab checklist
+- Compatibility effect: additive workflows with no GPU secrets or private data
+- Deviation: existing `ci.yml` remains as an umbrella compatibility check while the
+  four granular workflows provide stable names for branch protection
+- Rollback: revert PR 27 or disable the four granular required checks in branch protection
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: external metrics with unsupported fields require explicit adapters
+- Remaining risks: repository administrators must select the documented job names as required checks

@@ -86,6 +86,20 @@ def _source_text(source: Any) -> str:
     return str(source or "")
 
 
+def _canonical_json_bytes(value: Any) -> bytes:
+    """Serialize JSON independently of checkout newlines or pretty-print layout."""
+
+    return json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+
+
+def _normalized_text(path: Path) -> str:
+    """Read text with an explicit cross-platform newline contract."""
+
+    return path.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+
+
 def _imports(source: str) -> list[str]:
     sanitized = "\n".join(
         line
@@ -150,8 +164,7 @@ def _artifact_references(
 
 
 def inventory_notebook(path: Path, repository_root: Path) -> dict[str, Any]:
-    raw = path.read_bytes()
-    notebook = json.loads(raw.decode("utf-8"))
+    notebook = json.loads(path.read_text(encoding="utf-8"))
     cells = notebook.get("cells")
     if not isinstance(cells, list):
         raise ValueError(f"notebook has no cells array: {path}")
@@ -167,7 +180,7 @@ def inventory_notebook(path: Path, repository_root: Path) -> dict[str, Any]:
         references.extend(_artifact_references(source, cell_index))
     return {
         "path": path.relative_to(repository_root).as_posix(),
-        "sha256": hashlib.sha256(raw).hexdigest(),
+        "sha256": hashlib.sha256(_canonical_json_bytes(notebook)).hexdigest(),
         "nbformat": notebook.get("nbformat"),
         "code_cell_count": code_cell_count,
         "imports": sorted(imports),
@@ -176,14 +189,13 @@ def inventory_notebook(path: Path, repository_root: Path) -> dict[str, Any]:
 
 
 def inventory_python_source(path: Path, repository_root: Path) -> dict[str, Any] | None:
-    raw = path.read_bytes()
-    source = raw.decode("utf-8")
+    source = _normalized_text(path)
     references = _artifact_references(source, 0, include_term_only=False)
     if not references:
         return None
     return {
         "path": path.relative_to(repository_root).as_posix(),
-        "sha256": hashlib.sha256(raw).hexdigest(),
+        "sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
         "imports": _imports(source),
         "artifact_references": references,
     }

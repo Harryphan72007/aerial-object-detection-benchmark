@@ -840,14 +840,14 @@ resolved SHA.
 - Status: completed with manual GPU/Colab validation pending
 - Dependencies: PR 1–27
 - Files changed: canonical dataset/model-day notebooks; shared notebook entrypoint helper;
-  thin-notebook validator/tests; archive policy; README; deprecation guide; inventory/log
+  thin-notebook validator/tests; archive policy; README; deprecation guide; cross-platform inventory/log
 - Conceptual change: canonical notebooks now contain parameters, bootstrap, presentation,
   and package calls only; notebook-local workflow definitions are rejected by CI
 - Preserved behavior: dataset recovery instructions, model-day orchestration, model-specific
   HPO/final smoke entrypoints, and legacy artifact reads
 - Tests executed: thin/package-backed structure; one HPO/final smoke entrypoint per model;
   no browser uploads; legacy prediction read; notebook validation/cleaning; full CPU suite
-- Observed result: 228 passed, 2 skipped because PyTorch was unavailable; all 14
+- Observed result: 229 passed, 2 skipped because PyTorch was unavailable; all 14
   guarded canonical workflow notebooks passed CPU smoke execution
 - Validation level: CPU synthetic and static notebook contract validation
 - Unverified: real Drive download and GPU execution in Colab

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Training checkpoint contract v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "model_id", "model_signature", "config_hash", "dataset_hash", "optimizer_signature", "scheduler_signature", "accumulation_steps", "seed", "state_keys"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "model_id": {"type": "string", "minLength": 1},
+    "model_signature": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "config_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "dataset_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "optimizer_signature": {"type": "string", "minLength": 1},
+    "scheduler_signature": {"type": "string", "minLength": 1},
+    "accumulation_steps": {"type": "integer", "minimum": 1},
+    "seed": {"type": "integer", "minimum": 0},
+    "state_keys": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}

@@ -495,7 +495,33 @@ resolved SHA.
   is implemented and tested but the live launcher is retained until G2
 - Rollback: revert PR 14 and continue using the MMDetection runner; temporary smoke
   state files are test-only
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `4a46f623312fbde4be8ed44792b0e1f6633fd79c`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/24
 - Remaining risks: framework callbacks must preserve the tested step ordering when
   wired into a real MMEngine runner
+
+## PR 15 — Checkpoint schema and loading modes
+
+- Status: completed
+- Dependencies: PR 1–14
+- Files changed: strict checkpoint v2 schema; loading-mode classifier/guard;
+  compatibility policy; mode tests; migration log and inventory
+- Conceptual change: classify checkpoint intent before tensor loading as full resume,
+  weights only, evaluation only, or incompatible
+- Preserved behavior: legacy checkpoints remain evaluation inputs and are never
+  rewritten; current checkpoint aliases remain unchanged
+- Tests executed: exact resume, config/accumulation drift, legacy metadata absence,
+  model mismatch, schema parity; full CPU/static suite and repository checks
+- Observed result: 186 passed, 2 skipped because PyTorch was unavailable; all
+  loading classifications, refusal guards, schema parity, and static checks passed
+- Validation level: CPU/static metadata classification
+- Unverified: real tensor deserialization for each framework
+- Compatibility effect: additive policy; legacy artifacts default safely to
+  evaluation-only
+- Deviation: incompatible is an explicit fourth refusal state rather than forcing
+  unsafe artifacts into one of the three allowed loading modes
+- Rollback: revert PR 15; retain v2 metadata as harmless files or quarantine it
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: model-signature generation must be wired consistently by each
+  migrated producer

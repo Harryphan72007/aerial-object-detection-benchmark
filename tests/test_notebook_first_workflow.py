@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL_ID = "rtdetrv2_l"
 RUN_ID = "rtdetrv2_l__2class__640__20260729_120000__seed42"
 PRIMARY = {
+    "00_bootstrap_colab.ipynb",
     "00_prepare_visdrone.ipynb",
     "01_run_model_day.ipynb",
     "02_publish_results.ipynb",
@@ -132,6 +133,15 @@ def test_expected_primary_notebooks_and_no_legacy_notebooks():
 
 def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
     expected = {
+        "00_bootstrap_colab.ipynb": {
+            "REPOSITORY_URL",
+            "REPOSITORY_PATH",
+            "REFERENCE_TYPE",
+            "REFERENCE",
+            "DRIVE_ROOT",
+            "MOUNT_GOOGLE_DRIVE",
+            "INSTALL_SHARED_DEPENDENCIES",
+        },
         "00_prepare_visdrone.ipynb": {
             "USE_GOOGLE_DRIVE",
             "DATASET_SOURCE",

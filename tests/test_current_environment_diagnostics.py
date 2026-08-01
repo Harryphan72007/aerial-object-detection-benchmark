@@ -66,7 +66,7 @@ def test_diagnostic_cli_reports_current_repository_without_model_setup() -> None
     report = json.loads(completed.stdout)
     assert report["diagnostic"] == "current-environment-read-only"
     assert report["repository"]["is_repository"] is True
-    assert report["notebooks"]["notebook_count"] == 17
+    assert report["notebooks"]["notebook_count"] == 18
     assert report["model_construction_performed"] is False
     assert report["third_party_sources"]["available"] is True
 

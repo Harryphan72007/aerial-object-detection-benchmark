@@ -786,13 +786,24 @@
         {
           "cell": 2,
           "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"preview\": not START_TILING, \"tile_version\": TILE_VERSION, \"config\": config}"
+          "literals": [
+            "sliced_inference_v1.yaml"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "sliced_config = read_yaml(REPO_PATH / \"configs\" / \"performance\" / \"sliced_inference_v1.yaml\")"
         },
         {
           "cell": 2,
           "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "result = {\"preview\": not START_TILING, \"tile_version\": TILE_VERSION, \"config\": config, \"sliced_inference\": sliced_config}"
+        },
+        {
+          "cell": 2,
+          "line": 7,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -805,7 +816,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/07_performance_tiling.ipynb",
-      "sha256": "88e05c11f798b735b1136b1fc00100c96e9ecde47bbfcf18add3f88c6e645075"
+      "sha256": "f8f1e164c5006021fac25a07e7b0d98fcf800b861ba53f6ce0e8ee4d2592acca"
     },
     {
       "artifact_references": [
@@ -1867,7 +1878,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 91,
+  "python_source_count": 92,
   "python_sources": [
     {
       "artifact_references": [
@@ -7535,6 +7546,48 @@
       ],
       "path": "src/hpo/workflow.py",
       "sha256": "f26519b423c03322a0c77d507a2581263d678541f8b4aeeadd8ee7f7fa8f61f8"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 69,
+          "literals": [
+            "predictions",
+            "predictions.json"
+          ],
+          "operations": [],
+          "source": "\"predictions\": base / \"predictions\" / \"sliced\" / run_id / \"predictions.json\","
+        },
+        {
+          "cell": 0,
+          "line": 70,
+          "literals": [
+            "evaluation",
+            "metrics.json"
+          ],
+          "operations": [],
+          "source": "\"metrics\": base / \"evaluation\" / \"sliced\" / run_id / \"metrics.json\","
+        },
+        {
+          "cell": 0,
+          "line": 111,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "\"predictions\": merged,"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.data.tiling",
+        "time",
+        "typing"
+      ],
+      "path": "src/inference/sliced.py",
+      "sha256": "299c95b7e44b50bad6650ad0571c62ae02baabd2900ce2049a644c09d1fb43e9"
     },
     {
       "artifact_references": [

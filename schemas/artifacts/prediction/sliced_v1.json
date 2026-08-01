@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sliced prediction artifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "inference_mode", "image_id", "predictions", "latency"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "inference_mode": {"const": "sliced"},
+    "image_id": {"type": "integer"},
+    "predictions": {"type": "array"},
+    "latency": {
+      "type": "object",
+      "required": ["slice_count", "slice_model_seconds", "merge_seconds", "total_seconds"]
+    }
+  }
+}

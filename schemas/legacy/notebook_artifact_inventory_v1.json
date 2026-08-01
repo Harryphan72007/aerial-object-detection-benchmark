@@ -1878,7 +1878,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 92,
+  "python_source_count": 93,
   "python_sources": [
     {
       "artifact_references": [
@@ -6439,6 +6439,28 @@
       ],
       "path": "src/evaluation/error_analysis.py",
       "sha256": "de93dd4c04d0dbef7d3c12093c16f5e645212f92639065e5c5463e8b6a581719"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 64,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(mapping, sort_keys=True, separators=(\",\", \":\")).encode(\"utf-8\")"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "hashlib",
+        "json",
+        "src.data.class_mapping",
+        "typing"
+      ],
+      "path": "src/evaluation/label_granularity.py",
+      "sha256": "a031375abf73a1e5990246caac3c15eca951171012bfb0f028acad1346829c2d"
     },
     {
       "artifact_references": [

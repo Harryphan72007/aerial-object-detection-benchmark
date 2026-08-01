@@ -36,7 +36,7 @@ def load_search_config(repo_root: str | Path) -> dict[str, Any]:
         "detector_learning_rate",
         "backbone_lr_multiplier",
         "weight_decay",
-        "warmup_epochs",
+        "warmup_steps",
         "gradient_clip_norm",
     }
     if not isinstance(space, dict) or set(space) != expected:

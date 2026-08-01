@@ -1,7 +1,7 @@
 # Persistent RT-DETR Optuna search v2
 
 RT-DETR recipe v2 searches detector LR, backbone multiplier, weight decay,
-warm-up epochs, and gradient clipping. It uses protocol `rtdetr_optuna_v2`, the
+warm-up steps, and gradient clipping. It uses protocol `rtdetr_optuna_v2`, the
 database `study_v2.db`, and a distinct root from the legacy two-stage study.
 
 Each trial launches a fresh training orchestrator with resume disabled. Known CUDA

@@ -403,7 +403,38 @@ resolved SHA.
 - Deviation: the actual notebook 02 is result publishing, so the generic model-day
   notebook receives the non-constructing Swin hook
 - Rollback: revert PR 13B and continue through the existing MMDetection launcher
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `ea22681cf3a6320df1b2d3ec5109bc222b2796fb`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/21
 - Remaining risks: upstream Swin outputs must be checked against the adapter on a
   pinned real runtime before enabling it in training
+
+## PR 13C — VMamba factory and importer
+
+- Status: completed with live G1 pending
+- Dependencies: PR 1–13B
+- Files changed: clean VMamba detection importer; revision and selective-scan
+  gates; VMamba factory/build report; NCHW stage validator; clean-process and
+  construction contract tests; generic notebook hook; migration log/inventory
+- Conceptual change: centralize fragile module registration and refuse construction
+  unless revision, optimized scan, config, and pretrained-weight gates pass
+- Preserved behavior: pinned VMamba revision, `model` registration name, official
+  tiny detection config, Faster R-CNN mask removal, two-class head, and required
+  pretrained checkpoint
+- Tests executed: clean Python process import; revision mismatch; optimized backend
+  selection; NCHW feature stages; injected build/report; full CPU/static suite and
+  repository checks
+- Observed result: 175 passed, 2 skipped because PyTorch was unavailable; clean
+  process registration, revision/backend/pretraining gates, injected construction,
+  feature validation, notebook, and static checks passed
+- Validation level: CPU/static with synthetic upstream tree and tensor shapes
+- Unverified: compiled selective-scan import/execution, real model construction,
+  parameter count, CUDA, and tensor forward
+- Compatibility effect: additive factory/importer; legacy launcher remains active
+- Deviation: the actual notebook 03 is environment setup, so the generic model-day
+  notebook receives the non-constructing VMamba hook
+- Rollback: revert PR 13C and continue through the existing registered-import
+  launcher path
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: G1 must prove the pinned extension is the implementation used by
+  real SS2D blocks rather than merely importable

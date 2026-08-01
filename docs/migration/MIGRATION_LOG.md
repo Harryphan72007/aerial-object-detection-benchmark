@@ -521,7 +521,30 @@ resolved SHA.
 - Deviation: incompatible is an explicit fourth refusal state rather than forcing
   unsafe artifacts into one of the three allowed loading modes
 - Rollback: revert PR 15; retain v2 metadata as harmless files or quarantine it
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `15982ebba6f787e9d0d4f0bf5e4577e826807f32`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/25
 - Remaining risks: model-signature generation must be wired consistently by each
   migrated producer
+
+## PR 16 — RT-DETR parameter-group discovery
+
+- Status: completed with live model report pending
+- Dependencies: PR 1–15
+- Files changed: deterministic RT-DETR group discovery/report; smoke-manifest
+  attachment helper; diagnostic docs/notebook line; tests; migration log/inventory
+- Conceptual change: audit backbone/detector ownership without enabling differential LR
+- Preserved behavior: global-LR optimizer remains unchanged
+- Tests executed: zero duplicate/unassigned, exact tensor/value count sums, frozen
+  parameter exclusion, report round trip and manifest attachment; full CPU/static suite
+- Observed result: 189 passed, 2 skipped because PyTorch was unavailable; all
+  parameter ownership, count, report, and static checks passed
+- Validation level: CPU/static parameter test doubles
+- Unverified: reviewed report from the pinned real RT-DETRv2-L model
+- Compatibility effect: additive diagnostics only
+- Deviation: report attachment is exposed for the smoke producer; live manifest
+  generation awaits the GPU smoke run
+- Rollback: revert PR 16 and keep the global-LR optimizer
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: upstream parameter names may require an explicitly reviewed marker
+  update before PR 17 enables group-specific rates

@@ -291,28 +291,28 @@
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 10,
           "literals": [],
           "operations": [],
           "source": "paths = resolve_legacy_paths(DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 22,
+          "line": 25,
           "literals": [],
           "operations": [],
           "source": "def require_verified_data(report):"
         },
         {
           "cell": 3,
-          "line": 23,
+          "line": 26,
           "literals": [],
           "operations": [],
           "source": "if report.verified:"
         },
         {
           "cell": 3,
-          "line": 26,
+          "line": 29,
           "literals": [
             "Dataset setup is incomplete or was interrupted."
           ],
@@ -321,14 +321,14 @@
         },
         {
           "cell": 3,
-          "line": 27,
+          "line": 30,
           "literals": [],
           "operations": [],
           "source": "if any(\"staging directory\" in error for error in report.errors):"
         },
         {
           "cell": 3,
-          "line": 31,
+          "line": 34,
           "literals": [
             "Notebook 01 stopped safely before caching or training because dataset preparation is incomplete."
           ],
@@ -337,7 +337,7 @@
         },
         {
           "cell": 3,
-          "line": 53,
+          "line": 56,
           "literals": [],
           "operations": [
             "write"
@@ -346,14 +346,14 @@
         },
         {
           "cell": 3,
-          "line": 56,
+          "line": 59,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 62,
+          "line": 65,
           "literals": [],
           "operations": [
             "write"
@@ -362,7 +362,7 @@
         },
         {
           "cell": 3,
-          "line": 65,
+          "line": 68,
           "literals": [
             "Dataset setup is incomplete. Run 00_prepare_visdrone.ipynb, then rerun this notebook."
           ],
@@ -503,6 +503,7 @@
         "src.data.download",
         "src.data.local_cache",
         "src.models.resnet_frcnn.factory",
+        "src.models.rtdetrv2.factory",
         "src.models.swin_frcnn.factory",
         "src.models.vmamba_frcnn.factory",
         "src.pathing.resolver",
@@ -512,7 +513,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "65d5c2c3d903a2364b8b442e99ee6b81bd0f8ab2bbb7bfd81d607ac49c853bd0"
+      "sha256": "8160bc4b4a102d279bbd20ff94e174d2bbb28723ce9f6aa9672d344e6b3d8a1f"
     },
     {
       "artifact_references": [
@@ -1767,7 +1768,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 83,
+  "python_source_count": 84,
   "python_sources": [
     {
       "artifact_references": [
@@ -7350,7 +7351,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 24,
+          "line": 25,
           "literals": [],
           "operations": [
             "read"
@@ -7359,16 +7360,7 @@
         },
         {
           "cell": 0,
-          "line": 55,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "state = torch.load(checkpoint, map_location=\"cpu\", weights_only=False)"
-        },
-        {
-          "cell": 0,
-          "line": 100,
+          "line": 39,
           "literals": [],
           "operations": [
             "read"
@@ -7377,7 +7369,7 @@
         },
         {
           "cell": 0,
-          "line": 117,
+          "line": 56,
           "literals": [],
           "operations": [
             "read"
@@ -7391,13 +7383,56 @@
         "numpy",
         "pathlib",
         "src.models.base_adapter",
+        "src.models.rtdetrv2.factory",
         "time",
+        "torch",
+        "typing"
+      ],
+      "path": "src/models/rtdetr_adapter.py",
+      "sha256": "2349edf4c971b8944290a6ea172556d791c1b51922c93120f4d2c104fbf91896"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 10,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_yaml"
+        },
+        {
+          "cell": 0,
+          "line": 36,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "else read_yaml("
+        },
+        {
+          "cell": 0,
+          "line": 37,
+          "literals": [
+            "model.yaml"
+          ],
+          "operations": [],
+          "source": "self.repo_root / \"configs\" / RTDETR_FACTORY_MODEL_ID / \"model.yaml\""
+        }
+      ],
+      "imports": [
+        "__future__",
+        "contextlib",
+        "dataclasses",
+        "pathlib",
+        "src.utils.serialization",
         "torch",
         "transformers",
         "typing"
       ],
-      "path": "src/models/rtdetr_adapter.py",
-      "sha256": "4f0869daebab089a3f5e58b212281d27181fd47c6d6430af148c8b259a6078d5"
+      "path": "src/models/rtdetrv2/factory.py",
+      "sha256": "60be7106c400fd907966b32ebfa526ae67f33ac63ba196aa1ac50ab4c09161d9"
     },
     {
       "artifact_references": [

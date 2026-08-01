@@ -7,3 +7,6 @@ warmup_epochs: 2
 warmup_start_factor: 0.01
 minimum_lr_factor: 0.01
 scheduler_horizon_epochs: 100
+ema_enabled: true
+ema_decay: 0.9998
+effective_batch_size: 8

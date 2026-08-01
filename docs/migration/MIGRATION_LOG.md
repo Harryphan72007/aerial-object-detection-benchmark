@@ -569,6 +569,28 @@ resolved SHA.
 - Deviation: the performance horizon is 100 epochs and remains fixed during short
   HPO trials, rather than truncating cosine decay to the trial length
 - Rollback: revert PR 17 and select the legacy global-LR recipe
+- Commit SHA: `df534e46bf28f35bae8a0196c1fdcc6150907769`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/27
+- Remaining risks: upstream optimizer construction must preserve custom group metadata
+
+## PR 18 — EMA and effective batch
+
+- Status: completed with live tensor smoke pending
+- Dependencies: PR 1–17
+- Files changed: framework-light EMA and accumulation modules; shared engine callback;
+  RT-DETR checkpoint/trainer integration; performance policy; tests/docs/log
+- Conceptual change: optional EMA state and explicit effective-batch/update accounting
+- Preserved behavior: raw model state remains canonical and checkpoints without EMA load
+- Tests executed: optimizer-step count under partial accumulation; EMA update count;
+  save/load and raw-state restoration; effective-batch validation; full CPU/static suite
+- Observed result: 195 passed, 2 skipped because PyTorch was unavailable; EMA,
+  accumulation, effective-batch, checkpoint, and shared-engine contracts passed
+- Validation level: CPU/static state test doubles
+- Unverified: tensor EMA round trip and accumulated CUDA update
+- Compatibility effect: additive optional `ema_state_dict` checkpoint field
+- Deviation: raw weights remain the default evaluation target; EMA evaluation is an
+  explicit separate context to prevent silent metric mixing
+- Rollback: revert PR 18, disable EMA/accumulation, and load raw model state only
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: upstream optimizer construction must preserve custom group metadata
+- Remaining risks: GradScaler overflow detection should be confirmed in the CUDA smoke

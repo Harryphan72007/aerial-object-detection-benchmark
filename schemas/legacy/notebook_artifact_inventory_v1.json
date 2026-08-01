@@ -298,21 +298,30 @@
         },
         {
           "cell": 3,
-          "line": 25,
-          "literals": [],
+          "line": 19,
+          "literals": [
+            "Parameter-group report: diagnostic global-LR mode"
+          ],
           "operations": [],
-          "source": "def require_verified_data(report):"
+          "source": "print(\"Parameter-group report: diagnostic global-LR mode\")"
         },
         {
           "cell": 3,
           "line": 26,
           "literals": [],
           "operations": [],
+          "source": "def require_verified_data(report):"
+        },
+        {
+          "cell": 3,
+          "line": 27,
+          "literals": [],
+          "operations": [],
           "source": "if report.verified:"
         },
         {
           "cell": 3,
-          "line": 29,
+          "line": 30,
           "literals": [
             "Dataset setup is incomplete or was interrupted."
           ],
@@ -321,14 +330,14 @@
         },
         {
           "cell": 3,
-          "line": 30,
+          "line": 31,
           "literals": [],
           "operations": [],
           "source": "if any(\"staging directory\" in error for error in report.errors):"
         },
         {
           "cell": 3,
-          "line": 34,
+          "line": 35,
           "literals": [
             "Notebook 01 stopped safely before caching or training because dataset preparation is incomplete."
           ],
@@ -337,7 +346,7 @@
         },
         {
           "cell": 3,
-          "line": 56,
+          "line": 57,
           "literals": [],
           "operations": [
             "write"
@@ -346,14 +355,14 @@
         },
         {
           "cell": 3,
-          "line": 59,
+          "line": 60,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 65,
+          "line": 66,
           "literals": [],
           "operations": [
             "write"
@@ -362,7 +371,7 @@
         },
         {
           "cell": 3,
-          "line": 68,
+          "line": 69,
           "literals": [
             "Dataset setup is incomplete. Run 00_prepare_visdrone.ipynb, then rerun this notebook."
           ],
@@ -513,7 +522,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "8160bc4b4a102d279bbd20ff94e174d2bbb28723ce9f6aa9672d344e6b3d8a1f"
+      "sha256": "746e8cf556d0923f2efac5d2b7c2f093863a878d06b08d56c506f20e62df8763"
     },
     {
       "artifact_references": [
@@ -1768,7 +1777,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 85,
+  "python_source_count": 86,
   "python_sources": [
     {
       "artifact_references": [
@@ -7433,6 +7442,37 @@
       ],
       "path": "src/models/rtdetrv2/factory.py",
       "sha256": "60be7106c400fd907966b32ebfa526ae67f33ac63ba196aa1ac50ab4c09161d9"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 9,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_json"
+        },
+        {
+          "cell": 0,
+          "line": 86,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(path, discovery.report)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "dataclasses",
+        "pathlib",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/models/rtdetrv2/parameter_groups.py",
+      "sha256": "b97c0ba1fec6c2e0244785610b99ca0e40c369601a0fb3ddc1ad2a99e0e2de36"
     },
     {
       "artifact_references": [

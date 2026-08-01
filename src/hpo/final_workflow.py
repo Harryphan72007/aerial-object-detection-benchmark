@@ -9,6 +9,7 @@ from typing import Any
 
 from src.hpo.workflow import HPO_PROTOCOL_ID, _cleanup_accelerator_memory
 from src.models.registry import load_model_config
+from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
 from src.training.checkpointing import make_run_id, materialize_checkpoint_alias
 from src.training.trainer import TrainingOrchestrator
@@ -102,6 +103,11 @@ class FinalExperimentWorkflow:
                 f"effective batch size must be {EFFECTIVE_BATCH_SIZE}, got "
                 f"{effective}"
             )
+        scheduler_horizon = FINAL_EPOCHS
+        if self.model_id == "rtdetrv2_l":
+            scheduler_horizon = int(
+                checked_in_recipe(self.repo_root)["scheduler_horizon_epochs"]
+            )
         return {
             "model_id": self.model_id,
             "dataset_track": self.dataset_track,
@@ -112,7 +118,7 @@ class FinalExperimentWorkflow:
             "configuration_hash": configuration_hash(parameters),
             "scheduler_contract": {
                 "epochs": FINAL_EPOCHS,
-                "scheduler_horizon": FINAL_EPOCHS,
+                "scheduler_horizon": scheduler_horizon,
             },
             "baseline_or_tuned": recipe,
             "restart_from_original_pretrained": True,
@@ -188,9 +194,15 @@ class FinalExperimentWorkflow:
         manifests: list[dict[str, Any]] = []
         annotation_root = self.paths.coco(self.dataset_track) / "annotations"
         for recipe, parameters in (("baseline", {}), ("tuned", tuned)):
+            applied_parameters = dict(parameters)
+            scheduler_horizon = FINAL_EPOCHS
+            if self.model_id == "rtdetrv2_l":
+                static_recipe = checked_in_recipe(self.repo_root)
+                applied_parameters = {**static_recipe, **parameters}
+                scheduler_horizon = int(static_recipe["scheduler_horizon_epochs"])
             for seed in FINAL_SEEDS:
                 contract = self._contract(
-                    seed, recipe, parameters, batch_size, accumulation
+                    seed, recipe, applied_parameters, batch_size, accumulation
                 )
                 run_id, run_dir, resume = self._resumable(contract)
                 if resume == "completed":
@@ -210,7 +222,7 @@ class FinalExperimentWorkflow:
                         seed=seed,
                         use_amp=True,
                         resume_run_id=resume,
-                        overrides=parameters,
+                        overrides=applied_parameters,
                         train_annotation_override=(
                             annotation_root / "instances_train.json"
                         ),
@@ -222,7 +234,7 @@ class FinalExperimentWorkflow:
                         explicit_run_dir=run_dir,
                         explicit_run_id=run_id,
                         register_run=True,
-                        scheduler_horizon=FINAL_EPOCHS,
+                        scheduler_horizon=scheduler_horizon,
                         validation_interval=1,
                         run_kind="final_complete_official_train",
                         protocol_id=HPO_PROTOCOL_ID,

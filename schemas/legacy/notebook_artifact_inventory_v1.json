@@ -1238,28 +1238,28 @@
         },
         {
           "cell": 3,
-          "line": 3,
+          "line": 4,
           "literals": [],
           "operations": [],
           "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
           "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 9,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 10,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1278,7 +1278,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "992190747445cba556989aa8d34afbded350b74fad2ea7b61aa3e95178634660"
+      "sha256": "9ee1442a54766676a8095fde8211a9981de0954b1636103a75d3018e20c285f1"
     },
     {
       "artifact_references": [
@@ -1777,7 +1777,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 86,
+  "python_source_count": 87,
   "python_sources": [
     {
       "artifact_references": [
@@ -3237,7 +3237,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 88,
+          "line": 89,
           "literals": [],
           "operations": [
             "read"
@@ -3246,7 +3246,7 @@
         },
         {
           "cell": 0,
-          "line": 92,
+          "line": 93,
           "literals": [],
           "operations": [
             "read"
@@ -3255,7 +3255,7 @@
         },
         {
           "cell": 0,
-          "line": 142,
+          "line": 150,
           "literals": [
             "applied_overrides.json"
           ],
@@ -3266,7 +3266,7 @@
         },
         {
           "cell": 0,
-          "line": 143,
+          "line": 151,
           "literals": [],
           "operations": [
             "write"
@@ -3275,7 +3275,27 @@
         },
         {
           "cell": 0,
-          "line": 292,
+          "line": 233,
+          "literals": [
+            "parameter_groups.json"
+          ],
+          "operations": [
+            "write"
+          ],
+          "source": "(run_dir / \"parameter_groups.json\").write_text("
+        },
+        {
+          "cell": 0,
+          "line": 234,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(optimizer_build.report, indent=2), encoding=\"utf-8\""
+        },
+        {
+          "cell": 0,
+          "line": 340,
           "literals": [],
           "operations": [
             "write"
@@ -3284,7 +3304,7 @@
         },
         {
           "cell": 0,
-          "line": 297,
+          "line": 345,
           "literals": [
             "last.pth"
           ],
@@ -3293,7 +3313,7 @@
         },
         {
           "cell": 0,
-          "line": 298,
+          "line": 346,
           "literals": [],
           "operations": [
             "read"
@@ -3302,7 +3322,7 @@
         },
         {
           "cell": 0,
-          "line": 299,
+          "line": 347,
           "literals": [
             "last.pth"
           ],
@@ -3311,7 +3331,7 @@
         },
         {
           "cell": 0,
-          "line": 413,
+          "line": 464,
           "literals": [
             "last.pth"
           ],
@@ -3320,7 +3340,7 @@
         },
         {
           "cell": 0,
-          "line": 461,
+          "line": 512,
           "literals": [
             "predictions_epoch_{epoch:03d}.json"
           ],
@@ -3329,7 +3349,7 @@
         },
         {
           "cell": 0,
-          "line": 462,
+          "line": 513,
           "literals": [],
           "operations": [
             "write"
@@ -3338,7 +3358,7 @@
         },
         {
           "cell": 0,
-          "line": 476,
+          "line": 527,
           "literals": [
             "last.pth"
           ],
@@ -3347,7 +3367,7 @@
         },
         {
           "cell": 0,
-          "line": 478,
+          "line": 529,
           "literals": [
             "best_map.pth",
             "last.pth"
@@ -3357,7 +3377,7 @@
         },
         {
           "cell": 0,
-          "line": 480,
+          "line": 531,
           "literals": [
             "best_aptiny.pth",
             "last.pth"
@@ -3367,7 +3387,7 @@
         },
         {
           "cell": 0,
-          "line": 516,
+          "line": 582,
           "literals": [
             "training_curves.png"
           ],
@@ -3376,7 +3396,7 @@
         },
         {
           "cell": 0,
-          "line": 517,
+          "line": 583,
           "literals": [],
           "operations": [
             "write"
@@ -3385,7 +3405,7 @@
         },
         {
           "cell": 0,
-          "line": 519,
+          "line": 585,
           "literals": [
             "best_map.pth"
           ],
@@ -3394,7 +3414,7 @@
         },
         {
           "cell": 0,
-          "line": 520,
+          "line": 586,
           "literals": [
             "best_map.pth",
             "last.pth"
@@ -3404,7 +3424,7 @@
         },
         {
           "cell": 0,
-          "line": 521,
+          "line": 587,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -3413,7 +3433,7 @@
         },
         {
           "cell": 0,
-          "line": 523,
+          "line": 589,
           "literals": [
             "best_aptiny.pth",
             "last.pth"
@@ -3423,7 +3443,7 @@
         },
         {
           "cell": 0,
-          "line": 539,
+          "line": 605,
           "literals": [
             "best_map.pth"
           ],
@@ -3432,7 +3452,7 @@
         },
         {
           "cell": 0,
-          "line": 540,
+          "line": 606,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -3441,7 +3461,7 @@
         },
         {
           "cell": 0,
-          "line": 541,
+          "line": 607,
           "literals": [
             "last.pth"
           ],
@@ -3450,7 +3470,7 @@
         },
         {
           "cell": 0,
-          "line": 560,
+          "line": 626,
           "literals": [
             "final_metrics.json"
           ],
@@ -3461,7 +3481,7 @@
         },
         {
           "cell": 0,
-          "line": 561,
+          "line": 627,
           "literals": [],
           "operations": [
             "write"
@@ -3474,11 +3494,14 @@
         "argparse",
         "collections",
         "json",
+        "math",
         "numpy",
         "pathlib",
         "psutil",
         "src.data.dataset",
         "src.evaluation.coco_evaluator",
+        "src.models.rtdetrv2.optimizer",
+        "src.models.rtdetrv2.scheduler",
         "src.reproducibility",
         "src.runtime_manifest",
         "src.training.callbacks",
@@ -3492,7 +3515,7 @@
         "typing"
       ],
       "path": "scripts/run_rtdetr_training.py",
-      "sha256": "dca5a0ea8a0765cf1bd9a6dc54357bf1482d31c1c5417213ae9f81a8452cef1e"
+      "sha256": "404e34c28b79acb34a41ab0f15a810b0ac76cc9f9a4433eaef13e0d267fa66e2"
     },
     {
       "artifact_references": [
@@ -6412,7 +6435,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 15,
+          "line": 16,
           "literals": [],
           "operations": [
             "read",
@@ -6422,7 +6445,7 @@
         },
         {
           "cell": 0,
-          "line": 24,
+          "line": 25,
           "literals": [],
           "operations": [
             "write"
@@ -6431,7 +6454,7 @@
         },
         {
           "cell": 0,
-          "line": 62,
+          "line": 63,
           "literals": [
             "best_config.yaml"
           ],
@@ -6440,7 +6463,7 @@
         },
         {
           "cell": 0,
-          "line": 70,
+          "line": 71,
           "literals": [],
           "operations": [
             "read"
@@ -6449,7 +6472,7 @@
         },
         {
           "cell": 0,
-          "line": 127,
+          "line": 133,
           "literals": [
             "*/resume_contract.json"
           ],
@@ -6460,7 +6483,7 @@
         },
         {
           "cell": 0,
-          "line": 131,
+          "line": 137,
           "literals": [],
           "operations": [
             "read"
@@ -6469,7 +6492,7 @@
         },
         {
           "cell": 0,
-          "line": 134,
+          "line": 140,
           "literals": [
             "run_manifest.json"
           ],
@@ -6478,7 +6501,7 @@
         },
         {
           "cell": 0,
-          "line": 136,
+          "line": 142,
           "literals": [],
           "operations": [
             "read"
@@ -6487,7 +6510,7 @@
         },
         {
           "cell": 0,
-          "line": 139,
+          "line": 145,
           "literals": [
             "last.pth"
           ],
@@ -6496,7 +6519,7 @@
         },
         {
           "cell": 0,
-          "line": 164,
+          "line": 170,
           "literals": [
             "last.pth",
             "latest.pt"
@@ -6506,7 +6529,7 @@
         },
         {
           "cell": 0,
-          "line": 165,
+          "line": 171,
           "literals": [
             "best.pt",
             "best_map.pth"
@@ -6516,7 +6539,7 @@
         },
         {
           "cell": 0,
-          "line": 198,
+          "line": 210,
           "literals": [
             "run_manifest.json"
           ],
@@ -6527,7 +6550,7 @@
         },
         {
           "cell": 0,
-          "line": 201,
+          "line": 213,
           "literals": [
             "resume_contract.json"
           ],
@@ -6538,7 +6561,7 @@
         },
         {
           "cell": 0,
-          "line": 215,
+          "line": 227,
           "literals": [
             "instances_train.json"
           ],
@@ -6547,7 +6570,7 @@
         },
         {
           "cell": 0,
-          "line": 218,
+          "line": 230,
           "literals": [
             "instances_val.json"
           ],
@@ -6563,6 +6586,7 @@
         "pathlib",
         "src.hpo.workflow",
         "src.models.registry",
+        "src.models.rtdetrv2.optimizer",
         "src.paths",
         "src.training.checkpointing",
         "src.training.trainer",
@@ -6570,7 +6594,7 @@
         "typing"
       ],
       "path": "src/hpo/final_workflow.py",
-      "sha256": "62fbece24e1a01558aeeb5f43dc715e9186ab371bf0339040e48c1d21a11de3c"
+      "sha256": "481781a5e104148f57a4ddec87b109bced2f4ce0b34ca6fb74804992302f55ed"
     },
     {
       "artifact_references": [
@@ -6881,7 +6905,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 21,
+          "line": 22,
           "literals": [],
           "operations": [
             "read",
@@ -6891,7 +6915,7 @@
         },
         {
           "cell": 0,
-          "line": 44,
+          "line": 45,
           "literals": [],
           "operations": [
             "write"
@@ -6900,7 +6924,7 @@
         },
         {
           "cell": 0,
-          "line": 122,
+          "line": 123,
           "literals": [
             "study.db",
             "study_smoke.db"
@@ -6910,7 +6934,7 @@
         },
         {
           "cell": 0,
-          "line": 129,
+          "line": 130,
           "literals": [
             "instances_train.json"
           ],
@@ -6919,7 +6943,7 @@
         },
         {
           "cell": 0,
-          "line": 134,
+          "line": 135,
           "literals": [
             "instances_val.json"
           ],
@@ -6928,7 +6952,7 @@
         },
         {
           "cell": 0,
-          "line": 137,
+          "line": 138,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -6937,7 +6961,7 @@
         },
         {
           "cell": 0,
-          "line": 138,
+          "line": 139,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -6946,7 +6970,7 @@
         },
         {
           "cell": 0,
-          "line": 139,
+          "line": 140,
           "literals": [
             "official_full_train.json"
           ],
@@ -6955,7 +6979,7 @@
         },
         {
           "cell": 0,
-          "line": 140,
+          "line": 141,
           "literals": [
             "official_validation.json"
           ],
@@ -6964,7 +6988,7 @@
         },
         {
           "cell": 0,
-          "line": 141,
+          "line": 142,
           "literals": [
             "split_summary.json"
           ],
@@ -6973,7 +6997,7 @@
         },
         {
           "cell": 0,
-          "line": 149,
+          "line": 150,
           "literals": [
             "split_summary.json"
           ],
@@ -6984,7 +7008,7 @@
         },
         {
           "cell": 0,
-          "line": 201,
+          "line": 208,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -6993,7 +7017,7 @@
         },
         {
           "cell": 0,
-          "line": 204,
+          "line": 211,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7002,7 +7026,7 @@
         },
         {
           "cell": 0,
-          "line": 346,
+          "line": 353,
           "literals": [
             "final_metrics.json"
           ],
@@ -7011,7 +7035,7 @@
         },
         {
           "cell": 0,
-          "line": 347,
+          "line": 354,
           "literals": [
             "best_map.pth"
           ],
@@ -7020,7 +7044,7 @@
         },
         {
           "cell": 0,
-          "line": 392,
+          "line": 399,
           "literals": [],
           "operations": [
             "write"
@@ -7029,7 +7053,7 @@
         },
         {
           "cell": 0,
-          "line": 393,
+          "line": 400,
           "literals": [
             "{phase}_trials.csv"
           ],
@@ -7038,7 +7062,7 @@
         },
         {
           "cell": 0,
-          "line": 421,
+          "line": 428,
           "literals": [
             "search_space.json"
           ],
@@ -7049,7 +7073,7 @@
         },
         {
           "cell": 0,
-          "line": 422,
+          "line": 429,
           "literals": [
             "best_config.json"
           ],
@@ -7060,7 +7084,7 @@
         },
         {
           "cell": 0,
-          "line": 423,
+          "line": 430,
           "literals": [
             "best_config.yaml"
           ],
@@ -7071,7 +7095,7 @@
         },
         {
           "cell": 0,
-          "line": 428,
+          "line": 435,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7080,7 +7104,7 @@
         },
         {
           "cell": 0,
-          "line": 432,
+          "line": 439,
           "literals": [],
           "operations": [
             "read"
@@ -7089,7 +7113,7 @@
         },
         {
           "cell": 0,
-          "line": 434,
+          "line": 441,
           "literals": [],
           "operations": [
             "write"
@@ -7098,7 +7122,7 @@
         },
         {
           "cell": 0,
-          "line": 435,
+          "line": 442,
           "literals": [
             "parameter_application_report.json"
           ],
@@ -7107,7 +7131,7 @@
         },
         {
           "cell": 0,
-          "line": 449,
+          "line": 456,
           "literals": [
             "best_config.yaml"
           ],
@@ -7116,7 +7140,7 @@
         },
         {
           "cell": 0,
-          "line": 455,
+          "line": 462,
           "literals": [
             "search_summary.json"
           ],
@@ -7138,6 +7162,7 @@
         "pathlib",
         "src.hpo.search_spaces",
         "src.models.registry",
+        "src.models.rtdetrv2.optimizer",
         "src.paths",
         "src.reproducibility",
         "src.training.lr_search",
@@ -7149,7 +7174,7 @@
         "typing"
       ],
       "path": "src/hpo/workflow.py",
-      "sha256": "30cfc122f9bc9bce45cb7c64e881b773e57c8d304b604a1d2eccbac8425c0923"
+      "sha256": "f32844656cd5788c9f0f2040a2c44e936d32fc82899aa394488df5ecb2bdaa31"
     },
     {
       "artifact_references": [
@@ -7442,6 +7467,57 @@
       ],
       "path": "src/models/rtdetrv2/factory.py",
       "sha256": "60be7106c400fd907966b32ebfa526ae67f33ac63ba196aa1ac50ab4c09161d9"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 13,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_yaml"
+        },
+        {
+          "cell": 0,
+          "line": 52,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = read_yaml(path)"
+        },
+        {
+          "cell": 0,
+          "line": 59,
+          "literals": [
+            "configs/rtdetrv2_l/performance_recipe_v2.yaml"
+          ],
+          "operations": [],
+          "source": "relative = Path(\"configs/rtdetrv2_l/performance_recipe_v2.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 61,
+          "literals": [
+            "configs/rtdetrv2_l/smoke_recipe_v2.yaml"
+          ],
+          "operations": [],
+          "source": "relative = Path(\"configs/rtdetrv2_l/smoke_recipe_v2.yaml\")"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "dataclasses",
+        "pathlib",
+        "src.models.rtdetrv2.parameter_groups",
+        "src.utils.serialization",
+        "torch.optim",
+        "typing"
+      ],
+      "path": "src/models/rtdetrv2/optimizer.py",
+      "sha256": "7f508cc125b0b692e3b1f3eae9763f46f5d140094556b2ea83f443ddaa69a90a"
     },
     {
       "artifact_references": [

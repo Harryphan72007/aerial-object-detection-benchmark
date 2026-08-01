@@ -544,7 +544,31 @@ resolved SHA.
 - Deviation: report attachment is exposed for the smoke producer; live manifest
   generation awaits the GPU smoke run
 - Rollback: revert PR 16 and keep the global-LR optimizer
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `805d70c66880ef3d44625303fd80ab363a19a7b6`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/26
 - Remaining risks: upstream parameter names may require an explicitly reviewed marker
   update before PR 17 enables group-specific rates
+
+## PR 17 — RT-DETR optimizer and scheduler repair
+
+- Status: completed with GPU smoke pending
+- Dependencies: PR 1–16
+- Files changed: recipe-v2 optimizer and scheduler modules; smoke/performance
+  policies; HPO/final workflow wiring; RT-DETR trainer/notebook; tests/docs/log
+- Conceptual change: enable reviewed differential LR, stronger clipping, and
+  update-based warm-up/cosine decay behind `rtdetr_recipe_v2`
+- Preserved behavior: legacy global-LR construction remains selectable
+- Tests executed: exact group LRs; exact search/full early trace; scheduler step and
+  state round trip; HPO/final/notebook contracts; full CPU/static suite
+- Observed result: 192 passed, 2 skipped because PyTorch was unavailable; exact
+  differential rates and shared-horizon trace contracts passed
+- Validation level: CPU/static optimizer and scheduler test doubles
+- Unverified: one real optimizer step and short CUDA smoke
+- Compatibility effect: additive versioned recipe; old checkpoints remain loadable
+  under PR 15 policies
+- Deviation: the performance horizon is 100 epochs and remains fixed during short
+  HPO trials, rather than truncating cosine decay to the trial length
+- Rollback: revert PR 17 and select the legacy global-LR recipe
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: upstream optimizer construction must preserve custom group metadata

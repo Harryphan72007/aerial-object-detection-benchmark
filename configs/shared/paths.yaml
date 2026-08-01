@@ -1,0 +1,27 @@
+schema_version: 1
+
+# Existing names are frozen. resolve_legacy_paths() delegates to src.paths.
+legacy:
+  datasets: datasets
+  checkpoints: checkpoints
+  registry: experiment_registry
+  predictions: predictions
+  evaluation: evaluation
+  reports: reports
+  cache: cache
+
+# These namespaces are available for later PRs but are not selected by legacy
+# notebooks or trainers in PR 6.
+namespaced:
+  artifacts:
+    checkpoints: checkpoints
+    predictions: predictions
+    metrics: metrics
+    reports: reports
+    logs: logs
+    manifests: manifests
+  modes:
+    smoke: smoke
+    full: full_image
+    sliced: sliced
+    ensemble: ensemble

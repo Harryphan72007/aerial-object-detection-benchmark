@@ -138,7 +138,36 @@ resolved SHA.
 - Deviation: actual repository already had `src.colab_setup`; it was extended
   instead of introducing duplicate bootstrap logic in a new package
 - Rollback: revert PR 5; existing notebooks and setup cells remain usable
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `9befcc93e2b4bbc46c65ec88481b9b988d17a2a0`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/12
 - Remaining risks: a stale pre-PR-5 clone lacks the new helper and should be
   recloned; hosted dependency availability can drift
+
+## PR 6 — Central path resolver in legacy-compatible mode
+
+- Status: completed
+- Dependencies: PR 1–5
+- Files changed: versioned path layout config; new pathing package; one minimal
+  canonical notebook path-cell adapter; path/evaluator tests; documentation;
+  migration log and regenerated inventory
+- Conceptual change: preserve every legacy path while exposing isolated
+  smoke/controlled/performance/full/sliced/ensemble namespaces for later PRs
+- Preserved behavior: `src.paths.ProjectPaths`, all existing Drive paths,
+  registry discovery, checkpoint names, and evaluator behavior
+- Tests executed: old/new path equivalence; namespace isolation and invalid
+  combinations; legacy evaluator fixture; full CPU/static suite; notebook,
+  hygiene, secret, Ruff, compile, and inventory checks
+- Observed result: 127 passed, 2 skipped because PyTorch was unavailable; all
+  legacy path equivalence, isolation, evaluator, notebook, and static checks passed
+- Validation level: CPU/static
+- Unverified: existing Drive artifact lookup in a live Colab session
+- Compatibility effect: additive resolver; legacy notebook resolves the same type
+  and values
+- Deviation: `src.paths` is already a module, so the new package is `src.pathing`
+  to avoid a destructive module-to-package rename
+- Rollback: revert PR 6; the notebook import returns to `src.paths.ProjectPaths`;
+  new namespaces were unused and require no Drive cleanup
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: later producers must opt into the new resolver consistently
+  before isolation is enforceable

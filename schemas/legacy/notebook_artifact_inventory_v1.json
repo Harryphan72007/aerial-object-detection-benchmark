@@ -287,7 +287,7 @@
           "line": 6,
           "literals": [],
           "operations": [],
-          "source": "paths = ProjectPaths.from_value(DRIVE_ROOT)"
+          "source": "paths = resolve_legacy_paths(DRIVE_ROOT)"
         },
         {
           "cell": 3,
@@ -495,14 +495,14 @@
         "src.data.contract",
         "src.data.download",
         "src.data.local_cache",
-        "src.paths",
+        "src.pathing.resolver",
         "src.workflows.model_day",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "832551ee425f31c415029323c2f6d4d5ebb6f4d22636a9f8a75c176f02236a22"
+      "sha256": "3d0f5fd920870aa3b2c95e7c17c8a45300ea2e2ba20599beb4832f95dd9dbb4a"
     },
     {
       "artifact_references": [
@@ -1757,7 +1757,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 75,
+  "python_source_count": 76,
   "python_sources": [
     {
       "artifact_references": [
@@ -7107,6 +7107,47 @@
       ],
       "path": "src/notebook_utils.py",
       "sha256": "9ed6ef56c4dfd691670c3dd961d8cadc0b7270ed5bd5b24ef042e1f9116374a9"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 9,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_yaml"
+        },
+        {
+          "cell": 0,
+          "line": 12,
+          "literals": [
+            "paths.yaml"
+          ],
+          "operations": [],
+          "source": "DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / \"configs\" / \"shared\" / \"paths.yaml\""
+        },
+        {
+          "cell": 0,
+          "line": 30,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "self.config: dict[str, Any] = read_yaml(self.config_path)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.pathing.layout",
+        "src.paths",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/pathing/resolver.py",
+      "sha256": "4a7814ab77e878d58b2714616d8ff49046ace1f64f8a29ce9e8e5549161c3f95"
     },
     {
       "artifact_references": [

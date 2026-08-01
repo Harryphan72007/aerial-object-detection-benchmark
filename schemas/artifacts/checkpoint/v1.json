@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Versioned checkpoint metadata v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "identity", "role", "checkpoint_file", "checkpoint_sha256", "state_keys"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "artifact_type": {"const": "checkpoint"},
+    "identity": {"$ref": "../shared/identity_v1.json"},
+    "role": {"enum": ["last", "best_map", "best_aptiny"]},
+    "checkpoint_file": {"type": "string", "minLength": 1},
+    "checkpoint_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "state_keys": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}

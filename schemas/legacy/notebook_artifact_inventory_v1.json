@@ -1764,7 +1764,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 79,
+  "python_source_count": 82,
   "python_sources": [
     {
       "artifact_references": [
@@ -4378,6 +4378,172 @@
       "artifact_references": [
         {
           "cell": 0,
+          "line": 11,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, sha256_file, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 33,
+          "literals": [
+            "checkpoint_{role}.v1.pth"
+          ],
+          "operations": [],
+          "source": "versioned_checkpoint = output / f\"checkpoint_{role}.v1.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 44,
+          "literals": [
+            "checkpoint_{role}.v1.json"
+          ],
+          "operations": [],
+          "source": "metadata_path = output / f\"checkpoint_{role}.v1.json\""
+        },
+        {
+          "cell": 0,
+          "line": 45,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(metadata_path, metadata)"
+        },
+        {
+          "cell": 0,
+          "line": 60,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = read_json(metadata_path)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.artifacts.identity",
+        "src.compatibility.legacy_writer",
+        "src.training.checkpointing",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/artifacts/checkpoints.py",
+      "sha256": "d759d03d6715e02bb9f6a97f149e3973a47bf52360e31f984a63a0c4667699d1"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 13,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 33,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(versioned, payload)"
+        },
+        {
+          "cell": 0,
+          "line": 41,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "payload = read_json(path)"
+        },
+        {
+          "cell": 0,
+          "line": 74,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "\"predictions\": [dict(item) for item in predictions],"
+        },
+        {
+          "cell": 0,
+          "line": 77,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(versioned, payload)"
+        },
+        {
+          "cell": 0,
+          "line": 83,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "payload = read_json(path)"
+        },
+        {
+          "cell": 0,
+          "line": 85,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "return [dict(item) for item in payload[\"predictions\"]]"
+        },
+        {
+          "cell": 0,
+          "line": 89,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "expected = {\"schema_version\", \"artifact_type\", \"identity\", \"predictions\"}"
+        },
+        {
+          "cell": 0,
+          "line": 95,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "if not isinstance(payload[\"predictions\"], list):"
+        },
+        {
+          "cell": 0,
+          "line": 98,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "for prediction in payload[\"predictions\"]:"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.artifacts.identity",
+        "src.compatibility.legacy_writer",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/artifacts/metrics.py",
+      "sha256": "2645079339fbc806675ac563afe33ccdffb6afeb7b565c42cce67f4dfadd24b5"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
           "line": 9,
           "literals": [],
           "operations": [
@@ -4631,6 +4797,73 @@
       ],
       "path": "src/colab_setup.py",
       "sha256": "308a6c0a3e616ce2623a7cdd948ce310ea10c79bb60afe570dde1ecde5ac25eb"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 9,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_json"
+        },
+        {
+          "cell": 0,
+          "line": 12,
+          "literals": [
+            "last.pth"
+          ],
+          "operations": [],
+          "source": "\"last\": \"last.pth\","
+        },
+        {
+          "cell": 0,
+          "line": 13,
+          "literals": [
+            "best_map.pth"
+          ],
+          "operations": [],
+          "source": "\"best_map\": \"best_map.pth\","
+        },
+        {
+          "cell": 0,
+          "line": 14,
+          "literals": [
+            "best_aptiny.pth"
+          ],
+          "operations": [],
+          "source": "\"best_aptiny\": \"best_aptiny.pth\","
+        },
+        {
+          "cell": 0,
+          "line": 26,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(target, {**dict(identity), **dict(metrics)})"
+        },
+        {
+          "cell": 0,
+          "line": 37,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(target, [dict(item) for item in predictions])"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.training.checkpointing",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/compatibility/legacy_writer.py",
+      "sha256": "6c9f020fd0f5f071d3b98c2ea3078ad44690d17d84cdca9e647882651228e043"
     },
     {
       "artifact_references": [

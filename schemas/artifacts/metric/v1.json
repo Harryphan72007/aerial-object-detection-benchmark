@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Versioned evaluation metrics v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "identity", "metrics"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "artifact_type": {"const": "evaluation_metrics"},
+    "identity": {"$ref": "../shared/identity_v1.json"},
+    "metrics": {"type": "object"}
+  }
+}

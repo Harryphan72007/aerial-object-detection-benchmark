@@ -6,6 +6,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+from scripts.validation.inventory_legacy_artifacts import (
+    inventory_notebook,
+    inventory_python_source,
+)
+
 from src.evaluation.detection_metrics import detailed_metrics
 from src.training.checkpointing import MANIFEST_REQUIRED, validate_manifest_dict
 from src.utils.serialization import read_json
@@ -79,3 +84,38 @@ def test_notebook_inventory_is_complete_and_current() -> None:
         "scripts/evaluate.py",
     } <= source_paths
     assert inventory["python_source_count"] == len(source_paths)
+
+
+def test_inventory_hashes_are_independent_of_checkout_newlines(tmp_path: Path) -> None:
+    notebook_value = {
+        "cells": [
+            {
+                "cell_type": "code",
+                "execution_count": None,
+                "metadata": {},
+                "outputs": [],
+                "source": ["from src import paths\n", "print('artifact.json')\n"],
+            }
+        ],
+        "metadata": {},
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+    notebook_lf = tmp_path / "lf.ipynb"
+    notebook_crlf = tmp_path / "crlf.ipynb"
+    rendered = json.dumps(notebook_value, indent=2)
+    notebook_lf.write_bytes((rendered + "\n").encode("utf-8"))
+    notebook_crlf.write_bytes((rendered.replace("\n", "\r\n") + "\r\n").encode("utf-8"))
+    assert inventory_notebook(notebook_lf, tmp_path)["sha256"] == inventory_notebook(
+        notebook_crlf, tmp_path
+    )["sha256"]
+
+    source_lf = tmp_path / "lf.py"
+    source_crlf = tmp_path / "crlf.py"
+    source_lf.write_bytes(b"from pathlib import Path\nPath('artifact.json').read_text()\n")
+    source_crlf.write_bytes(
+        b"from pathlib import Path\r\nPath('artifact.json').read_text()\r\n"
+    )
+    assert inventory_python_source(source_lf, tmp_path)["sha256"] == (
+        inventory_python_source(source_crlf, tmp_path)["sha256"]
+    )

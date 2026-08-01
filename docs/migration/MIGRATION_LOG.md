@@ -817,13 +817,13 @@ resolved SHA.
 - Status: completed with manual GPU/Colab validation deferred by policy
 - Dependencies: PR 1–26
 - Files changed: four required-check workflows; configuration/schema validator;
-  notebook validation API; PR template; GPU checklist; release policy; tests/inventory
+  notebook validation API; PR template; GPU checklist; release policy; tests/cross-platform inventory
 - Conceptual change: make static, CPU, notebook, schema, artifact, and security
   validation explicit, independently visible pull-request checks
 - Preserved behavior: existing umbrella CI and result validation remain available
 - Tests executed: malformed config, prohibited artifact, malformed notebook;
   configuration/schema, notebook, Ruff, compile, and full CPU suite
-- Observed result: 224 passed, 2 skipped because PyTorch was unavailable; all
+- Observed result: 225 passed, 2 skipped because PyTorch was unavailable; all
   static, config/schema, artifact, secret, and notebook validation passed
 - Validation level: local CPU/static parity with GitHub Actions commands
 - Unverified: protected-branch administrator settings and manual GPU/Colab checklist

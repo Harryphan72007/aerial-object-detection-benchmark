@@ -742,6 +742,29 @@ resolved SHA.
 - Deviation: this PR writes annotation/manifest artifacts; image pixels are materialized by
   the runtime producer using the manifest's deterministic crop coordinates
 - Rollback: revert PR 23 and delete only `datasets/tiles/v1` generated artifacts
+- Commit SHA: `6a442c216c15792e11d75e5673f075af8306de14`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/35
+- Remaining risks: image decoder orientation metadata must be normalized during live crop
+
+## PR 24 — Sliced inference
+
+- Status: completed with live model inference pending
+- Dependencies: PR 1–23
+- Files changed: sliced inference/coordinate restoration/class-aware merge; prediction
+  schema/config; isolated output paths; tests; notebook 07; migration log/inventory
+- Conceptual change: restore slice-local boxes globally and merge duplicates without
+  sharing full-image artifact namespaces
+- Preserved behavior: category IDs/scores and full-image predictions remain untouched
+- Tests executed: one-slice equivalence; multi-slice offsets; class preservation;
+  duplicate merge; isolated metrics/predictions; separate latency; full suite
+- Observed result: 215 passed, 2 skipped because PyTorch was unavailable; coordinate,
+  equivalence, merge, class, namespace, and latency contracts passed
+- Validation level: CPU synthetic geometry and callback inference
+- Unverified: real model slice batching and GPU latency
+- Compatibility effect: additive performance-only prediction artifact
+- Deviation: merge v1 uses deterministic class-aware NMS; weighted box fusion can be
+  added as a later schema version without changing v1 results
+- Rollback: revert PR 24 and remove only sliced prediction/metric namespaces
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: image decoder orientation metadata must be normalized during live crop
+- Remaining risks: optimal overlap and merge threshold remain performance experiments

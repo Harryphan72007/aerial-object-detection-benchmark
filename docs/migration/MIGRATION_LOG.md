@@ -786,6 +786,28 @@ resolved SHA.
 - Compatibility effect: additive performance ablation with an isolated namespace
 - Deviation: records preserve source category provenance rather than destructively replacing it
 - Rollback: revert PR 25 and remove only label-granularity ablation artifacts
+- Commit SHA: `d8b65c6014fc3685347e035a4bcc975764782aad`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/37
+- Remaining risks: overlapping original-class predictions may require class-merge NMS policy
+
+## PR 26 — Versioned evaluator and comparison pipeline
+
+- Status: completed
+- Dependencies: PR 1–25
+- Files changed: legacy/versioned evaluation adapters; v2 metric envelopes; five isolated
+  comparison tables; canonical evaluation/comparison notebooks; parity tests/log/inventory
+- Conceptual change: normalize old/new predictions before one metric implementation and
+  separate controlled, performance, full, sliced, and ensemble result tables
+- Preserved behavior: frozen legacy fixture metrics and untagged controlled artifacts
+- Tests executed: same fixture through old, legacy-adapter, and versioned paths within
+  tolerance; table membership/output isolation; notebook/full CPU suite
+- Observed result: 220 passed, 2 skipped because PyTorch was unavailable; exact
+  old/adapter/new fixture parity and all five table-isolation checks passed
+- Validation level: CPU deterministic legacy/versioned fixture parity
+- Unverified: pycocotools parity on a full validation artifact
+- Compatibility effect: additive evaluator v2; legacy files remain readable through adapter
+- Deviation: canonical notebooks 30 and 03 replace nonexistent planned notebooks 05–06
+- Rollback: revert PR 26 and restore original evaluation/comparison notebook calls
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: overlapping original-class predictions may require class-merge NMS policy
+- Remaining risks: external metrics with unsupported fields require explicit adapters

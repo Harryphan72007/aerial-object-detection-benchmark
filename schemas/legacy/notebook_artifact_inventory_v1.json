@@ -704,14 +704,14 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
           "source": "result = compare_completed_models(DRIVE_ROOT, benchmark_track=BENCHMARK_TRACK)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 9,
           "literals": [],
           "operations": [
             "write"
@@ -754,12 +754,13 @@
         "pathlib",
         "src.config.benchmark_tracks",
         "src.workflows.comparison",
+        "src.workflows.versioned_comparison",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/03_compare_all_models.ipynb",
-      "sha256": "77bfa2487cd8b0142e45af6307d2ece35ba874d4ccb23f010dea72e797f22677"
+      "sha256": "7d7cad3bb99dc3c2ecbf1bd80b1df5a1a5fdcaf48c3d9e24a9e3c7dfc66a2569"
     },
     {
       "artifact_references": [
@@ -1381,7 +1382,14 @@
         },
         {
           "cell": 2,
-          "line": 9,
+          "line": 8,
+          "literals": [],
+          "operations": [],
+          "source": "from src.evaluation.versioned import evaluate_prediction_artifact"
+        },
+        {
+          "cell": 2,
+          "line": 11,
           "literals": [
             "Legacy evaluator accepts controlled artifacts only"
           ],
@@ -1390,7 +1398,7 @@
         },
         {
           "cell": 2,
-          "line": 11,
+          "line": 13,
           "literals": [
             "dataset_track"
           ],
@@ -1399,7 +1407,7 @@
         },
         {
           "cell": 2,
-          "line": 13,
+          "line": 15,
           "literals": [
             "--dataset-track"
           ],
@@ -1408,7 +1416,7 @@
         },
         {
           "cell": 2,
-          "line": 17,
+          "line": 19,
           "literals": [
             "comparison.json",
             "report",
@@ -1419,7 +1427,7 @@
         },
         {
           "cell": 2,
-          "line": 18,
+          "line": 20,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1430,12 +1438,13 @@
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
+        "src.evaluation.versioned",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "0f6a3ee326c7f3ac1404e7f2103ca74926bc3795902dd65357999c317766dd57"
+      "sha256": "5b35cafdfed0fc06e8a32b9f0df025f80d78636ac2faaadfcfad6146b819a119"
     },
     {
       "artifact_references": [
@@ -1878,7 +1887,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 93,
+  "python_source_count": 95,
   "python_sources": [
     {
       "artifact_references": [
@@ -6646,6 +6655,76 @@
       ],
       "path": "src/evaluation/report_generator.py",
       "sha256": "ed2f7ed7025f55e381a1b85ef6480bb16d91cf769e2398673c0f095df3bfc3be"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 18,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = json.loads(Path(path).read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 29,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "\"predictions\": value,"
+        },
+        {
+          "cell": 0,
+          "line": 31,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "if not isinstance(value, dict) or not isinstance(value.get(\"predictions\"), list):"
+        },
+        {
+          "cell": 0,
+          "line": 64,
+          "literals": [
+            "predictions.json"
+          ],
+          "operations": [],
+          "source": "normalized = Path(temporary) / \"predictions.json\""
+        },
+        {
+          "cell": 0,
+          "line": 65,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "normalized.write_text("
+        },
+        {
+          "cell": 0,
+          "line": 66,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(artifact[\"predictions\"]), encoding=\"utf-8\""
+        }
+      ],
+      "imports": [
+        "__future__",
+        "json",
+        "pathlib",
+        "src.evaluation.detection_metrics",
+        "tempfile",
+        "typing"
+      ],
+      "path": "src/evaluation/versioned.py",
+      "sha256": "10d07915257f4f4cf1bd9c38945641041652422df448ef73f3826f4e43113977"
     },
     {
       "artifact_references": [
@@ -12721,6 +12800,56 @@
       ],
       "path": "src/workflows/publishing.py",
       "sha256": "753ed8400122087c2588f769573966717ed6e804fe3a2979e36ea046d6acf099"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 10,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_json"
+        },
+        {
+          "cell": 0,
+          "line": 61,
+          "literals": [
+            "comparison.json"
+          ],
+          "operations": [],
+          "source": "json_path = table_root / \"comparison.json\""
+        },
+        {
+          "cell": 0,
+          "line": 62,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(json_path, {\"table\": name, \"rows\": rows}, atomic=True)"
+        },
+        {
+          "cell": 0,
+          "line": 63,
+          "literals": [
+            "comparison.csv"
+          ],
+          "operations": [],
+          "source": "csv_path = table_root / \"comparison.csv\""
+        }
+      ],
+      "imports": [
+        "__future__",
+        "csv",
+        "pathlib",
+        "src.config.benchmark_tracks",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/workflows/versioned_comparison.py",
+      "sha256": "be240a72bf7944ac7f2b40909ddf7f089bc338ea57ee45ef040ea49324733c27"
     }
   ],
   "repository_contract": "legacy-artifacts-v1",

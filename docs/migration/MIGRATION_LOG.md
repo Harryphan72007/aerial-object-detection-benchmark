@@ -677,6 +677,27 @@ resolved SHA.
 - Compatibility effect: additive typed trainer boundary
 - Deviation: framework callbacks stay dependency-injected until the model runtime is present
 - Rollback: revert PR 22A and restore the existing Swin backend entry point
+- Commit SHA: `185da749875cd68ca74a65b76dca250be32a2e5f`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/32
+- Remaining risks: MMDetection hook ordering requires live smoke confirmation
+
+## PR 22B — Migrate VMamba training onto the shared engine
+
+- Status: completed with live model smoke pending
+- Dependencies: PR 1–22A
+- Files changed: VMamba shared trainer boundary; fine-tuning notebook; smoke/resume/
+  compatibility test; migration log/inventory
+- Conceptual change: route VMamba lifecycle callbacks through the shared engine contract
+- Preserved behavior: existing VMamba importer/factory/backend and legacy artifacts
+- Tests executed: one accumulated batch pair/forward/backward/optimizer/scheduler step;
+  save/resume; legacy evaluator read; full CPU/static suite
+- Observed result: 208 passed, 2 skipped because PyTorch was unavailable; VMamba
+  accumulation, step, resume, and legacy evaluation contracts passed
+- Validation level: CPU/static callbacks and legacy fixture
+- Unverified: optimized selective-scan tensor forward and CUDA optimizer step
+- Compatibility effect: additive typed trainer boundary
+- Deviation: framework callbacks stay dependency-injected until the VMamba runtime is present
+- Rollback: revert PR 22B and restore the existing VMamba backend entry point
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: MMDetection hook ordering requires live smoke confirmation
+- Remaining risks: upstream selective-scan autograd must be confirmed live

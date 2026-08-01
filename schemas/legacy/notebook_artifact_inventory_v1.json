@@ -1198,28 +1198,28 @@
         },
         {
           "cell": 3,
-          "line": 3,
+          "line": 5,
           "literals": [],
           "operations": [],
           "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 9,
           "literals": [],
           "operations": [],
           "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 10,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 11,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1232,13 +1232,14 @@
         "os",
         "pathlib",
         "src.hpo.final_workflow",
+        "src.models.vmamba_frcnn.trainer",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "11d853caca102de432523d79f7f11b7cfe73d56f2b1a237ec93cb63cdff875bf"
+      "sha256": "40b19b608649357e8103c80d8a58e0c38d03bb9d58f12146c6827d298817f586"
     },
     {
       "artifact_references": [

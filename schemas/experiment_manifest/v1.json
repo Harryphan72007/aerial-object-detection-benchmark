@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Harryphan72007/aerial-object-detection-benchmark/schemas/experiment_manifest/v1.json",
+  "title": "VisDrone experiment manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "experiment_id", "model_id", "dataset_track",
+    "execution_mode", "code", "config", "dataset", "environment",
+    "hardware", "seed", "output_path", "status", "created_at",
+    "completed_at", "failure", "result"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "model_id": {"type": "string", "minLength": 1},
+    "dataset_track": {"enum": ["2class", "10class"]},
+    "execution_mode": {"enum": ["legacy", "smoke", "controlled", "performance"]},
+    "code": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "revision"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "config": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "dataset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "version", "hashes"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "hashes": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "environment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["python_version", "dependencies_sha256"],
+      "properties": {
+        "python_version": {"type": "string", "minLength": 1},
+        "dependencies_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "hardware": {
+      "type": "object", "additionalProperties": false,
+      "required": ["device_type", "device_name"],
+      "properties": {
+        "device_type": {"enum": ["cpu", "cuda", "mps", "other"]},
+        "device_name": {"type": "string", "minLength": 1}
+      }
+    },
+    "seed": {"type": "integer", "minimum": 0},
+    "output_path": {"type": "string", "minLength": 1},
+    "status": {"enum": ["running", "completed", "failed"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "completed_at": {"type": ["string", "null"], "format": "date-time"},
+    "failure": {"type": ["string", "null"]},
+    "result": {"type": ["object", "null"]}
+  }
+}

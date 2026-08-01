@@ -1757,7 +1757,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 77,
+  "python_source_count": 78,
   "python_sources": [
     {
       "artifact_references": [
@@ -6873,6 +6873,57 @@
       ],
       "path": "src/hpo/workflow.py",
       "sha256": "30cfc122f9bc9bce45cb7c64e881b773e57c8d304b604a1d2eccbac8425c0923"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 10,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 209,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(destination, validated)"
+        },
+        {
+          "cell": 0,
+          "line": 237,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(path, validated)"
+        },
+        {
+          "cell": 0,
+          "line": 244,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = read_json(path)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "datetime",
+        "pathlib",
+        "re",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/manifests/experiment.py",
+      "sha256": "101fae4b52366126dce6fa7bc75e43ad95e1fa2d30d08eea178399e603487ea4"
     },
     {
       "artifact_references": [

@@ -720,6 +720,28 @@ resolved SHA.
 - Deviation: the optimized script retains tensor-specific timing/evaluation callbacks while
   sharing lifecycle state and update-boundary semantics
 - Rollback: revert PR 22C and restore the previous RT-DETR script entry point
+- Commit SHA: `a53a5a6dac1b7b7dde9d2f87b94af83d5b3fa504`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/34
+- Remaining risks: GradScaler skipped-update behavior requires live confirmation
+
+## PR 23 — Higher resolution and tiled training data
+
+- Status: completed with image materialization smoke pending
+- Dependencies: PR 1–22C
+- Files changed: deterministic tiling/clipping module; tile manifest schema; performance
+  config; boundary fixture/tests; notebook 07; migration log/inventory
+- Conceptual change: derive versioned tiled COCO data without mutating source annotations
+- Preserved behavior: source image and annotation identifiers remain recorded in manifests
+- Tests executed: boundary clipping, visible fraction, ignore regions, empty tiles,
+  deterministic IDs/hashes, source immutability; full CPU/static suite
+- Observed result: 212 passed, 2 skipped because PyTorch was unavailable; all
+  boundary, ignore, empty-tile, determinism, hash, and immutability checks passed
+- Validation level: CPU annotation transformation and manifest generation
+- Unverified: real image crop materialization and high-resolution GPU training
+- Compatibility effect: additive performance-only dataset variant
+- Deviation: this PR writes annotation/manifest artifacts; image pixels are materialized by
+  the runtime producer using the manifest's deterministic crop coordinates
+- Rollback: revert PR 23 and delete only `datasets/tiles/v1` generated artifacts
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: GradScaler skipped-update behavior requires live confirmation
+- Remaining risks: image decoder orientation metadata must be normalized during live crop

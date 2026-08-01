@@ -1,5 +1,5 @@
 {
-  "notebook_count": 18,
+  "notebook_count": 19,
   "notebook_root": "notebooks",
   "notebooks": [
     {
@@ -760,6 +760,52 @@
       "nbformat": 4,
       "path": "notebooks/03_compare_all_models.ipynb",
       "sha256": "77bfa2487cd8b0142e45af6307d2ece35ba874d4ccb23f010dea72e797f22677"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 2,
+          "line": 2,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_yaml"
+        },
+        {
+          "cell": 2,
+          "line": 4,
+          "literals": [
+            "tiling_v1.yaml"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "config = read_yaml(REPO_PATH / \"configs\" / \"performance\" / \"tiling_v1.yaml\")"
+        },
+        {
+          "cell": 2,
+          "line": 5,
+          "literals": [],
+          "operations": [],
+          "source": "result = {\"preview\": not START_TILING, \"tile_version\": TILE_VERSION, \"config\": config}"
+        },
+        {
+          "cell": 2,
+          "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "result"
+        }
+      ],
+      "code_cell_count": 2,
+      "imports": [
+        "pathlib",
+        "src.utils.serialization"
+      ],
+      "nbformat": 4,
+      "path": "notebooks/07_performance_tiling.ipynb",
+      "sha256": "88e05c11f798b735b1136b1fc00100c96e9ecde47bbfcf18add3f88c6e645075"
     },
     {
       "artifact_references": [
@@ -1821,7 +1867,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 90,
+  "python_source_count": 91,
   "python_sources": [
     {
       "artifact_references": [
@@ -5889,6 +5935,76 @@
       ],
       "path": "src/data/statistics.py",
       "sha256": "ddab1081f82c6e9f5894a64459bf2909cf259d884e7bff85559800cfcc6b527b"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 12,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_json"
+        },
+        {
+          "cell": 0,
+          "line": 108,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "encoded = json.dumps("
+        },
+        {
+          "cell": 0,
+          "line": 208,
+          "literals": [
+            "instances_tiled.json"
+          ],
+          "operations": [],
+          "source": "dataset_path = root / \"annotations\" / \"instances_tiled.json\""
+        },
+        {
+          "cell": 0,
+          "line": 209,
+          "literals": [
+            "tile_manifest.json"
+          ],
+          "operations": [],
+          "source": "manifest_path = root / \"tile_manifest.json\""
+        },
+        {
+          "cell": 0,
+          "line": 210,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(dataset_path, dict(tiled_dataset), atomic=True)"
+        },
+        {
+          "cell": 0,
+          "line": 211,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(manifest_path, dict(manifest), atomic=True)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "copy",
+        "dataclasses",
+        "hashlib",
+        "json",
+        "pathlib",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/data/tiling.py",
+      "sha256": "e1f85a2cd964b51bbeb9a3820f0940ceec993445cc3e520d01d641e9344e4d2c"
     },
     {
       "artifact_references": [

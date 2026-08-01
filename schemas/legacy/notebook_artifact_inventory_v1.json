@@ -1757,7 +1757,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 76,
+  "python_source_count": 77,
   "python_sources": [
     {
       "artifact_references": [
@@ -4642,6 +4642,56 @@
       ],
       "path": "src/colab_setup.py",
       "sha256": "308a6c0a3e616ce2623a7cdd948ce310ea10c79bb60afe570dde1ecde5ac25eb"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 10,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_yaml"
+        },
+        {
+          "cell": 0,
+          "line": 97,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "canonical = json.dumps("
+        },
+        {
+          "cell": 0,
+          "line": 121,
+          "literals": [
+            "{model_id}_{dataset_track}.yaml"
+          ],
+          "operations": [],
+          "source": "/ f\"{model_id}_{dataset_track}.yaml\""
+        },
+        {
+          "cell": 0,
+          "line": 128,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "return validate_experiment_config(read_yaml(path))"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "hashlib",
+        "json",
+        "pathlib",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/config/experiment.py",
+      "sha256": "34bdc074860c89550220df433bd37a1c9e243ec0d7e7c7e733e092fa14a61238"
     },
     {
       "artifact_references": [

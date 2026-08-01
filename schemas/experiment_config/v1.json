@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Harryphan72007/aerial-object-detection-benchmark/schemas/experiment_config/v1.json",
+  "title": "VisDrone experiment configuration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "model_id",
+    "dataset_track",
+    "execution_mode",
+    "image_size",
+    "batch_size",
+    "gradient_accumulation_steps",
+    "epochs",
+    "seed",
+    "use_amp",
+    "max_detections_per_image",
+    "learning_rate",
+    "weight_decay"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "model_id": {
+      "enum": [
+        "faster_rcnn_resnet50",
+        "faster_rcnn_swin_t",
+        "faster_rcnn_vmamba_t",
+        "rtdetrv2_l",
+        "yolox_s"
+      ]
+    },
+    "dataset_track": {"enum": ["2class", "10class"]},
+    "execution_mode": {"enum": ["legacy", "smoke"]},
+    "image_size": {"type": "integer", "minimum": 32},
+    "batch_size": {"type": "integer", "minimum": 1},
+    "gradient_accumulation_steps": {"type": "integer", "minimum": 1},
+    "epochs": {"type": "integer", "minimum": 1},
+    "seed": {"type": "integer", "minimum": 0},
+    "use_amp": {"type": "boolean"},
+    "max_detections_per_image": {"type": "integer", "minimum": 1},
+    "learning_rate": {"type": "number", "exclusiveMinimum": 0},
+    "weight_decay": {"type": "number", "minimum": 0}
+  }
+}

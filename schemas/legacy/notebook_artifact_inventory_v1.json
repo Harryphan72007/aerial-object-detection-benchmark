@@ -1007,7 +1007,7 @@
           "line": 8,
           "literals": [],
           "operations": [],
-          "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
+          "source": "result = RTDetrOptunaV2(REPO_PATH, DRIVE_ROOT, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
@@ -1023,14 +1023,14 @@
         "importlib.util",
         "os",
         "pathlib",
-        "src.hpo.workflow",
+        "src.hpo.rtdetr_v2",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "2d905ae75786b18db790c377bda5e92d03213cae26438ed76124be67e4ad2580"
+      "sha256": "e0e88435525c3fc53a5a842bb2ceaa3d758d266d87408d17e4631675669d5b23"
     },
     {
       "artifact_references": [
@@ -1777,7 +1777,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 87,
+  "python_source_count": 88,
   "python_sources": [
     {
       "artifact_references": [
@@ -6438,7 +6438,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 16,
+          "line": 17,
           "literals": [],
           "operations": [
             "read",
@@ -6448,7 +6448,7 @@
         },
         {
           "cell": 0,
-          "line": 25,
+          "line": 26,
           "literals": [],
           "operations": [
             "write"
@@ -6457,16 +6457,25 @@
         },
         {
           "cell": 0,
-          "line": 63,
+          "line": 68,
           "literals": [
             "best_config.yaml"
           ],
           "operations": [],
-          "source": "return self.hpo_root / \"best_config.yaml\""
+          "source": "current = self.hpo_root / \"best_config.yaml\""
         },
         {
           "cell": 0,
-          "line": 71,
+          "line": 75,
+          "literals": [
+            "best_config.yaml"
+          ],
+          "operations": [],
+          "source": "/ \"best_config.yaml\""
+        },
+        {
+          "cell": 0,
+          "line": 85,
           "literals": [],
           "operations": [
             "read"
@@ -6475,7 +6484,7 @@
         },
         {
           "cell": 0,
-          "line": 133,
+          "line": 153,
           "literals": [
             "*/resume_contract.json"
           ],
@@ -6486,7 +6495,7 @@
         },
         {
           "cell": 0,
-          "line": 137,
+          "line": 157,
           "literals": [],
           "operations": [
             "read"
@@ -6495,7 +6504,7 @@
         },
         {
           "cell": 0,
-          "line": 140,
+          "line": 160,
           "literals": [
             "run_manifest.json"
           ],
@@ -6504,7 +6513,7 @@
         },
         {
           "cell": 0,
-          "line": 142,
+          "line": 162,
           "literals": [],
           "operations": [
             "read"
@@ -6513,7 +6522,7 @@
         },
         {
           "cell": 0,
-          "line": 145,
+          "line": 165,
           "literals": [
             "last.pth"
           ],
@@ -6522,7 +6531,7 @@
         },
         {
           "cell": 0,
-          "line": 170,
+          "line": 190,
           "literals": [
             "last.pth",
             "latest.pt"
@@ -6532,7 +6541,7 @@
         },
         {
           "cell": 0,
-          "line": 171,
+          "line": 191,
           "literals": [
             "best.pt",
             "best_map.pth"
@@ -6542,7 +6551,7 @@
         },
         {
           "cell": 0,
-          "line": 210,
+          "line": 230,
           "literals": [
             "run_manifest.json"
           ],
@@ -6553,7 +6562,7 @@
         },
         {
           "cell": 0,
-          "line": 213,
+          "line": 233,
           "literals": [
             "resume_contract.json"
           ],
@@ -6564,7 +6573,7 @@
         },
         {
           "cell": 0,
-          "line": 227,
+          "line": 247,
           "literals": [
             "instances_train.json"
           ],
@@ -6573,7 +6582,7 @@
         },
         {
           "cell": 0,
-          "line": 230,
+          "line": 250,
           "literals": [
             "instances_val.json"
           ],
@@ -6587,6 +6596,7 @@
         "json",
         "os",
         "pathlib",
+        "src.hpo.rtdetr_v2",
         "src.hpo.workflow",
         "src.models.registry",
         "src.models.rtdetrv2.optimizer",
@@ -6597,7 +6607,7 @@
         "typing"
       ],
       "path": "src/hpo/final_workflow.py",
-      "sha256": "481781a5e104148f57a4ddec87b109bced2f4ce0b34ca6fb74804992302f55ed"
+      "sha256": "870ab4e6d9f1b0da386ababc3ca849ff70f7aabc12725a2e1954ce94f782ebe1"
     },
     {
       "artifact_references": [
@@ -6908,6 +6918,97 @@
       "artifact_references": [
         {
           "cell": 0,
+          "line": 14,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_yaml"
+        },
+        {
+          "cell": 0,
+          "line": 22,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(value, sort_keys=True, separators=(\",\", \":\")).encode(\"utf-8\")"
+        },
+        {
+          "cell": 0,
+          "line": 27,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "config = read_yaml("
+        },
+        {
+          "cell": 0,
+          "line": 28,
+          "literals": [
+            "hpo_recipe_v2.yaml"
+          ],
+          "operations": [],
+          "source": "Path(repo_root) / \"configs\" / \"rtdetrv2_l\" / \"hpo_recipe_v2.yaml\""
+        },
+        {
+          "cell": 0,
+          "line": 113,
+          "literals": [
+            "study_v2.db",
+            "study_v2_smoke.db"
+          ],
+          "operations": [],
+          "source": "filename = \"study_v2_smoke.db\" if self.smoke_test else \"study_v2.db\""
+        },
+        {
+          "cell": 0,
+          "line": 137,
+          "literals": [
+            "study_v2.db"
+          ],
+          "operations": [],
+          "source": "\"database\": \"study_v2.db\","
+        },
+        {
+          "cell": 0,
+          "line": 138,
+          "literals": [
+            "snapshots/study_v2_latest.db"
+          ],
+          "operations": [],
+          "source": "\"snapshot\": \"snapshots/study_v2_latest.db\","
+        },
+        {
+          "cell": 0,
+          "line": 147,
+          "literals": [
+            "study_v2_latest.db"
+          ],
+          "operations": [],
+          "source": "self.study_path, self.root / \"snapshots\" / \"study_v2_latest.db\""
+        }
+      ],
+      "imports": [
+        "__future__",
+        "hashlib",
+        "json",
+        "os",
+        "pathlib",
+        "sqlite3",
+        "src.hpo.workflow",
+        "src.models.rtdetrv2.optimizer",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/hpo/rtdetr_v2.py",
+      "sha256": "05bfc8b8c828fa256d5763cd9141c63dc14ccbed8f7fee137d0a182083c7c9a9"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
           "line": 22,
           "literals": [],
           "operations": [
@@ -6927,7 +7028,7 @@
         },
         {
           "cell": 0,
-          "line": 123,
+          "line": 125,
           "literals": [
             "study.db",
             "study_smoke.db"
@@ -6937,7 +7038,7 @@
         },
         {
           "cell": 0,
-          "line": 130,
+          "line": 132,
           "literals": [
             "instances_train.json"
           ],
@@ -6946,7 +7047,7 @@
         },
         {
           "cell": 0,
-          "line": 135,
+          "line": 137,
           "literals": [
             "instances_val.json"
           ],
@@ -6955,7 +7056,7 @@
         },
         {
           "cell": 0,
-          "line": 138,
+          "line": 140,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -6964,7 +7065,7 @@
         },
         {
           "cell": 0,
-          "line": 139,
+          "line": 141,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -6973,7 +7074,7 @@
         },
         {
           "cell": 0,
-          "line": 140,
+          "line": 142,
           "literals": [
             "official_full_train.json"
           ],
@@ -6982,7 +7083,7 @@
         },
         {
           "cell": 0,
-          "line": 141,
+          "line": 143,
           "literals": [
             "official_validation.json"
           ],
@@ -6991,7 +7092,7 @@
         },
         {
           "cell": 0,
-          "line": 142,
+          "line": 144,
           "literals": [
             "split_summary.json"
           ],
@@ -7000,7 +7101,7 @@
         },
         {
           "cell": 0,
-          "line": 150,
+          "line": 152,
           "literals": [
             "split_summary.json"
           ],
@@ -7011,7 +7112,7 @@
         },
         {
           "cell": 0,
-          "line": 208,
+          "line": 210,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7020,7 +7121,7 @@
         },
         {
           "cell": 0,
-          "line": 211,
+          "line": 213,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7029,7 +7130,7 @@
         },
         {
           "cell": 0,
-          "line": 353,
+          "line": 359,
           "literals": [
             "final_metrics.json"
           ],
@@ -7038,7 +7139,7 @@
         },
         {
           "cell": 0,
-          "line": 354,
+          "line": 360,
           "literals": [
             "best_map.pth"
           ],
@@ -7047,7 +7148,7 @@
         },
         {
           "cell": 0,
-          "line": 399,
+          "line": 426,
           "literals": [],
           "operations": [
             "write"
@@ -7056,7 +7157,7 @@
         },
         {
           "cell": 0,
-          "line": 400,
+          "line": 427,
           "literals": [
             "{phase}_trials.csv"
           ],
@@ -7065,7 +7166,7 @@
         },
         {
           "cell": 0,
-          "line": 428,
+          "line": 455,
           "literals": [
             "search_space.json"
           ],
@@ -7076,7 +7177,7 @@
         },
         {
           "cell": 0,
-          "line": 429,
+          "line": 456,
           "literals": [
             "best_config.json"
           ],
@@ -7087,7 +7188,7 @@
         },
         {
           "cell": 0,
-          "line": 430,
+          "line": 457,
           "literals": [
             "best_config.yaml"
           ],
@@ -7098,7 +7199,7 @@
         },
         {
           "cell": 0,
-          "line": 435,
+          "line": 462,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7107,7 +7208,7 @@
         },
         {
           "cell": 0,
-          "line": 439,
+          "line": 466,
           "literals": [],
           "operations": [
             "read"
@@ -7116,7 +7217,7 @@
         },
         {
           "cell": 0,
-          "line": 441,
+          "line": 468,
           "literals": [],
           "operations": [
             "write"
@@ -7125,7 +7226,7 @@
         },
         {
           "cell": 0,
-          "line": 442,
+          "line": 469,
           "literals": [
             "parameter_application_report.json"
           ],
@@ -7134,7 +7235,7 @@
         },
         {
           "cell": 0,
-          "line": 456,
+          "line": 483,
           "literals": [
             "best_config.yaml"
           ],
@@ -7143,7 +7244,7 @@
         },
         {
           "cell": 0,
-          "line": 462,
+          "line": 489,
           "literals": [
             "search_summary.json"
           ],
@@ -7177,7 +7278,7 @@
         "typing"
       ],
       "path": "src/hpo/workflow.py",
-      "sha256": "f32844656cd5788c9f0f2040a2c44e936d32fc82899aa394488df5ecb2bdaa31"
+      "sha256": "f26519b423c03322a0c77d507a2581263d678541f8b4aeeadd8ee7f7fa8f61f8"
     },
     {
       "artifact_references": [

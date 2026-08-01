@@ -591,6 +591,28 @@ resolved SHA.
 - Deviation: raw weights remain the default evaluation target; EMA evaluation is an
   explicit separate context to prevent silent metric mixing
 - Rollback: revert PR 18, disable EMA/accumulation, and load raw model state only
+- Commit SHA: `cd260f14d4d3bde9149744c4983c27207d6052c9`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/28
+- Remaining risks: GradScaler overflow detection should be confirmed in the CUDA smoke
+
+## PR 19 — Persistent RT-DETR Optuna search v2
+
+- Status: completed with real training trials pending
+- Dependencies: PR 1–18
+- Files changed: RT-DETR v2 objective/storage policy; study metadata schema;
+  five-parameter search config; final-workflow selection; notebook; tests/docs/log
+- Conceptual change: move RT-DETR search to isolated `rtdetr_optuna_v2` persistence
+- Preserved behavior: the legacy study path and database are never modified
+- Tests executed: one trial plus reconnect/second trial; independent v2 namespace;
+  valid SQLite snapshot; failure classification; metadata/search schema; full suite
+- Observed result: 200 passed, 2 skipped because PyTorch was unavailable; Optuna
+  reconnect, SQLite snapshot, isolation, schema, and failure-policy checks passed
+- Validation level: CPU Optuna/SQLite persistence with synthetic objectives
+- Unverified: real RT-DETR objective values and Drive reconnect latency
+- Compatibility effect: final workflow prefers v2 output and retains legacy fallback
+- Deviation: SQLite backup is atomic at the file target and replaces a rolling latest
+  snapshot rather than retaining an unbounded snapshot per trial
+- Rollback: revert PR 19 and quarantine the v2 DB; the legacy DB remains unchanged
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: GradScaler overflow detection should be confirmed in the CUDA smoke
+- Remaining risks: Drive-mounted SQLite locking still requires the planned Colab trial

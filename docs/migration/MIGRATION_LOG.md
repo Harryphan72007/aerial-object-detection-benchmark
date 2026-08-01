@@ -344,7 +344,37 @@ resolved SHA.
   metric schemas because evaluator parity requires the frozen COCO view
 - Rollback: revert PR 12; direct legacy writers remain active, and test artifacts
   are temporary only
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `bfcbebee3ef9430238c7757ff0d2f673fb0b39f3`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/19
 - Remaining risks: native framework state dictionaries require model-specific
   compatibility tests in later PRs
+
+## PR 13A — ResNet model factory
+
+- Status: completed with live G1 pending
+- Dependencies: PR 1–12
+- Files changed: ResNet Faster R-CNN factory package; dependency-injected factory
+  contract tests; minimal notebook 01 availability hook; migration log/inventory
+- Conceptual change: centralize pinned config resolution and public MMDetection
+  construction/forward boundaries without changing training or optimization
+- Preserved behavior: model ID, pinned config, public `init_detector` and
+  `inference_detector` APIs, checkpoint argument, device, parameter counting, and
+  notebook orchestration
+- Tests executed: fake-backend legacy/new argument, parameter-count, and output
+  parity; config resolution and missing-runtime failure; full CPU/static suite and
+  repository checks
+- Observed result: 166 passed, 2 skipped because PyTorch was unavailable;
+  injected legacy/new construction arguments, parameter counts, forward outputs,
+  notebook/static checks, and expected missing-runtime failure all passed
+- Validation level: CPU/static; dependency-injected construction and forward only
+- Unverified: real MMDetection construction, parameter count, weights, CUDA, and
+  tensor forward because PyTorch/MMDetection are unavailable
+- Compatibility effect: additive factory; legacy adapter and trainer remain active
+- Deviation: the actual repository has one generic model-day notebook rather than
+  a ResNet-specific notebook 01, so it receives only a non-constructing hook
+- Rollback: revert PR 13A; notebook orchestration continues through the existing
+  adapter/launcher
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: G1 must confirm exact real parameter count and detector output
+  structure at the pinned MMDetection revision

@@ -189,6 +189,7 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "30_evaluate_all_models.ipynb": {
                 "DATASET_TRACK",
                 "BENCHMARK_TRACK",
+                "EVALUATOR_VERSION",
                 "EVALUATE_MISSING",
         },
         "31_publish_results.ipynb": {

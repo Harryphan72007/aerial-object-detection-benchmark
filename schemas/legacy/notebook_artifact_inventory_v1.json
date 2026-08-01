@@ -1887,7 +1887,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 95,
+  "python_source_count": 96,
   "python_sources": [
     {
       "artifact_references": [
@@ -3829,7 +3829,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 35,
+          "line": 76,
           "literals": [],
           "operations": [
             "discover"
@@ -3846,7 +3846,7 @@
         "re"
       ],
       "path": "scripts/validate_notebooks.py",
-      "sha256": "319f944a2927195ca606bd7af8ea9c31fa8fbe8885959474cbaab14be875f16a"
+      "sha256": "55cf9cd72cfb3b4ab9646bc522c913ffef23c0140c7b0754f727f44b0fad089e"
     },
     {
       "artifact_references": [
@@ -4554,6 +4554,72 @@
       ],
       "path": "scripts/validation/inventory_legacy_artifacts.py",
       "sha256": "c03e3f11b12f20efc9e46cefbb36ad647eef76bc5a1768216bb51dfb26df2ee0"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 17,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = yaml.safe_load(path.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 26,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = json.loads(path.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 36,
+          "literals": [
+            "*.yaml"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "for path in sorted((root / \"configs\").rglob(\"*.yaml\")):"
+        },
+        {
+          "cell": 0,
+          "line": 41,
+          "literals": [
+            "*.json"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "for path in sorted((root / \"schemas\").rglob(\"*.json\")):"
+        },
+        {
+          "cell": 0,
+          "line": 47,
+          "literals": [
+            "*.yaml"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "for path in sorted((root / \"configs\" / mode).glob(\"*.yaml\")):"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "pathlib",
+        "src.config.benchmark_tracks",
+        "src.config.experiment",
+        "yaml"
+      ],
+      "path": "scripts/validation/validate_ci_contract.py",
+      "sha256": "33118564f6cbf43abb8f922c9a568b561c6313b4d77f13fa2be56a0e8c3ef93f"
     },
     {
       "artifact_references": [

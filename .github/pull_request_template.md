@@ -1,4 +1,15 @@
-## Benchmark result publication
+## Migration validation
+
+- [ ] Static and schema checks pass
+- [ ] CPU tests pass
+- [ ] Notebook validation, cleaning, smoke, and inventory checks pass
+- [ ] Security, prohibited-artifact, and result-bundle checks pass
+- [ ] No dataset, checkpoint, raw prediction, token, or private path is committed
+- [ ] GPU validation is either recorded below or explicitly deferred to Colab
+
+GPU validation evidence/defer reason:
+
+## Benchmark result publication (when applicable)
 
 - Result bundle:
 - Dataset track (`2class` controlled workflow):

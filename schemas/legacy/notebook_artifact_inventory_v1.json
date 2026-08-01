@@ -1261,28 +1261,28 @@
         },
         {
           "cell": 3,
-          "line": 4,
+          "line": 6,
           "literals": [],
           "operations": [],
           "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 10,
           "literals": [],
           "operations": [],
           "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 11,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 10,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1295,13 +1295,14 @@
         "os",
         "pathlib",
         "src.hpo.final_workflow",
+        "src.models.rtdetrv2.trainer",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "9ee1442a54766676a8095fde8211a9981de0954b1636103a75d3018e20c285f1"
+      "sha256": "911eb6efa5469942d66165b058d3080cdfb25ebc45e4e0d5ef8b30cb41e03a92"
     },
     {
       "artifact_references": [

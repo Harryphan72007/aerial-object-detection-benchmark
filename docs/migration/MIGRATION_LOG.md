@@ -698,6 +698,28 @@ resolved SHA.
 - Compatibility effect: additive typed trainer boundary
 - Deviation: framework callbacks stay dependency-injected until the VMamba runtime is present
 - Rollback: revert PR 22B and restore the existing VMamba backend entry point
+- Commit SHA: `b1dcf60a9d11af2801707d4f9718fbc6c78b80b6`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/33
+- Remaining risks: upstream selective-scan autograd must be confirmed live
+
+## PR 22C — Migrate RT-DETR training onto the shared engine
+
+- Status: completed with live model smoke pending
+- Dependencies: PR 1–22B
+- Files changed: RT-DETR shared trainer boundary; fine-tuning notebook; smoke/resume/
+  EMA-hook/compatibility test; migration log/inventory
+- Conceptual change: route RT-DETR lifecycle callbacks through the shared engine contract
+- Preserved behavior: recipe-v2 optimizer/scheduler/EMA and legacy evaluator artifacts
+- Tests executed: accumulated forward/backward; one optimizer/scheduler/EMA update;
+  save/resume; legacy evaluator read; full CPU/static suite
+- Observed result: 209 passed, 2 skipped because PyTorch was unavailable; RT-DETR
+  accumulation, optimizer/scheduler/EMA, resume, and legacy evaluation contracts passed
+- Validation level: CPU/static callbacks and legacy fixture
+- Unverified: real RT-DETR tensor forward and CUDA optimizer step
+- Compatibility effect: additive typed trainer boundary
+- Deviation: the optimized script retains tensor-specific timing/evaluation callbacks while
+  sharing lifecycle state and update-boundary semantics
+- Rollback: revert PR 22C and restore the previous RT-DETR script entry point
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: upstream selective-scan autograd must be confirmed live
+- Remaining risks: GradScaler skipped-update behavior requires live confirmation

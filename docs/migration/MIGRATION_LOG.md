@@ -197,7 +197,38 @@ resolved SHA.
   optimization constants
 - Rollback: revert PR 7; existing config consumers continue using their original
   files and literal workflow values
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `e394b68cee9cbdd45a5a0b00b6786ae8b9558d6e`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/14
 - Remaining risks: producer code must opt into validation before the schema can
   prevent invalid live runs
+
+## PR 8 — Experiment manifests
+
+- Status: completed
+- Dependencies: PR 1–7
+- Files changed: portable v1 experiment-manifest schema; strict manifest
+  lifecycle package; completed/failed examples; success/failure/compatibility
+  tests; migration log and regenerated source inventory
+- Conceptual change: record code, config, dataset, environment, hardware, seed,
+  output namespace, lifecycle status, results, and failures in one atomic record
+- Preserved behavior: legacy `run_manifest.json`, registry, evaluator globbing,
+  training loop, and checkpoint discovery are unchanged
+- Tests executed: create/finalize/reload round trips for success and failure;
+  lifecycle rejection cases; example validation; legacy evaluator filename
+  isolation; full CPU/static suite and repository checks
+- Observed result: 146 passed, 2 skipped because PyTorch was unavailable; both
+  terminal round trips, lifecycle guards, examples, compatibility, and static
+  checks passed
+- Validation level: CPU/static
+- Unverified: integration into GPU-backed producer lifecycles, deferred until
+  each training loop is migrated
+- Compatibility effect: additive `experiment_manifest.json` contract that legacy
+  readers ignore
+- Deviation: repository uses flat `src`, so implementation lives in
+  `src/manifests`
+- Rollback: revert PR 8; any generated experiment manifests are harmless metadata
+  and may be retained or moved to quarantine
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: until producer integration, callers must explicitly finalize
+  a running manifest after interruption handling

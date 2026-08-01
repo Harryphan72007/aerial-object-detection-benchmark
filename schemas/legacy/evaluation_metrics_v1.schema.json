@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/visdrone/schemas/legacy/evaluation_metrics_v1.schema.json",
+  "title": "Legacy VisDrone evaluation metrics v1",
+  "type": "object",
+  "required": [
+    "run_id",
+    "model_id",
+    "dataset_track",
+    "evaluation_resolution",
+    "mAP",
+    "AP50",
+    "AP75",
+    "APtiny",
+    "APsmall",
+    "per_class"
+  ],
+  "properties": {
+    "run_id": {"type": "string"},
+    "model_id": {"type": "string"},
+    "dataset_track": {"enum": ["2class", "10class"]},
+    "evaluation_resolution": {"type": "integer", "minimum": 1},
+    "mAP": {"type": "number", "minimum": 0, "maximum": 1},
+    "AP50": {"type": "number", "minimum": 0, "maximum": 1},
+    "AP75": {"type": "number", "minimum": 0, "maximum": 1},
+    "APtiny": {"type": "number", "minimum": 0, "maximum": 1},
+    "APsmall": {"type": "number", "minimum": 0, "maximum": 1},
+    "per_class": {"type": "object"}
+  },
+  "additionalProperties": true
+}

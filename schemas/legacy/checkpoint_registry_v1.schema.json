@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/visdrone/schemas/legacy/checkpoint_registry_v1.schema.json",
+  "title": "Legacy VisDrone checkpoint registry v1",
+  "type": "object",
+  "required": ["schema_version", "runs"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "runs": {
+      "type": "object",
+      "additionalProperties": {"$ref": "run_manifest_v1.schema.json"}
+    }
+  },
+  "additionalProperties": true
+}

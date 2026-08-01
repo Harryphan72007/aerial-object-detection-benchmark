@@ -1,0 +1,21 @@
+{
+  "run_id": "faster_rcnn_resnet50__2class__640__20260729_120000__seed42",
+  "model_id": "faster_rcnn_resnet50",
+  "architecture_family": "CNN",
+  "dataset_track": "2class",
+  "evaluation_resolution": 640,
+  "seed": 42,
+  "mAP": 0.5,
+  "AP50": 0.75,
+  "AP75": 0.5,
+  "APtiny": 0.25,
+  "APsmall": 0.5,
+  "APmedium": 0.0,
+  "APlarge": 0.0,
+  "AR100": 0.5,
+  "per_class": {
+    "person": {"AP": 0.5, "AP50": 0.75, "AP75": 0.5},
+    "vehicle": {"AP": 0.5, "AP50": 0.75, "AP75": 0.5}
+  },
+  "prediction_count": 3
+}

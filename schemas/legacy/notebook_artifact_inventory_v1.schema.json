@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/visdrone/schemas/legacy/notebook_artifact_inventory_v1.schema.json",
+  "title": "Legacy notebook artifact inventory v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "repository_contract",
+    "notebook_count",
+    "notebooks",
+    "python_source_count",
+    "python_sources"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "repository_contract": {"const": "legacy-artifacts-v1"},
+    "notebook_count": {"type": "integer", "minimum": 1},
+    "notebooks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256", "code_cell_count", "imports", "artifact_references"],
+        "properties": {
+          "path": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "code_cell_count": {"type": "integer", "minimum": 0},
+          "imports": {"type": "array", "items": {"type": "string"}},
+          "artifact_references": {"type": "array"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "python_source_count": {"type": "integer", "minimum": 1},
+    "python_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256", "imports", "artifact_references"],
+        "properties": {
+          "path": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "imports": {"type": "array", "items": {"type": "string"}},
+          "artifact_references": {"type": "array", "minItems": 1}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

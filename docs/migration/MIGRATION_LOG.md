@@ -656,6 +656,27 @@ resolved SHA.
 - Deviation: actual canonical notebooks 01–03 and 30–31 receive selectors because the
   plan's notebook 01–06 numbering does not exist in this repository
 - Rollback: revert PR 21 and exclude tagged performance runs from legacy summaries
+- Commit SHA: `227a3a154aa24630a9b820d68dab228ecddf2a55`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/31
+- Remaining risks: performance producers added in PRs 23–25 must use the new root helper
+
+## PR 22A — Migrate Swin training onto the shared engine
+
+- Status: completed with live model smoke pending
+- Dependencies: PR 1–21
+- Files changed: Swin shared trainer boundary; fine-tuning notebook; smoke/resume/
+  compatibility test; migration log/inventory
+- Conceptual change: route Swin lifecycle callbacks through the shared engine contract
+- Preserved behavior: existing Swin model factory/backend and legacy evaluator artifacts
+- Tests executed: one batch/forward/backward/optimizer/scheduler step; save/resume;
+  legacy evaluator read; full CPU/static suite
+- Observed result: 207 passed, 2 skipped because PyTorch was unavailable; Swin
+  batch, step, resume, and legacy evaluation contracts passed
+- Validation level: CPU/static callbacks and legacy fixture
+- Unverified: real Swin tensor forward and CUDA optimizer step
+- Compatibility effect: additive typed trainer boundary
+- Deviation: framework callbacks stay dependency-injected until the model runtime is present
+- Rollback: revert PR 22A and restore the existing Swin backend entry point
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: performance producers added in PRs 23–25 must use the new root helper
+- Remaining risks: MMDetection hook ordering requires live smoke confirmation

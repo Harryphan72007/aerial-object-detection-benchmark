@@ -12,6 +12,8 @@ from src.utils.serialization import write_json, write_yaml
 from src.workflows.adapter_gate import adapter_fingerprint
 from src.workflows.contract import BENCHMARK_CONTRACT, validate_final_config
 from src.workflows.model_day import Stage, inspect_model_day
+from src.workflows.notebook_entrypoints import require_verified_data
+from src.data.contract import DataContractReport
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_ID = "rtdetrv2_l"
@@ -316,13 +318,19 @@ def test_publishing_configuration_defaults_to_dry_run():
     assert values["DRY_RUN"] is True
 
 
-def test_notebook_one_gives_concise_interrupted_setup_recovery_instruction():
+def test_notebook_one_gives_concise_interrupted_setup_recovery_instruction(capsys):
     notebook = nbformat.read(
         ROOT / "notebooks" / "01_run_model_day.ipynb", as_version=4
     )
     source = "\n".join(
         cell.source for cell in notebook.cells if cell.cell_type == "code"
     )
-    assert "Dataset setup is incomplete or was interrupted." in source
-    assert "notebook 00 will recover or rebuild it" in source
-    assert "stopped safely before caching or training" in source
+    assert "from src.workflows.notebook_entrypoints import require_verified_data" in source
+    report = DataContractReport(
+        verified=False, errors=["staging directory is incomplete"]
+    )
+    with pytest.raises(RuntimeError, match="stopped safely before caching or training"):
+        require_verified_data(report)
+    output = capsys.readouterr().out
+    assert "Dataset setup is incomplete or was interrupted." in output
+    assert "notebook 00 will recover or rebuild it" in output

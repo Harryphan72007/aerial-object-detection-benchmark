@@ -172,34 +172,18 @@
           "line": 13,
           "literals": [],
           "operations": [],
-          "source": "if DATASET_SOURCE == \"manual\" and IN_COLAB:"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [
-            "datasets"
-          ],
-          "operations": [],
-          "source": "archive_dir = DRIVE_ROOT / \"datasets\" / \"VisDrone2019-DET\" / \"archives\""
-        },
-        {
-          "cell": 3,
-          "line": 30,
-          "literals": [],
-          "operations": [],
           "source": "from src.workflows.dataset_setup import prepare_visdrone"
         },
         {
           "cell": 3,
-          "line": 33,
+          "line": 16,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 34,
+          "line": 17,
           "literals": [],
           "operations": [],
           "source": "dataset_source=DATASET_SOURCE,"
@@ -259,7 +243,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/00_prepare_visdrone.ipynb",
-      "sha256": "7feb99954289e4a02d7dda0a84e140f1408c0c9722281a9d113909833d4db3c4"
+      "sha256": "c9026288b6415be3f2ea63c6628f89093130b83d2840afe042157c3e7aa56bd0"
     },
     {
       "artifact_references": [
@@ -291,7 +275,7 @@
         },
         {
           "cell": 3,
-          "line": 12,
+          "line": 13,
           "literals": [
             "Benchmark track: {BENCHMARK_TRACK}; outputs: {track_output_root(DRIVE_ROOT, BENCHMARK_TRACK)}"
           ],
@@ -300,14 +284,14 @@
         },
         {
           "cell": 3,
-          "line": 13,
+          "line": 14,
           "literals": [],
           "operations": [],
           "source": "paths = resolve_legacy_paths(DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 22,
+          "line": 23,
           "literals": [
             "Parameter-group report: diagnostic global-LR mode"
           ],
@@ -316,46 +300,7 @@
         },
         {
           "cell": 3,
-          "line": 29,
-          "literals": [],
-          "operations": [],
-          "source": "def require_verified_data(report):"
-        },
-        {
-          "cell": 3,
-          "line": 30,
-          "literals": [],
-          "operations": [],
-          "source": "if report.verified:"
-        },
-        {
-          "cell": 3,
-          "line": 33,
-          "literals": [
-            "Dataset setup is incomplete or was interrupted."
-          ],
-          "operations": [],
-          "source": "print(\"Dataset setup is incomplete or was interrupted.\")"
-        },
-        {
-          "cell": 3,
-          "line": 34,
-          "literals": [],
-          "operations": [],
-          "source": "if any(\"staging directory\" in error for error in report.errors):"
-        },
-        {
-          "cell": 3,
-          "line": 38,
-          "literals": [
-            "Notebook 01 stopped safely before caching or training because dataset preparation is incomplete."
-          ],
-          "operations": [],
-          "source": "raise RuntimeError(\"Notebook 01 stopped safely before caching or training because dataset preparation is incomplete.\")"
-        },
-        {
-          "cell": 3,
-          "line": 60,
+          "line": 49,
           "literals": [],
           "operations": [
             "write"
@@ -364,14 +309,14 @@
         },
         {
           "cell": 3,
-          "line": 63,
+          "line": 52,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 69,
+          "line": 58,
           "literals": [],
           "operations": [
             "write"
@@ -380,7 +325,7 @@
         },
         {
           "cell": 3,
-          "line": 72,
+          "line": 61,
           "literals": [
             "Dataset setup is incomplete. Run 00_prepare_visdrone.ipynb, then rerun this notebook."
           ],
@@ -527,12 +472,13 @@
         "src.models.vmamba_frcnn.factory",
         "src.pathing.resolver",
         "src.workflows.model_day",
+        "src.workflows.notebook_entrypoints",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "c95044f9bbd718c0275e34e9029f187b2c6a179b34366f00c272ced60f4ca254"
+      "sha256": "194a8661e37ec5906edc02ceea31480bb9425d704bd9a7d53b8039d3f1dd20d9"
     },
     {
       "artifact_references": [
@@ -3829,7 +3775,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 76,
+          "line": 121,
           "literals": [],
           "operations": [
             "discover"
@@ -3846,7 +3792,7 @@
         "re"
       ],
       "path": "scripts/validate_notebooks.py",
-      "sha256": "55cf9cd72cfb3b4ab9646bc522c913ffef23c0140c7b0754f727f44b0fad089e"
+      "sha256": "8fb760712430f79bef7c3329cdc954fbae313060e4c0475e3711f726455c9942"
     },
     {
       "artifact_references": [

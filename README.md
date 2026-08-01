@@ -52,6 +52,13 @@ configuration contract matches.
 3. Change only the small parameter cell and run all cells.
 4. After interruption, reopen the same notebook and run all cells again.
 
+These are thin, package-backed notebooks and are the only supported entry points. Open
+them directly from GitHub in Colab; the dataset setup workflow downloads and verifies
+archives into Drive, so no notebook file or dataset archive needs a browser upload.
+Historical notebook-local model, training, checkpoint, resume, artifact, and evaluator
+implementations are deprecated; see
+[`docs/migration/NOTEBOOK_DEPRECATION.md`](docs/migration/NOTEBOOK_DEPRECATION.md).
+
 All artifacts are discovered automatically under
 `/content/drive/MyDrive/visdrone_architecture_benchmark`; users never copy a
 checkpoint path, run ID, study name, or configuration between notebooks.

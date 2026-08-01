@@ -831,6 +831,30 @@ resolved SHA.
 - Deviation: existing `ci.yml` remains as an umbrella compatibility check while the
   four granular workflows provide stable names for branch protection
 - Rollback: revert PR 27 or disable the four granular required checks in branch protection
+- Commit SHA: `1d10a22fdb27af1fedc6d6d42c930e3c16b8c3a6`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/39
+- Remaining risks: repository administrators must select the documented job names as required checks
+
+## PR 28 — Deprecate notebook-local legacy logic
+
+- Status: completed with manual GPU/Colab validation pending
+- Dependencies: PR 1–27
+- Files changed: canonical dataset/model-day notebooks; shared notebook entrypoint helper;
+  thin-notebook validator/tests; archive policy; README; deprecation guide; inventory/log
+- Conceptual change: canonical notebooks now contain parameters, bootstrap, presentation,
+  and package calls only; notebook-local workflow definitions are rejected by CI
+- Preserved behavior: dataset recovery instructions, model-day orchestration, model-specific
+  HPO/final smoke entrypoints, and legacy artifact reads
+- Tests executed: thin/package-backed structure; one HPO/final smoke entrypoint per model;
+  no browser uploads; legacy prediction read; notebook validation/cleaning; full CPU suite
+- Observed result: 228 passed, 2 skipped because PyTorch was unavailable; all 14
+  guarded canonical workflow notebooks passed CPU smoke execution
+- Validation level: CPU synthetic and static notebook contract validation
+- Unverified: real Drive download and GPU execution in Colab
+- Compatibility effect: old artifacts remain readable; old notebooks remain in Git history
+- Deviation: planned notebooks 04–06 are represented by model-specific 10–23 and versioned
+  30–31 flows, avoiding duplicate canonical entry points
+- Rollback: revert PR 28 notebook/docs changes; keep package and compatibility code intact
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: repository administrators must select the documented job names as required checks
+- Remaining risks: framework/GPU behavior still requires the documented manual checklist

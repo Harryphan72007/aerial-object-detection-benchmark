@@ -27,6 +27,24 @@ TRANSIENT_CELL_METADATA = {
     "outputId",
     "scrolled",
 }
+CANONICAL_NOTEBOOKS = {
+    "00_bootstrap_colab.ipynb",
+    "00_prepare_visdrone.ipynb",
+    "01_run_model_day.ipynb",
+    "02_publish_results.ipynb",
+    "03_compare_all_models.ipynb",
+    "07_performance_tiling.ipynb",
+    "10_hpo_resnet50.ipynb",
+    "11_hpo_swin_t.ipynb",
+    "12_hpo_vmamba_t.ipynb",
+    "13_hpo_rtdetrv2.ipynb",
+    "20_finetune_resnet50.ipynb",
+    "21_finetune_swin_t.ipynb",
+    "22_finetune_vmamba_t.ipynb",
+    "23_finetune_rtdetrv2.ipynb",
+    "30_evaluate_all_models.ipynb",
+    "31_publish_results.ipynb",
+}
 
 
 def validate_notebook(path: Path) -> list[str]:
@@ -46,6 +64,7 @@ def validate_notebook(path: Path) -> list[str]:
             f"{path}: transient notebook metadata: "
             + ", ".join(sorted(notebook_metadata))
         )
+    package_import_found = False
     for index, cell in enumerate(notebook.cells):
         cell_metadata = TRANSIENT_CELL_METADATA.intersection(cell.metadata)
         if cell_metadata:
@@ -60,14 +79,40 @@ def validate_notebook(path: Path) -> list[str]:
         if cell.execution_count is not None:
             errors.append(f"{path}: cell {index} has execution_count")
         try:
-            ast.parse(transformer.transform_cell(cell.source))
+            tree = ast.parse(transformer.transform_cell(cell.source))
         except SyntaxError as error:
             errors.append(f"{path}: cell {index} syntax: {error}")
+            tree = None
+        if tree is not None and path.name in CANONICAL_NOTEBOOKS:
+            package_import_found = package_import_found or any(
+                (
+                    isinstance(node, ast.ImportFrom)
+                    and node.module is not None
+                    and (node.module == "src" or node.module.startswith("src."))
+                )
+                or (
+                    isinstance(node, ast.Import)
+                    and any(alias.name == "src" for alias in node.names)
+                )
+                for node in ast.walk(tree)
+            )
+            local_definitions = [
+                node.name
+                for node in tree.body
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            ]
+            if local_definitions:
+                errors.append(
+                    f"{path}: cell {index} contains notebook-local definitions: "
+                    + ", ".join(local_definitions)
+                )
         if SECRET_ASSIGNMENT.search(cell.source):
             errors.append(f"{path}: cell {index} contains a secret-like assignment")
         for pattern in PRIVATE_PATHS:
             if pattern.search(cell.source):
                 errors.append(f"{path}: cell {index} contains a private path")
+    if path.name in CANONICAL_NOTEBOOKS and not package_import_found:
+        errors.append(f"{path}: canonical notebook does not delegate to the src package")
     return errors
 
 

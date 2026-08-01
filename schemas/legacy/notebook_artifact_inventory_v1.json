@@ -1689,7 +1689,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 74,
+  "python_source_count": 75,
   "python_sources": [
     {
       "artifact_references": [
@@ -1986,6 +1986,37 @@
       ],
       "path": "scripts/diagnostics/report_current_environment.py",
       "sha256": "a3d28e28c09b5079f361d7a21d1284714516590033c7c672cf4702df50594486"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 30,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "rendered = json.dumps(build_report(args.repo_root), indent=2, sort_keys=True) + \"\\n\""
+        },
+        {
+          "cell": 0,
+          "line": 32,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "args.output.expanduser().resolve().write_text(rendered, encoding=\"utf-8\")"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "pathlib",
+        "src.diagnostics"
+      ],
+      "path": "scripts/diagnostics/run_diagnostics.py",
+      "sha256": "b726f537647552421edb48514d52f0479615607b3cfe001e0bda644bcf6480f5"
     },
     {
       "artifact_references": [

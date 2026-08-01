@@ -83,7 +83,33 @@ resolved SHA.
   a second competing policy
 - Rollback: revert PR 3; restore the previous ignore/attribute and contributor
   files; no runtime artifacts are deleted
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `cfddf38fc839676bc1bff49d9fa9338d02da380c`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/10
 - Remaining risks: pattern and size checks cannot detect every sensitive or
   copyrighted artifact, so review remains mandatory
+
+## PR 4 — Read-only Git and environment diagnostics
+
+- Status: completed
+- Dependencies: PR 1–3
+- Files changed: reusable repository/environment diagnostic modules; canonical
+  runner; clean/dirty/detached/non-Git/CPU/no-GPU tests; migration log;
+  regenerated source inventory
+- Conceptual change: expose structured read-only diagnostics without blocking
+  runs or importing detector frameworks
+- Preserved behavior: PR 2 diagnostic entry point, all notebooks, training, and
+  artifact paths
+- Tests executed: focused diagnostic cases; full CPU suite; Ruff; Python
+  compile; notebook, prohibited-file, secret, and inventory checks
+- Observed result: 121 passed, 2 skipped because PyTorch was unavailable;
+  focused diagnostics covered every required repository and CPU/no-GPU state
+- Validation level: CPU/static; no G0 Colab execution
+- Unverified: live CUDA device discovery and hosted Colab hardware reporting
+- Compatibility effect: additive package APIs and CLI only
+- Deviation: repository uses flat `src` package, so modules live under
+  `src/diagnostics` rather than `src/visdrone_benchmark/diagnostics`
+- Rollback: revert PR 4 and regenerate the PR 1 inventory; PR 2 reporter remains
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: OS access and `nvidia-smi` metadata do not prove framework
+  compatibility

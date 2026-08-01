@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Label-space manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "ablation_id", "training_class_space", "evaluation_class_space", "evaluation_class_names", "category_mapping", "category_mapping_hash"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "ablation_id": {"enum": ["direct_2class", "original_10class_to_merged_2class"]},
+    "training_class_space": {"enum": ["merged_2class", "original_10class"]},
+    "evaluation_class_space": {"const": "merged_2class"},
+    "evaluation_class_names": {"const": ["person", "vehicle"]},
+    "category_mapping": {"type": "object"},
+    "category_mapping_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

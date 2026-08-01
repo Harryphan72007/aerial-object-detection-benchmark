@@ -765,6 +765,27 @@ resolved SHA.
 - Deviation: merge v1 uses deterministic class-aware NMS; weighted box fusion can be
   added as a later schema version without changing v1 results
 - Rollback: revert PR 24 and remove only sliced prediction/metric namespaces
+- Commit SHA: `d954e5398ef540c9a7f8512a8ab8e04d6e8a8025`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/36
+- Remaining risks: optimal overlap and merge threshold remain performance experiments
+
+## PR 25 — Label-granularity ablation
+
+- Status: completed
+- Dependencies: PR 1–24
+- Files changed: direct/merged label-granularity configs; mapping module; label-space
+  schema; class-merge/isolation tests; documentation/log/inventory
+- Conceptual change: evaluate original-10-class training in merged person/vehicle space
+- Preserved behavior: ignored categories 0/11 and direct two-class evaluation semantics
+- Tests executed: all ten category mappings; ignored/unknown IDs; prediction provenance;
+  manifest hashes; direct-versus-merged comparison rejection; full suite
+- Observed result: 218 passed, 2 skipped because PyTorch was unavailable; all ten
+  mappings, ignore, provenance, manifest, and comparison-isolation checks passed
+- Validation level: CPU synthetic prediction/annotation mappings
+- Unverified: end-to-end original-class trained checkpoint evaluation
+- Compatibility effect: additive performance ablation with an isolated namespace
+- Deviation: records preserve source category provenance rather than destructively replacing it
+- Rollback: revert PR 25 and remove only label-granularity ablation artifacts
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: optimal overlap and merge threshold remain performance experiments
+- Remaining risks: overlapping original-class predictions may require class-merge NMS policy

@@ -1,0 +1,6 @@
+schema_version: 1
+benchmark_track: performance
+ablation_id: direct_2class
+training_class_space: merged_2class
+evaluation_class_space: merged_2class
+output_namespace: evaluation/label_granularity/direct_2class

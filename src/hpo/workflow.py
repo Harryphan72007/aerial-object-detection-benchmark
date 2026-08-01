@@ -91,6 +91,7 @@ class TwoStageRandomHPO:
         dataset_track: str,
         *,
         trial_runner: TrialRunner | None = None,
+        protocol_id: str = HPO_PROTOCOL_ID,
     ):
         if dataset_track not in {"2class", "10class"}:
             raise ValueError(f"unsupported dataset track: {dataset_track}")
@@ -98,6 +99,7 @@ class TwoStageRandomHPO:
         self.paths = ProjectPaths.from_value(drive_root).create()
         self.model_id = model_id
         self.dataset_track = dataset_track
+        self.protocol_id = str(protocol_id)
         self.smoke_test = os.environ.get("SMOKE_TEST", "").lower() in {
             "1",
             "true",
@@ -107,7 +109,7 @@ class TwoStageRandomHPO:
         full_root = (
             self.paths.root
             / "hpo"
-            / HPO_PROTOCOL_ID
+            / self.protocol_id
             / model_id
             / dataset_track
         )
@@ -164,7 +166,7 @@ class TwoStageRandomHPO:
         return {
             "model_id": self.model_id,
             "dataset_track": self.dataset_track,
-            "protocol_id": HPO_PROTOCOL_ID,
+            "protocol_id": self.protocol_id,
             "search_seed": SEARCH_SEED,
             "dataset_hashes": split_summary["hashes"],
             "source_commit": git_commit(self.repo_root),
@@ -214,7 +216,7 @@ class TwoStageRandomHPO:
             validation_images_override=self.paths.images("train"),
             explicit_run_dir=run_dir,
             explicit_run_id=(
-                f"{self.model_id}__{self.dataset_track}__{HPO_PROTOCOL_ID}"
+                f"{self.model_id}__{self.dataset_track}__{self.protocol_id}"
                 f"__{phase}__trial{trial_number:02d}"
             ),
             resume_run_id=None,
@@ -222,7 +224,7 @@ class TwoStageRandomHPO:
             scheduler_horizon=scheduler_horizon,
             validation_interval=1,
             run_kind=f"hpo_{phase}_trial",
-            protocol_id=HPO_PROTOCOL_ID,
+            protocol_id=self.protocol_id,
             baseline_or_tuned="search_trial",
         )
         return (
@@ -238,7 +240,7 @@ class TwoStageRandomHPO:
         suffix = "__smoke" if self.smoke_test else ""
         study = optuna.create_study(
             study_name=(
-                f"{self.model_id}__{self.dataset_track}__{HPO_PROTOCOL_ID}{suffix}"
+                f"{self.model_id}__{self.dataset_track}__{self.protocol_id}{suffix}"
             ),
             storage=storage,
             sampler=optuna.samplers.RandomSampler(seed=SEARCH_SEED),
@@ -300,7 +302,11 @@ class TwoStageRandomHPO:
             trial.set_user_attr("phase", phase)
             trial.set_user_attr("resume", False)
             parameters = _sample(trial, space)
-            learning_rate = float(parameters["learning_rate"])
+            learning_rate = float(
+                parameters.get(
+                    "learning_rate", parameters.get("detector_learning_rate")
+                )
+            )
             trial.set_user_attr("learning_rate", learning_rate)
             trial.set_user_attr("diverged", False)
             trial.set_user_attr("out_of_memory", False)
@@ -316,7 +322,7 @@ class TwoStageRandomHPO:
                         f"non-finite validation objectives: {values}"
                     )
             except (RuntimeError, ValueError, FloatingPointError) as error:
-                failure_kind = _failure_kind(error)
+                failure_kind = self._classify_failure(error)
                 elapsed = time.perf_counter() - started
                 trial.set_user_attr("failure_type", type(error).__name__)
                 trial.set_user_attr("failure_reason", str(error))
@@ -357,6 +363,7 @@ class TwoStageRandomHPO:
         while completed_count() < PHASE_TRIALS and attempts < attempt_limit:
             study.optimize(objective, n_trials=1)
             attempts += 1
+            self._after_trial(study)
         completed_after = completed_count()
         if completed_after < PHASE_TRIALS:
             raise RuntimeError(
@@ -379,6 +386,26 @@ class TwoStageRandomHPO:
             key=lambda trial: (float(trial.values[0]), float(trial.values[1])),
             reverse=True,
         )[:3]
+
+    def _after_trial(self, study: Any) -> None:
+        """Hook for storage policies that run after each persisted trial."""
+
+    def _classify_failure(self, error: BaseException) -> str | None:
+        return _failure_kind(error)
+
+    def _broad_search_space(self) -> dict[str, dict[str, Any]]:
+        return broad_search_space(self.model_id)
+
+    def _phase_b_search_space(
+        self,
+        broad: dict[str, dict[str, Any]],
+        strongest: list[Any],
+    ) -> dict[str, dict[str, Any]]:
+        if self.model_id == "rtdetrv2_l":
+            return broad
+        return refined_search_space(
+            broad, [dict(trial.params) for trial in strongest]
+        )
 
     def _export(
         self,
@@ -464,7 +491,7 @@ class TwoStageRandomHPO:
 
     def run(self, *, start_expensive_stage: bool = False) -> dict[str, Any]:
         split_summary = self.prepare_manifests()
-        broad = broad_search_space(self.model_id)
+        broad = self._broad_search_space()
         metadata = self._metadata(split_summary, broad)
         preview = {
             **metadata,
@@ -488,12 +515,6 @@ class TwoStageRandomHPO:
         # The observed RT-DETR range is a controlled contract. Phase B samples
         # the same 1e-6..5e-4 interval rather than narrowing away divergent or
         # unexplored regions after only five short trials.
-        refined = (
-            broad
-            if self.model_id == "rtdetrv2_l"
-            else refined_search_space(
-                broad, [dict(trial.params) for trial in strongest]
-            )
-        )
+        refined = self._phase_b_search_space(broad, strongest)
         self._run_phase(study, "phase_b", refined)
         return self._export(study, broad, refined, metadata)

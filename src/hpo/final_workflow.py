@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from src.hpo.workflow import HPO_PROTOCOL_ID, _cleanup_accelerator_memory
+from src.hpo.rtdetr_v2 import RTDETR_HPO_PROTOCOL_ID
 from src.models.registry import load_model_config
 from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
@@ -46,6 +47,10 @@ class FinalExperimentWorkflow:
         self.paths = ProjectPaths.from_value(drive_root).create()
         self.model_id = model_id
         self.dataset_track = dataset_track
+        self.protocol_id = (
+            RTDETR_HPO_PROTOCOL_ID if model_id == "rtdetrv2_l" else HPO_PROTOCOL_ID
+        )
+        self.selected_protocol_id = self.protocol_id
         load_model_config(model_id, self.repo_root)
         self.orchestrator = orchestrator or TrainingOrchestrator(
             self.repo_root, self.paths.root
@@ -53,14 +58,23 @@ class FinalExperimentWorkflow:
         self.hpo_root = (
             self.paths.root
             / "hpo"
-            / HPO_PROTOCOL_ID
+            / self.protocol_id
             / model_id
             / dataset_track
         )
 
     @property
     def best_config_path(self) -> Path:
-        return self.hpo_root / "best_config.yaml"
+        current = self.hpo_root / "best_config.yaml"
+        legacy = (
+            self.paths.root
+            / "hpo"
+            / HPO_PROTOCOL_ID
+            / self.model_id
+            / self.dataset_track
+            / "best_config.yaml"
+        )
+        return current if current.is_file() or not legacy.is_file() else legacy
 
     def _load_tuned_parameters(self) -> dict[str, Any]:
         if not self.best_config_path.is_file():
@@ -69,10 +83,15 @@ class FinalExperimentWorkflow:
                 f"{self.best_config_path}"
             )
         selected = read_yaml(self.best_config_path)
+        expected_protocol = (
+            HPO_PROTOCOL_ID
+            if HPO_PROTOCOL_ID in self.best_config_path.parts
+            else self.protocol_id
+        )
         expected = {
             "model_id": self.model_id,
             "dataset_track": self.dataset_track,
-            "protocol_id": HPO_PROTOCOL_ID,
+            "protocol_id": expected_protocol,
             "search_seed": 42,
         }
         changed = {
@@ -82,6 +101,7 @@ class FinalExperimentWorkflow:
         }
         if changed:
             raise ValueError(f"incompatible best HPO configuration: {changed}")
+        self.selected_protocol_id = expected_protocol
         parameters = selected.get("parameters")
         if not isinstance(parameters, dict) or not parameters:
             raise ValueError("best HPO configuration contains no parameters")
@@ -111,7 +131,7 @@ class FinalExperimentWorkflow:
         return {
             "model_id": self.model_id,
             "dataset_track": self.dataset_track,
-            "protocol_id": HPO_PROTOCOL_ID,
+            "protocol_id": self.selected_protocol_id,
             "seed": seed,
             "image_size": IMAGE_SIZE,
             "effective_batch_size": effective,
@@ -237,7 +257,7 @@ class FinalExperimentWorkflow:
                         scheduler_horizon=scheduler_horizon,
                         validation_interval=1,
                         run_kind="final_complete_official_train",
-                        protocol_id=HPO_PROTOCOL_ID,
+                        protocol_id=self.selected_protocol_id,
                         baseline_or_tuned=recipe,
                     )
                 finally:

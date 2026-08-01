@@ -256,7 +256,34 @@ resolved SHA.
 - Deviation: implementation lives in the existing `src/pathing` package
 - Rollback: revert PR 9; no test directories were created, so no cleanup is
   required
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `664a20df8fa11909f304ff90551cfd2919b47e93`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/16
 - Remaining risks: legacy writers remain outside guard coverage until explicitly
   migrated
+
+## PR 10 — Legacy evaluator compatibility suite
+
+- Status: completed
+- Dependencies: PR 1–9
+- Files changed: two-model controlled comparison fixture plus smoke candidate;
+  frozen evaluator/comparison tests; evaluator contract documentation; migration
+  log and regenerated source inventory
+- Conceptual change: none; freeze consumer behavior before producer migrations
+- Preserved behavior: detailed metrics, controlled-config filtering, legacy file
+  discovery, output columns, missing-model rows, and rejected-run reporting
+- Tests executed: exact detailed evaluator fixture; deterministic two-model
+  comparison twice; smoke exclusion; full CPU/static suite and repository checks
+- Observed result: 155 passed, 2 skipped because PyTorch was unavailable; exact
+  evaluator metrics, deterministic comparison rows, smoke exclusion, and all
+  static checks passed
+- Validation level: CPU/static
+- Unverified: pycocotools/GPU evaluator parity on the full validation dataset
+- Compatibility effect: contract tests only; no production evaluator changes
+- Deviation: reused the PR 1 COCO fixture and added a comparison-case bundle to
+  avoid committing generated images or checkpoints
+- Rollback: revert PR 10; evaluator and notebooks require no restoration because
+  runtime code was unchanged
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: synthetic fixtures cannot reveal scale- or ordering-dependent
+  behavior in a full VisDrone evaluation

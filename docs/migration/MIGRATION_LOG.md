@@ -314,7 +314,37 @@ resolved SHA.
   00, the evaluator consumer, and the native RT-DETR trainer were minimally migrated
 - Rollback: revert PR 11; source datasets are never modified, and legacy modules
   return to their prior implementations
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `ab45cfbe47e28ad8cd880c5e51e0ca7f46d21fd1`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/18
 - Remaining risks: full-dataset file corruption and framework worker behavior
   require later G1/G2 and Colab validation
+
+## PR 12 — Versioned artifact writers with legacy dual-write
+
+- Status: completed
+- Dependencies: PR 1–11
+- Files changed: strict checkpoint/metric/prediction schemas; artifact identity,
+  readers, and writers; legacy view adapters; synthetic dual-write compatibility
+  tests; migration log and regenerated source inventory
+- Conceptual change: new producers can write schema-v1 envelopes and atomically
+  materialize the frozen flat metrics, COCO prediction arrays, and checkpoint names
+- Preserved behavior: `best_map.pth`, `best_aptiny.pth`, `last.pth`, legacy metric
+  keys, and COCO prediction records remain byte/value compatible
+- Tests executed: new/legacy metric equality; old/new evaluator prediction parity;
+  checkpoint byte/hash/alias equality; schema strictness; full CPU/static suite and
+  repository checks
+- Observed result: 162 passed, 2 skipped because PyTorch was unavailable;
+  new/legacy metrics, predictions, evaluator results, checkpoint bytes/hashes,
+  schemas, and all static checks passed
+- Validation level: CPU/static with synthetic checkpoint bytes
+- Unverified: framework-native tensor checkpoint serialization on GPU
+- Compatibility effect: additive writers/readers; no existing producer is switched
+  until its model migration
+- Deviation: prediction envelopes were included with the requested checkpoint and
+  metric schemas because evaluator parity requires the frozen COCO view
+- Rollback: revert PR 12; direct legacy writers remain active, and test artifacts
+  are temporary only
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: native framework state dictionaries require model-specific
+  compatibility tests in later PRs

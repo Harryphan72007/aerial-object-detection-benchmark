@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from src.models.registry import load_model_config
+from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
 from src.reproducibility import git_commit
 from src.training.lr_search import (
@@ -187,6 +188,12 @@ class TwoStageRandomHPO:
     ) -> tuple[float, float]:
         orchestrator = TrainingOrchestrator(self.repo_root, self.paths.root)
         epochs = 3 if phase == "phase_a" else 5
+        scheduler_horizon = epochs
+        applied_parameters = dict(parameters)
+        if self.model_id == "rtdetrv2_l":
+            static_recipe = checked_in_recipe(self.repo_root)
+            applied_parameters = {**static_recipe, **parameters}
+            scheduler_horizon = int(static_recipe["scheduler_horizon_epochs"])
         manifest = orchestrator.run(
             self.model_id,
             dataset_track=self.dataset_track,
@@ -196,7 +203,7 @@ class TwoStageRandomHPO:
             epochs=epochs,
             seed=SEARCH_SEED,
             use_amp=True,
-            overrides=parameters,
+            overrides=applied_parameters,
             train_annotation_override=(
                 self.manifest_dir / "search_train_seed42.json"
             ),
@@ -212,7 +219,7 @@ class TwoStageRandomHPO:
             ),
             resume_run_id=None,
             register_run=False,
-            scheduler_horizon=epochs,
+            scheduler_horizon=scheduler_horizon,
             validation_interval=1,
             run_kind=f"hpo_{phase}_trial",
             protocol_id=HPO_PROTOCOL_ID,

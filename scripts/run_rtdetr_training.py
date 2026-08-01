@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -25,6 +26,8 @@ from src.training.recipes import (
     RTDETR_WARMUP_EPOCHS,
     RTDETR_WEIGHT_DECAY,
 )
+from src.models.rtdetrv2.optimizer import RECIPE_VERSION, build_optimizer
+from src.models.rtdetrv2.scheduler import WarmupCosineScheduler
 
 
 def parse_args() -> argparse.Namespace:
@@ -77,8 +80,6 @@ def main() -> None:
     )
 
     seed_everything(args.seed)
-    if args.scheduler_horizon < args.epochs:
-        raise ValueError("--scheduler-horizon must be >= --epochs")
     if args.validation_interval < 0:
         raise ValueError("--validation-interval must be non-negative")
     run_dir = Path(args.run_dir)
@@ -119,9 +120,16 @@ def main() -> None:
             applied_overrides[key] = value
         elif key in {
             "learning_rate",
+            "detector_learning_rate",
+            "backbone_lr_multiplier",
             "weight_decay",
             "gradient_clip",
+            "gradient_clip_norm",
             "warmup_epochs",
+            "warmup_start_factor",
+            "minimum_lr_factor",
+            "scheduler_horizon_epochs",
+            "recipe_version",
             "max_detections",
         }:
             applied_overrides[key] = value
@@ -189,28 +197,68 @@ def main() -> None:
     )
     learning_rate = float(overrides.get("learning_rate", args.learning_rate))
     weight_decay = float(overrides.get("weight_decay", args.weight_decay))
-    gradient_clip = float(overrides.get("gradient_clip", RTDETR_GRADIENT_CLIP))
+    gradient_clip = float(
+        overrides.get(
+            "gradient_clip_norm",
+            overrides.get("gradient_clip", RTDETR_GRADIENT_CLIP),
+        )
+    )
     warmup_epochs = int(overrides.get("warmup_epochs", RTDETR_WARMUP_EPOCHS))
     maximum_detections = int(
         overrides.get("max_detections", RTDETR_MAX_DETECTIONS)
     )
-    optimizer = torch.optim.AdamW(
-        model.parameters(), lr=learning_rate, weight_decay=weight_decay
+    recipe_version = str(overrides.get("recipe_version", "legacy"))
+    if recipe_version not in {"legacy", RECIPE_VERSION}:
+        raise ValueError(f"unsupported RT-DETR recipe version: {recipe_version}")
+    scheduler_horizon = int(
+        overrides.get("scheduler_horizon_epochs", args.scheduler_horizon)
     )
-    cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=max(1, args.scheduler_horizon - warmup_epochs)
-    )
-    if warmup_epochs > 0:
-        warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
-            optimizer, start_factor=0.01, total_iters=warmup_epochs
+    if scheduler_horizon < args.epochs:
+        raise ValueError("recipe scheduler horizon must be >= --epochs")
+    recipe_v2 = recipe_version == RECIPE_VERSION
+    if recipe_v2:
+        recipe = {
+            "recipe_version": recipe_version,
+            "detector_learning_rate": float(
+                overrides.get("detector_learning_rate", learning_rate)
+            ),
+            "backbone_lr_multiplier": float(
+                overrides.get("backbone_lr_multiplier", 0.1)
+            ),
+            "weight_decay": weight_decay,
+            "gradient_clip_norm": gradient_clip,
+        }
+        optimizer_build = build_optimizer(model, recipe)
+        optimizer = optimizer_build.optimizer
+        (run_dir / "parameter_groups.json").write_text(
+            json.dumps(optimizer_build.report, indent=2), encoding="utf-8"
         )
-        scheduler = torch.optim.lr_scheduler.SequentialLR(
+        updates_per_epoch = max(1, math.ceil(len(train_loader) / args.accumulation))
+        scheduler = WarmupCosineScheduler(
             optimizer,
-            schedulers=[warmup_scheduler, cosine_scheduler],
-            milestones=[warmup_epochs],
+            total_updates=scheduler_horizon * updates_per_epoch,
+            warmup_updates=warmup_epochs * updates_per_epoch,
+            warmup_start_factor=float(overrides.get("warmup_start_factor", 0.01)),
+            minimum_factor=float(overrides.get("minimum_lr_factor", 0.01)),
         )
     else:
-        scheduler = cosine_scheduler
+        optimizer = torch.optim.AdamW(
+            model.parameters(), lr=learning_rate, weight_decay=weight_decay
+        )
+        cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=max(1, scheduler_horizon - warmup_epochs)
+        )
+        if warmup_epochs > 0:
+            warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
+                optimizer, start_factor=0.01, total_iters=warmup_epochs
+            )
+            scheduler = torch.optim.lr_scheduler.SequentialLR(
+                optimizer,
+                schedulers=[warmup_scheduler, cosine_scheduler],
+                milestones=[warmup_epochs],
+            )
+        else:
+            scheduler = cosine_scheduler
     scaler = torch.amp.GradScaler(
         "cuda", enabled=args.amp and torch.cuda.is_available()
     )
@@ -235,7 +283,7 @@ def main() -> None:
         model.train()
         for optimizer_step, step_learning_rate in enumerate(schedule, start=1):
             for group in optimizer.param_groups:
-                group["lr"] = step_learning_rate
+                group["lr"] = step_learning_rate * float(group.get("lr_scale", 1.0))
             optimizer.zero_grad(set_to_none=True)
             step_losses: list[float] = []
             for _ in range(args.accumulation):
@@ -312,11 +360,11 @@ def main() -> None:
         best.best_aptiny = float(state.get("best_aptiny", float("-inf")))
         best.best_map_epoch = int(state.get("best_map_epoch", 0))
         best.best_aptiny_epoch = int(state.get("best_aptiny_epoch", 0))
-        checkpoint_horizon = int(state.get("scheduler_horizon", args.scheduler_horizon))
-        if checkpoint_horizon != args.scheduler_horizon:
+        checkpoint_horizon = int(state.get("scheduler_horizon", scheduler_horizon))
+        if checkpoint_horizon != scheduler_horizon:
             raise ValueError(
                 "scheduler horizon changed across resume: "
-                f"checkpoint={checkpoint_horizon}, requested={args.scheduler_horizon}"
+                f"checkpoint={checkpoint_horizon}, requested={scheduler_horizon}"
             )
         if state.get("rng_state"):
             restore_rng_state(state["rng_state"])
@@ -379,12 +427,15 @@ def main() -> None:
                 )
                 scaler.step(optimizer)
                 scaler.update()
+                if recipe_v2:
+                    scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
                 if torch.cuda.is_available():
                     torch.cuda.synchronize()
                 optimizer_time += time.perf_counter() - optimizer_start
             last_batch_end = time.perf_counter()
-        scheduler.step()
+        if not recipe_v2:
+            scheduler.step()
 
         checkpoint_state = {
             "epoch": epoch,
@@ -406,7 +457,7 @@ def main() -> None:
             "best_aptiny": best.best_aptiny,
             "best_map_epoch": best.best_map_epoch,
             "best_aptiny_epoch": best.best_aptiny_epoch,
-            "scheduler_horizon": args.scheduler_horizon,
+            "scheduler_horizon": scheduler_horizon,
             "rng_state": capture_rng_state(),
             "sampler_generator_state": sampler_generator.get_state(),
         }
@@ -483,7 +534,22 @@ def main() -> None:
         row: dict[str, Any] = {
             "epoch": epoch,
             "training_loss": float(np.mean(losses)),
-            "learning_rate": optimizer.param_groups[0]["lr"],
+            "learning_rate": next(
+                (
+                    group["lr"]
+                    for group in optimizer.param_groups
+                    if group.get("name") == "detector"
+                ),
+                optimizer.param_groups[0]["lr"],
+            ),
+            "backbone_learning_rate": next(
+                (
+                    group["lr"]
+                    for group in optimizer.param_groups
+                    if group.get("name") == "backbone"
+                ),
+                optimizer.param_groups[0]["lr"],
+            ),
             "gradient_norm": gradient_norm,
             "epoch_seconds": epoch_seconds,
             "data_loading_seconds": data_time,

@@ -1689,7 +1689,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 73,
+  "python_source_count": 74,
   "python_sources": [
     {
       "artifact_references": [
@@ -3647,6 +3647,245 @@
       ],
       "path": "scripts/validate_results.py",
       "sha256": "7d8ea9262e4b1f1e6d6545f455bb18b254239349e74b8ad456c00172717b7a47"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 16,
+          "literals": [
+            ".ckpt"
+          ],
+          "operations": [],
+          "source": "\".ckpt\","
+        },
+        {
+          "cell": 0,
+          "line": 17,
+          "literals": [
+            ".db"
+          ],
+          "operations": [],
+          "source": "\".db\","
+        },
+        {
+          "cell": 0,
+          "line": 22,
+          "literals": [
+            ".onnx"
+          ],
+          "operations": [],
+          "source": "\".onnx\","
+        },
+        {
+          "cell": 0,
+          "line": 24,
+          "literals": [
+            ".pt"
+          ],
+          "operations": [],
+          "source": "\".pt\","
+        },
+        {
+          "cell": 0,
+          "line": 25,
+          "literals": [
+            ".pth"
+          ],
+          "operations": [],
+          "source": "\".pth\","
+        },
+        {
+          "cell": 0,
+          "line": 36,
+          "literals": [
+            "cache"
+          ],
+          "operations": [],
+          "source": "\"cache\","
+        },
+        {
+          "cell": 0,
+          "line": 37,
+          "literals": [
+            "checkpoints"
+          ],
+          "operations": [],
+          "source": "\"checkpoints\","
+        },
+        {
+          "cell": 0,
+          "line": 39,
+          "literals": [
+            "datasets"
+          ],
+          "operations": [],
+          "source": "\"datasets\","
+        },
+        {
+          "cell": 0,
+          "line": 40,
+          "literals": [
+            "evaluation"
+          ],
+          "operations": [],
+          "source": "\"evaluation\","
+        },
+        {
+          "cell": 0,
+          "line": 46,
+          "literals": [
+            "predictions"
+          ],
+          "operations": [],
+          "source": "\"predictions\","
+        },
+        {
+          "cell": 0,
+          "line": 47,
+          "literals": [
+            "reports"
+          ],
+          "operations": [],
+          "source": "\"reports\","
+        },
+        {
+          "cell": 0,
+          "line": 55,
+          "literals": [
+            "credentials.json"
+          ],
+          "operations": [],
+          "source": "\"credentials.json\","
+        },
+        {
+          "cell": 0,
+          "line": 56,
+          "literals": [
+            "github_token.txt"
+          ],
+          "operations": [],
+          "source": "\"github_token.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 57,
+          "literals": [
+            "service-account.json"
+          ],
+          "operations": [],
+          "source": "\"service-account.json\","
+        },
+        {
+          "cell": 0,
+          "line": 58,
+          "literals": [
+            "token.json"
+          ],
+          "operations": [],
+          "source": "\"token.json\","
+        },
+        {
+          "cell": 0,
+          "line": 67,
+          "literals": [
+            ".csv"
+          ],
+          "operations": [],
+          "source": "\".csv\","
+        },
+        {
+          "cell": 0,
+          "line": 68,
+          "literals": [
+            ".html"
+          ],
+          "operations": [],
+          "source": "\".html\","
+        },
+        {
+          "cell": 0,
+          "line": 71,
+          "literals": [
+            ".json"
+          ],
+          "operations": [],
+          "source": "\".json\","
+        },
+        {
+          "cell": 0,
+          "line": 73,
+          "literals": [
+            ".png"
+          ],
+          "operations": [],
+          "source": "\".png\","
+        },
+        {
+          "cell": 0,
+          "line": 74,
+          "literals": [
+            ".txt"
+          ],
+          "operations": [],
+          "source": "\".txt\","
+        },
+        {
+          "cell": 0,
+          "line": 75,
+          "literals": [
+            ".yaml"
+          ],
+          "operations": [],
+          "source": "\".yaml\","
+        },
+        {
+          "cell": 0,
+          "line": 76,
+          "literals": [
+            ".yml"
+          ],
+          "operations": [],
+          "source": "\".yml\","
+        },
+        {
+          "cell": 0,
+          "line": 87,
+          "literals": [
+            "manifests"
+          ],
+          "operations": [],
+          "source": "(\"results\", \"manifests\"),"
+        },
+        {
+          "cell": 0,
+          "line": 111,
+          "literals": [
+            ".json"
+          ],
+          "operations": [],
+          "source": "if \"token\" in name and suffix == \".json\":"
+        },
+        {
+          "cell": 0,
+          "line": 128,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "text = path.read_text(encoding=\"utf-8\")"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "pathlib",
+        "re",
+        "subprocess",
+        "typing"
+      ],
+      "path": "scripts/validation/check_prohibited_files.py",
+      "sha256": "72396d515637ec46569d0f2a3e34915b677ec465b86592e3dcb5dc8f7e6e8d28"
     },
     {
       "artifact_references": [

@@ -56,7 +56,34 @@ resolved SHA.
   documents them and defers centralization to PR 6
 - Rollback: remove the PR 2 docs, requirements file, diagnostic, and test, then
   regenerate the PR 1 inventory snapshot
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `17af755f408146f243e58242451818333c2ee439`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/9
 - Remaining risks: hosted Colab images can drift; import metadata is not a model
   compatibility gate
+
+## PR 3 — Repository hygiene
+
+- Status: completed
+- Dependencies: PR 1–2
+- Files changed: ignore and attribute policy; security and contribution policy;
+  GitHub/Drive boundary; prohibited-file validator and tests; migration log;
+  regenerated source inventory
+- Conceptual change: enforce the source/artifact boundary for tracked or staged
+  files while allowing small reviewed fixtures and validated lightweight results
+- Preserved behavior: existing source package `src.data`, notebooks, result
+  publication layout, and all Drive artifact paths
+- Tests executed: prohibited-file unit/CLI checks; full CPU suite; Ruff; Python
+  compile; notebook validator; secret scanner; inventory drift check
+- Observed result: 117 passed, 2 skipped because PyTorch was unavailable; all
+  focused, hygiene, notebook, inventory, and security checks passed
+- Validation level: CPU/static
+- Unverified: GitHub branch protection and Drive-side enforcement
+- Compatibility effect: additive validation; existing tracked repository passes
+- Deviation: existing hygiene rules were consolidated rather than replaced with
+  a second competing policy
+- Rollback: revert PR 3; restore the previous ignore/attribute and contributor
+  files; no runtime artifacts are deleted
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: pattern and size checks cannot detect every sensitive or
+  copyrighted artifact, so review remains mandatory

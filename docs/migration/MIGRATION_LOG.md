@@ -374,7 +374,36 @@ resolved SHA.
   a ResNet-specific notebook 01, so it receives only a non-constructing hook
 - Rollback: revert PR 13A; notebook orchestration continues through the existing
   adapter/launcher
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `f2053ab0957ce09953328aeaccbb0bc61d87afaf`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/20
 - Remaining risks: G1 must confirm exact real parameter count and detector output
   structure at the pinned MMDetection revision
+
+## PR 13B — Swin factory and feature adapter
+
+- Status: completed with live G1 pending
+- Dependencies: PR 1–13A
+- Files changed: dynamic-resolution Swin Faster R-CNN factory; NHWC-to-NCHW FPN
+  feature adapter; smoke/controlled contract tests; generic notebook hook;
+  migration log and inventory
+- Conceptual change: centralize construction-time image size, mask-branch removal,
+  class count, and validation of every FPN feature level
+- Preserved behavior: pinned MMDetection config and public builder, Swin channel
+  widths, two-class head, legacy launcher, and notebook orchestration
+- Tests executed: 128/640 config and four-level feature contracts; NHWC conversion;
+  NCHW pass-through; invalid channel rejection; injected public builder; full
+  CPU/static suite and repository checks
+- Observed result: 170 passed, 2 skipped because PyTorch was unavailable; dynamic
+  smoke/controlled sizes, every FPN level, layout conversion, config mutation,
+  injected builder, notebook, and static checks passed
+- Validation level: CPU/static with tensor-shaped test doubles
+- Unverified: real Swin tensors, parameter count, MMDetection construction, CUDA,
+  and forward at smoke/controlled sizes
+- Compatibility effect: additive factory/adapter; existing trainer remains active
+- Deviation: the actual notebook 02 is result publishing, so the generic model-day
+  notebook receives the non-constructing Swin hook
+- Rollback: revert PR 13B and continue through the existing MMDetection launcher
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: upstream Swin outputs must be checked against the adapter on a
+  pinned real runtime before enabling it in training

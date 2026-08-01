@@ -291,28 +291,28 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
           "source": "paths = resolve_legacy_paths(DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 16,
+          "line": 19,
           "literals": [],
           "operations": [],
           "source": "def require_verified_data(report):"
         },
         {
           "cell": 3,
-          "line": 17,
+          "line": 20,
           "literals": [],
           "operations": [],
           "source": "if report.verified:"
         },
         {
           "cell": 3,
-          "line": 20,
+          "line": 23,
           "literals": [
             "Dataset setup is incomplete or was interrupted."
           ],
@@ -321,14 +321,14 @@
         },
         {
           "cell": 3,
-          "line": 21,
+          "line": 24,
           "literals": [],
           "operations": [],
           "source": "if any(\"staging directory\" in error for error in report.errors):"
         },
         {
           "cell": 3,
-          "line": 25,
+          "line": 28,
           "literals": [
             "Notebook 01 stopped safely before caching or training because dataset preparation is incomplete."
           ],
@@ -337,7 +337,7 @@
         },
         {
           "cell": 3,
-          "line": 47,
+          "line": 50,
           "literals": [],
           "operations": [
             "write"
@@ -346,14 +346,14 @@
         },
         {
           "cell": 3,
-          "line": 50,
+          "line": 53,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 56,
+          "line": 59,
           "literals": [],
           "operations": [
             "write"
@@ -362,7 +362,7 @@
         },
         {
           "cell": 3,
-          "line": 59,
+          "line": 62,
           "literals": [
             "Dataset setup is incomplete. Run 00_prepare_visdrone.ipynb, then rerun this notebook."
           ],
@@ -503,6 +503,7 @@
         "src.data.download",
         "src.data.local_cache",
         "src.models.resnet_frcnn.factory",
+        "src.models.swin_frcnn.factory",
         "src.pathing.resolver",
         "src.workflows.model_day",
         "subprocess",
@@ -510,7 +511,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "0dc39f74c150f2408e1d8dfdb46b2d348cd2834b26a8964167c16894e0d498ba"
+      "sha256": "ce2307f0b999cec23df7b25b617252fcae93f546b5d935f3d3c9533522591542"
     },
     {
       "artifact_references": [

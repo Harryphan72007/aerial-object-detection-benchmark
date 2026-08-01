@@ -1689,7 +1689,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 72,
+  "python_source_count": 73,
   "python_sources": [
     {
       "artifact_references": [
@@ -1810,6 +1810,182 @@
       ],
       "path": "scripts/clean_notebooks.py",
       "sha256": "63ec37f2adb7e279d53295024ee8830f4bfdd8b8209e4bcdc1d7da551227238e"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 25,
+          "literals": [
+            "requirements.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 26,
+          "literals": [
+            "requirements-colab.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements-colab.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 27,
+          "literals": [
+            "requirements-dataset-colab.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements-dataset-colab.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 28,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements-hpo-colab.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 29,
+          "literals": [
+            "requirements-notebook-test.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements-notebook-test.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 30,
+          "literals": [
+            "requirements-openmmlab-py310-cu118.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements-openmmlab-py310-cu118.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 31,
+          "literals": [
+            "requirements-rtdetr-colab.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements-rtdetr-colab.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 32,
+          "literals": [
+            "requirements/legacy-colab.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements/legacy-colab.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 110,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "for raw_line in path.read_text(encoding=\"utf-8\").splitlines():"
+        },
+        {
+          "cell": 0,
+          "line": 160,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = yaml.safe_load(path.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 175,
+          "literals": [
+            "project_config.yaml"
+          ],
+          "operations": [],
+          "source": "project_config = _load_yaml(repository_root / \"project_config.yaml\") or {}"
+        },
+        {
+          "cell": 0,
+          "line": 204,
+          "literals": [
+            "runtime_environments.yaml"
+          ],
+          "operations": [],
+          "source": "config = _load_yaml(repository_root / \"configs\" / \"runtime_environments.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 216,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "\"pretrained\": value.get(\"pretrained\"),"
+        },
+        {
+          "cell": 0,
+          "line": 231,
+          "literals": [
+            "notebook_artifact_inventory_v1.json"
+          ],
+          "operations": [],
+          "source": "/ \"notebook_artifact_inventory_v1.json\""
+        },
+        {
+          "cell": 0,
+          "line": 235,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = json.loads(snapshot.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 319,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "rendered = json.dumps(report, indent=2, sort_keys=True) + \"\\n\""
+        },
+        {
+          "cell": 0,
+          "line": 321,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "args.output.expanduser().resolve().write_text(rendered, encoding=\"utf-8\")"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "datetime",
+        "importlib.metadata",
+        "json",
+        "os",
+        "pathlib",
+        "platform",
+        "re",
+        "shutil",
+        "subprocess",
+        "sys",
+        "typing",
+        "urllib.parse",
+        "yaml"
+      ],
+      "path": "scripts/diagnostics/report_current_environment.py",
+      "sha256": "a3d28e28c09b5079f361d7a21d1284714516590033c7c672cf4702df50594486"
     },
     {
       "artifact_references": [

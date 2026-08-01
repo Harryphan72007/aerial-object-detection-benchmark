@@ -465,7 +465,37 @@ resolved SHA.
   notebook receives the non-constructing RT-DETR hook
 - Rollback: revert PR 13D to restore construction inside `RTDetrV2Adapter`; optimizer
   and scheduler need no rollback because they were untouched
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `4afb278c660a4bab166bd996424c5cb4ff54d43f`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/23
 - Remaining risks: G1 must confirm the legacy checkpoint's serialized tensor keys
   against the pinned Transformers implementation
+
+## PR 14 — Shared training state and engine
+
+- Status: completed with live G2 pending
+- Dependencies: PR 1–13D
+- Files changed: shared training state, accumulation engine, atomic state checkpoint,
+  ResNet engine boundary, CPU resume/evaluator integration tests, migration log and
+  inventory
+- Conceptual change: centralize epoch/microstep/optimizer-step transitions and
+  serializable component restore through a ResNet-first wrapper
+- Preserved behavior: legacy MMDetection launcher remains available; legacy
+  prediction view and evaluator remain readable
+- Tests executed: accumulated optimizer/scheduler steps; epoch-one save and
+  epoch-two resume; component mismatch rejection; legacy evaluator read; full
+  CPU/static suite and repository checks
+- Observed result: 181 passed, 2 skipped because PyTorch was unavailable;
+  accumulation, optimizer/scheduler ordering, save/resume, mismatch rejection,
+  legacy evaluator, and static checks passed
+- Validation level: CPU/static integration with injected components
+- Unverified: real ResNet forward/backward, scaler, tensor optimizer state, CUDA,
+  and framework-native checkpointing
+- Compatibility effect: additive engine; model-specific runtime switch awaits G2
+- Deviation: MMDetection owns its loop internally, so the ResNet migration boundary
+  is implemented and tested but the live launcher is retained until G2
+- Rollback: revert PR 14 and continue using the MMDetection runner; temporary smoke
+  state files are test-only
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: framework callbacks must preserve the tested step ordering when
+  wired into a real MMEngine runner

@@ -1768,7 +1768,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 84,
+  "python_source_count": 85,
   "python_sources": [
     {
       "artifact_references": [
@@ -10331,6 +10331,47 @@
       ],
       "path": "src/training/lr_workflow.py",
       "sha256": "128c09a538829bd075c6bd482e8619847d774b6cc1151d4ba487f9ad3417bcc6"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 9,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 25,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(path, payload)"
+        },
+        {
+          "cell": 0,
+          "line": 33,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "payload = read_json(path)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.training.state",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/training/state_checkpoint.py",
+      "sha256": "25209613b729186556b579c07ab5cdbce3006e126870b3d22e11f4b05c957e20"
     },
     {
       "artifact_references": [

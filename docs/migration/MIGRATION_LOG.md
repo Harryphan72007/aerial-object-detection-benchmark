@@ -167,7 +167,37 @@ resolved SHA.
   to avoid a destructive module-to-package rename
 - Rollback: revert PR 6; the notebook import returns to `src.paths.ProjectPaths`;
   new namespaces were unused and require no Drive cleanup
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `9256d1477f945a38e7938a3448c7c7936993a919`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/13
 - Remaining risks: later producers must opt into the new resolver consistently
   before isolation is enforceable
+
+## PR 7 — Config schemas and deterministic hashes
+
+- Status: completed
+- Dependencies: PR 1–6
+- Files changed: portable experiment-config schema; strict dependency-free runtime
+  validator and resolver; per-model legacy/smoke configs; equivalence/hash tests;
+  migration log and regenerated source inventory
+- Conceptual change: express existing per-model constants as versioned configs and
+  provide semantic SHA-256 identities independent of YAML formatting
+- Preserved behavior: existing model-track YAML files, notebook orchestration,
+  training defaults, and runtime config loading remain unchanged
+- Tests executed: all checked-in config validation; legacy-value equivalence;
+  deterministic hash and invalid-field cases; full CPU/static suite; hygiene,
+  secret, Ruff, compile, notebook, and inventory checks
+- Observed result: 140 passed, 2 skipped because PyTorch was unavailable; all
+  config equivalence, hash, rejection, notebook, and static checks passed
+- Validation level: CPU/static
+- Unverified: live framework consumption of the new configs, which is deliberately
+  deferred until producer migrations
+- Compatibility effect: additive schema/config API only
+- Deviation: repository uses a flat `src` package, so config code lives under
+  `src/config`; smoke configs reduce runtime while preserving model identity and
+  optimization constants
+- Rollback: revert PR 7; existing config consumers continue using their original
+  files and literal workflow values
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: producer code must opt into validation before the schema can
+  prevent invalid live runs

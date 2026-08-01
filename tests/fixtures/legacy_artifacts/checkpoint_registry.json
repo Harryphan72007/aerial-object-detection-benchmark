@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "runs": {
+    "faster_rcnn_resnet50__2class__640__20260729_120000__seed42": {
+      "run_id": "faster_rcnn_resnet50__2class__640__20260729_120000__seed42",
+      "model_id": "faster_rcnn_resnet50",
+      "architecture_family": "CNN",
+      "dataset_track": "2class",
+      "class_names": ["person", "vehicle"],
+      "seed": 42,
+      "input_resolution": 640,
+      "checkpoint_best_map": "checkpoints/faster_rcnn_resnet50/example/best_map.pth",
+      "checkpoint_best_aptiny": "checkpoints/faster_rcnn_resnet50/example/best_aptiny.pth",
+      "checkpoint_last": "checkpoints/faster_rcnn_resnet50/example/last.pth",
+      "config_path": "checkpoints/faster_rcnn_resnet50/example/training_config.yaml",
+      "created_at": "2026-07-29T12:00:00+00:00",
+      "framework": "mmdetection",
+      "framework_version": "3.3.0",
+      "pytorch_version": "2.1.2",
+      "cuda_version": "11.8",
+      "gpu_name": "fixture-gpu",
+      "total_parameters": 100,
+      "trainable_parameters": 80,
+      "frozen_parameters": 20,
+      "best_validation_map": 0.5,
+      "best_validation_aptiny": 0.25,
+      "best_epoch": 3,
+      "total_training_seconds": 60.0,
+      "status": "completed"
+    }
+  }
+}

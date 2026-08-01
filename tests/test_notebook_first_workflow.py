@@ -12,15 +12,19 @@ from src.utils.serialization import write_json, write_yaml
 from src.workflows.adapter_gate import adapter_fingerprint
 from src.workflows.contract import BENCHMARK_CONTRACT, validate_final_config
 from src.workflows.model_day import Stage, inspect_model_day
+from src.workflows.notebook_entrypoints import require_verified_data
+from src.data.contract import DataContractReport
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_ID = "rtdetrv2_l"
 RUN_ID = "rtdetrv2_l__2class__640__20260729_120000__seed42"
 PRIMARY = {
+    "00_bootstrap_colab.ipynb",
     "00_prepare_visdrone.ipynb",
     "01_run_model_day.ipynb",
     "02_publish_results.ipynb",
     "03_compare_all_models.ipynb",
+    "07_performance_tiling.ipynb",
     "10_hpo_resnet50.ipynb",
     "11_hpo_swin_t.ipynb",
     "12_hpo_vmamba_t.ipynb",
@@ -132,6 +136,15 @@ def test_expected_primary_notebooks_and_no_legacy_notebooks():
 
 def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
     expected = {
+        "00_bootstrap_colab.ipynb": {
+            "REPOSITORY_URL",
+            "REPOSITORY_PATH",
+            "REFERENCE_TYPE",
+            "REFERENCE",
+            "DRIVE_ROOT",
+            "MOUNT_GOOGLE_DRIVE",
+            "INSTALL_SHARED_DEPENDENCIES",
+        },
         "00_prepare_visdrone.ipynb": {
             "USE_GOOGLE_DRIVE",
             "DATASET_SOURCE",
@@ -139,8 +152,9 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "REDOWNLOAD",
             "SMOKE_TEST",
         },
-        "01_run_model_day.ipynb": {
-            "MODEL_ID",
+            "01_run_model_day.ipynb": {
+                "MODEL_ID",
+                "BENCHMARK_TRACK",
             "RUN_MODE",
             "RUN_LR_RANGE_TEST",
             "RUN_BOUNDARY_EXTENSION",
@@ -148,7 +162,12 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "ALLOW_OVER_BUDGET_RUN",
             "DATA_ACCESS_MODE",
         },
-        "02_publish_results.ipynb": {"MODEL_ID", "PUBLISH_RESULTS", "DRY_RUN"},
+            "02_publish_results.ipynb": {
+                "MODEL_ID",
+                "BENCHMARK_TRACK",
+                "PUBLISH_RESULTS",
+                "DRY_RUN",
+            },
         "10_hpo_resnet50.ipynb": {"DATASET_TRACK", "START_HPO"},
         "11_hpo_swin_t.ipynb": {"DATASET_TRACK", "START_HPO"},
         "12_hpo_vmamba_t.ipynb": {"DATASET_TRACK", "START_HPO"},
@@ -169,13 +188,16 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "DATASET_TRACK",
             "START_FINETUNING",
         },
-        "30_evaluate_all_models.ipynb": {
-            "DATASET_TRACK",
-            "EVALUATE_MISSING",
+            "30_evaluate_all_models.ipynb": {
+                "DATASET_TRACK",
+                "BENCHMARK_TRACK",
+                "EVALUATOR_VERSION",
+                "EVALUATE_MISSING",
         },
         "31_publish_results.ipynb": {
-            "MODEL_ID",
-            "DATASET_TRACK",
+                "MODEL_ID",
+                "DATASET_TRACK",
+                "BENCHMARK_TRACK",
             "PUBLISH_RESULTS",
             "DRY_RUN",
         },
@@ -296,13 +318,19 @@ def test_publishing_configuration_defaults_to_dry_run():
     assert values["DRY_RUN"] is True
 
 
-def test_notebook_one_gives_concise_interrupted_setup_recovery_instruction():
+def test_notebook_one_gives_concise_interrupted_setup_recovery_instruction(capsys):
     notebook = nbformat.read(
         ROOT / "notebooks" / "01_run_model_day.ipynb", as_version=4
     )
     source = "\n".join(
         cell.source for cell in notebook.cells if cell.cell_type == "code"
     )
-    assert "Dataset setup is incomplete or was interrupted." in source
-    assert "notebook 00 will recover or rebuild it" in source
-    assert "stopped safely before caching or training" in source
+    assert "from src.workflows.notebook_entrypoints import require_verified_data" in source
+    report = DataContractReport(
+        verified=False, errors=["staging directory is incomplete"]
+    )
+    with pytest.raises(RuntimeError, match="stopped safely before caching or training"):
+        require_verified_data(report)
+    output = capsys.readouterr().out
+    assert "Dataset setup is incomplete or was interrupted." in output
+    assert "notebook 00 will recover or rebuild it" in output

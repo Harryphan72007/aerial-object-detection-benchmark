@@ -1,0 +1,16 @@
+{
+  "info": {"description": "Tiny shared-dataset contract fixture"},
+  "licenses": [],
+  "images": [
+    {"id": 7, "file_name": "image_7.jpg", "width": 20, "height": 16},
+    {"id": 9, "file_name": "image_9.jpg", "width": 24, "height": 18}
+  ],
+  "annotations": [
+    {"id": 3, "image_id": 7, "category_id": 1, "bbox": [1, 2, 5, 6], "area": 30, "iscrowd": 0, "segmentation": []},
+    {"id": 8, "image_id": 9, "category_id": 2, "bbox": [3, 4, 8, 5], "area": 40, "iscrowd": 0, "segmentation": []}
+  ],
+  "categories": [
+    {"id": 1, "name": "person", "supercategory": "person"},
+    {"id": 2, "name": "vehicle", "supercategory": "vehicle"}
+  ]
+}

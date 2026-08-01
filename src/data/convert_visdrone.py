@@ -10,7 +10,7 @@ from typing import Any
 
 from PIL import Image
 
-from src.data.collapse_classes import ClassMapping
+from src.data.class_mapping import IGNORED_CATEGORY_IDS, ClassMapping
 
 
 @dataclass
@@ -174,7 +174,7 @@ def convert_split(
                 if len(summary.issue_examples) < 50:
                     summary.issue_examples.append(f"{location}: {exc}")
                 continue
-            if category_id in {0, 11}:
+            if category_id in IGNORED_CATEGORY_IDS:
                 summary.ignored_regions += 1
                 continue
             mapped = mapping.map_category(category_id)

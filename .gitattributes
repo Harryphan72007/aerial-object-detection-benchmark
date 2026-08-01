@@ -4,6 +4,21 @@
 *.yaml text eol=lf
 *.yml text eol=lf
 *.md text eol=lf
+*.json text eol=lf
+*.csv text eol=lf
+*.toml text eol=lf
+*.txt text eol=lf
 *.png binary
 *.jpg binary
+*.jpeg binary
+*.gif binary
 *.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.7z binary
+*.pth binary
+*.pt binary
+*.ckpt binary
+*.onnx binary
+schemas/legacy/notebook_artifact_inventory_v1.json linguist-generated=true

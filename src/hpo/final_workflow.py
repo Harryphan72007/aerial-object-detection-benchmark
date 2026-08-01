@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from src.hpo.workflow import HPO_PROTOCOL_ID, _cleanup_accelerator_memory
+from src.hpo.rtdetr_v2 import RTDETR_HPO_PROTOCOL_ID
 from src.models.registry import load_model_config
+from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
 from src.training.checkpointing import make_run_id, materialize_checkpoint_alias
 from src.training.trainer import TrainingOrchestrator
@@ -45,6 +47,10 @@ class FinalExperimentWorkflow:
         self.paths = ProjectPaths.from_value(drive_root).create()
         self.model_id = model_id
         self.dataset_track = dataset_track
+        self.protocol_id = (
+            RTDETR_HPO_PROTOCOL_ID if model_id == "rtdetrv2_l" else HPO_PROTOCOL_ID
+        )
+        self.selected_protocol_id = self.protocol_id
         load_model_config(model_id, self.repo_root)
         self.orchestrator = orchestrator or TrainingOrchestrator(
             self.repo_root, self.paths.root
@@ -52,14 +58,23 @@ class FinalExperimentWorkflow:
         self.hpo_root = (
             self.paths.root
             / "hpo"
-            / HPO_PROTOCOL_ID
+            / self.protocol_id
             / model_id
             / dataset_track
         )
 
     @property
     def best_config_path(self) -> Path:
-        return self.hpo_root / "best_config.yaml"
+        current = self.hpo_root / "best_config.yaml"
+        legacy = (
+            self.paths.root
+            / "hpo"
+            / HPO_PROTOCOL_ID
+            / self.model_id
+            / self.dataset_track
+            / "best_config.yaml"
+        )
+        return current if current.is_file() or not legacy.is_file() else legacy
 
     def _load_tuned_parameters(self) -> dict[str, Any]:
         if not self.best_config_path.is_file():
@@ -68,10 +83,15 @@ class FinalExperimentWorkflow:
                 f"{self.best_config_path}"
             )
         selected = read_yaml(self.best_config_path)
+        expected_protocol = (
+            HPO_PROTOCOL_ID
+            if HPO_PROTOCOL_ID in self.best_config_path.parts
+            else self.protocol_id
+        )
         expected = {
             "model_id": self.model_id,
             "dataset_track": self.dataset_track,
-            "protocol_id": HPO_PROTOCOL_ID,
+            "protocol_id": expected_protocol,
             "search_seed": 42,
         }
         changed = {
@@ -81,6 +101,7 @@ class FinalExperimentWorkflow:
         }
         if changed:
             raise ValueError(f"incompatible best HPO configuration: {changed}")
+        self.selected_protocol_id = expected_protocol
         parameters = selected.get("parameters")
         if not isinstance(parameters, dict) or not parameters:
             raise ValueError("best HPO configuration contains no parameters")
@@ -102,17 +123,22 @@ class FinalExperimentWorkflow:
                 f"effective batch size must be {EFFECTIVE_BATCH_SIZE}, got "
                 f"{effective}"
             )
+        scheduler_horizon = FINAL_EPOCHS
+        if self.model_id == "rtdetrv2_l":
+            scheduler_horizon = int(
+                checked_in_recipe(self.repo_root)["scheduler_horizon_epochs"]
+            )
         return {
             "model_id": self.model_id,
             "dataset_track": self.dataset_track,
-            "protocol_id": HPO_PROTOCOL_ID,
+            "protocol_id": self.selected_protocol_id,
             "seed": seed,
             "image_size": IMAGE_SIZE,
             "effective_batch_size": effective,
             "configuration_hash": configuration_hash(parameters),
             "scheduler_contract": {
                 "epochs": FINAL_EPOCHS,
-                "scheduler_horizon": FINAL_EPOCHS,
+                "scheduler_horizon": scheduler_horizon,
             },
             "baseline_or_tuned": recipe,
             "restart_from_original_pretrained": True,
@@ -188,9 +214,15 @@ class FinalExperimentWorkflow:
         manifests: list[dict[str, Any]] = []
         annotation_root = self.paths.coco(self.dataset_track) / "annotations"
         for recipe, parameters in (("baseline", {}), ("tuned", tuned)):
+            applied_parameters = dict(parameters)
+            scheduler_horizon = FINAL_EPOCHS
+            if self.model_id == "rtdetrv2_l":
+                static_recipe = checked_in_recipe(self.repo_root)
+                applied_parameters = {**static_recipe, **parameters}
+                scheduler_horizon = int(static_recipe["scheduler_horizon_epochs"])
             for seed in FINAL_SEEDS:
                 contract = self._contract(
-                    seed, recipe, parameters, batch_size, accumulation
+                    seed, recipe, applied_parameters, batch_size, accumulation
                 )
                 run_id, run_dir, resume = self._resumable(contract)
                 if resume == "completed":
@@ -210,7 +242,7 @@ class FinalExperimentWorkflow:
                         seed=seed,
                         use_amp=True,
                         resume_run_id=resume,
-                        overrides=parameters,
+                        overrides=applied_parameters,
                         train_annotation_override=(
                             annotation_root / "instances_train.json"
                         ),
@@ -222,10 +254,10 @@ class FinalExperimentWorkflow:
                         explicit_run_dir=run_dir,
                         explicit_run_id=run_id,
                         register_run=True,
-                        scheduler_horizon=FINAL_EPOCHS,
+                        scheduler_horizon=scheduler_horizon,
                         validation_interval=1,
                         run_kind="final_complete_official_train",
-                        protocol_id=HPO_PROTOCOL_ID,
+                        protocol_id=self.selected_protocol_id,
                         baseline_or_tuned=recipe,
                     )
                 finally:

@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 
 from src.models.base_adapter import DetectionModelAdapter
+from src.models.rtdetrv2.factory import RTDetrV2Factory
 
 
 class RTDetrV2Adapter(DetectionModelAdapter):
@@ -24,74 +25,12 @@ class RTDetrV2Adapter(DetectionModelAdapter):
     def load_model(
         self, checkpoint_path: str | Path, config: dict[str, Any]
     ) -> Any:
-        try:
-            import torch
-            from transformers import (
-                RTDetrImageProcessor,
-                RTDetrV2ForObjectDetection,
-            )
-        except ImportError as exc:
-            raise RuntimeError(
-                "Install transformers with RT-DETRv2 support."
-            ) from exc
-
-        checkpoint = Path(checkpoint_path)
-        base_source = str(
-            config.get("pretrained_model_name_or_path", "PekingU/rtdetr_v2_r101vd")
+        result = RTDetrV2Factory(config=config).build(
+            checkpoint_path, device=self.device
         )
-        revision = config.get("pretrained_revision")
-        processor_kwargs: dict[str, Any] = (
-            {"revision": str(revision)} if revision else {}
-        )
-        model_source_kwargs: dict[str, Any] = dict(processor_kwargs)
-        resolution = config.get("input_resolution")
-        if resolution:
-            processor_kwargs["size"] = {
-                "height": int(resolution),
-                "width": int(resolution),
-            }
-
-        if checkpoint.exists() and checkpoint.is_file():
-            state = torch.load(checkpoint, map_location="cpu", weights_only=False)
-            raw_id2label = state.get("id2label") or config.get("id2label")
-            if not raw_id2label:
-                raise ValueError(
-                    "RT-DETR checkpoint is missing id2label metadata; "
-                    "load a standardized project checkpoint or provide id2label."
-                )
-            id2label = {int(key): str(value) for key, value in raw_id2label.items()}
-            label2id = {value: key for key, value in id2label.items()}
-            self.processor = RTDetrImageProcessor.from_pretrained(
-                base_source, **processor_kwargs
-            )
-            self.model = RTDetrV2ForObjectDetection.from_pretrained(
-                base_source,
-                **model_source_kwargs,
-                id2label=id2label,
-                label2id=label2id,
-                ignore_mismatched_sizes=True,
-            )
-            model_state = state.get("model", state)
-            incompat = self.model.load_state_dict(model_state, strict=True)
-            if incompat.missing_keys or incompat.unexpected_keys:
-                raise RuntimeError(
-                    "RT-DETR checkpoint state is incompatible: "
-                    f"missing={incompat.missing_keys}, "
-                    f"unexpected={incompat.unexpected_keys}"
-                )
-        else:
-            source = str(checkpoint_path or base_source)
-            self.processor = RTDetrImageProcessor.from_pretrained(
-                source, **processor_kwargs
-            )
-            self.model = RTDetrV2ForObjectDetection.from_pretrained(
-                source, **model_source_kwargs
-            )
-
-        self.device = self.device or (
-            "cuda" if torch.cuda.is_available() else "cpu"
-        )
-        self.model.to(self.device).eval()
+        self.model = result.model
+        self.processor = result.processor
+        self.device = result.device
         self.config = dict(config)
         return self.model
 

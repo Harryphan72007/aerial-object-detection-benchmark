@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Artifact identity v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "model_id", "architecture_family", "dataset_track", "evaluation_resolution", "seed"],
+  "properties": {
+    "run_id": {"type": "string", "minLength": 1},
+    "model_id": {"type": "string", "minLength": 1},
+    "architecture_family": {"type": "string", "minLength": 1},
+    "dataset_track": {"enum": ["2class", "10class"]},
+    "evaluation_resolution": {"type": "integer", "minimum": 1},
+    "seed": {"type": "integer", "minimum": 0}
+  }
+}

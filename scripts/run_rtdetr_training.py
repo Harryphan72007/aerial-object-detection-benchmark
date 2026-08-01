@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -25,6 +27,15 @@ from src.training.recipes import (
     RTDETR_WARMUP_EPOCHS,
     RTDETR_WEIGHT_DECAY,
 )
+from src.models.rtdetrv2.optimizer import RECIPE_VERSION, build_optimizer
+from src.models.rtdetrv2.scheduler import WarmupCosineScheduler
+from src.training.accumulation import effective_batch
+from src.training.ema import ModelEMA, ema_checkpoint_fields, load_ema_checkpoint
+from src.training.checkpoint_selection import (
+    BestCheckpointState,
+    materialize_best_checkpoint,
+)
+from src.training.early_stopping import EarlyStopping
 
 
 def parse_args() -> argparse.Namespace:
@@ -60,7 +71,7 @@ def main() -> None:
     args = parse_args()
     import psutil
     import torch
-    from torch.utils.data import DataLoader, Dataset
+    from torch.utils.data import DataLoader
     from transformers import (
         RTDetrImageProcessor,
         RTDetrV2Config,
@@ -68,6 +79,7 @@ def main() -> None:
     )
 
     from src.evaluation.coco_evaluator import evaluate_coco
+    from src.data.dataset import CocoDetectionDataset
     from src.reproducibility import (
         capture_rng_state,
         restore_rng_state,
@@ -76,8 +88,6 @@ def main() -> None:
     )
 
     seed_everything(args.seed)
-    if args.scheduler_horizon < args.epochs:
-        raise ValueError("--scheduler-horizon must be >= --epochs")
     if args.validation_interval < 0:
         raise ValueError("--validation-interval must be non-negative")
     run_dir = Path(args.run_dir)
@@ -85,9 +95,6 @@ def main() -> None:
     write_runtime_environment_manifest(run_dir, args.model_id, Path.cwd())
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_data = json.loads(Path(args.train_ann).read_text(encoding="utf-8"))
-    validation_data = json.loads(
-        Path(args.val_ann).read_text(encoding="utf-8")
-    )
     classes = [category["name"] for category in train_data["categories"]]
     id2label = {index: name for index, name in enumerate(classes)}
     label2id = {name: index for index, name in id2label.items()}
@@ -121,9 +128,22 @@ def main() -> None:
             applied_overrides[key] = value
         elif key in {
             "learning_rate",
+            "detector_learning_rate",
+            "backbone_lr_multiplier",
             "weight_decay",
             "gradient_clip",
+            "gradient_clip_norm",
             "warmup_epochs",
+            "warmup_steps",
+            "warmup_start_factor",
+            "minimum_lr_factor",
+            "scheduler_horizon_epochs",
+            "recipe_version",
+            "ema_enabled",
+            "ema_decay",
+            "effective_batch_size",
+            "early_stopping_patience",
+            "early_stopping_min_delta",
             "max_detections",
         }:
             applied_overrides[key] = value
@@ -145,39 +165,22 @@ def main() -> None:
         json.dumps(override_report, indent=2), encoding="utf-8"
     )
 
-    class Records(Dataset):
-        def __init__(self, data: dict[str, Any], root: str | Path):
-            self.images = sorted(data["images"], key=lambda item: int(item["id"]))
-            self.root = Path(root)
-            self.annotations: dict[int, list[dict[str, Any]]] = defaultdict(list)
-            for annotation in data["annotations"]:
-                converted = dict(annotation)
-                # Transformers training labels are zero-based.
-                converted["category_id"] = int(converted["category_id"]) - 1
-                self.annotations[int(annotation["image_id"])].append(converted)
-
-        def __len__(self) -> int:
-            return len(self.images)
-
-        def __getitem__(self, index: int) -> dict[str, Any]:
-            from PIL import Image
-
-            metadata = self.images[index]
-            image = Image.open(self.root / metadata["file_name"]).convert("RGB")
-            encoded = processor(
-                images=image,
-                annotations={
-                    "image_id": int(metadata["id"]),
-                    "annotations": self.annotations[int(metadata["id"])],
-                },
-                return_tensors="pt",
-            )
-            return {
-                "pixel_values": encoded["pixel_values"].squeeze(0),
-                "labels": encoded["labels"][0],
-                "image_id": int(metadata["id"]),
-                "image": image,
-            }
+    def encode_record(record: dict[str, Any]) -> dict[str, Any]:
+        annotations = [
+            {**annotation, "category_id": int(annotation["category_id"]) - 1}
+            for annotation in record["annotations"]
+        ]
+        encoded = processor(
+            images=record["image"],
+            annotations={"image_id": record["image_id"], "annotations": annotations},
+            return_tensors="pt",
+        )
+        return {
+            "pixel_values": encoded["pixel_values"].squeeze(0),
+            "labels": encoded["labels"][0],
+            "image_id": record["image_id"],
+            "image": record["image"],
+        }
 
     def collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
         # The processor resizes every image to the configured square resolution.
@@ -188,8 +191,12 @@ def main() -> None:
             "labels": [item["labels"] for item in batch],
         }
 
-    train_records = Records(train_data, args.train_images)
-    validation_records = Records(validation_data, args.val_images)
+    train_records = CocoDetectionDataset(
+        args.train_images, args.train_ann, transform=encode_record
+    )
+    validation_records = CocoDetectionDataset(
+        args.val_images, args.val_ann, transform=encode_record
+    )
     sampler_generator = torch.Generator()
     sampler_generator.manual_seed(args.seed)
     train_loader = DataLoader(
@@ -204,30 +211,91 @@ def main() -> None:
     )
     learning_rate = float(overrides.get("learning_rate", args.learning_rate))
     weight_decay = float(overrides.get("weight_decay", args.weight_decay))
-    gradient_clip = float(overrides.get("gradient_clip", RTDETR_GRADIENT_CLIP))
+    gradient_clip = float(
+        overrides.get(
+            "gradient_clip_norm",
+            overrides.get("gradient_clip", RTDETR_GRADIENT_CLIP),
+        )
+    )
     warmup_epochs = int(overrides.get("warmup_epochs", RTDETR_WARMUP_EPOCHS))
     maximum_detections = int(
         overrides.get("max_detections", RTDETR_MAX_DETECTIONS)
     )
-    optimizer = torch.optim.AdamW(
-        model.parameters(), lr=learning_rate, weight_decay=weight_decay
+    recipe_version = str(overrides.get("recipe_version", "legacy"))
+    if recipe_version not in {"legacy", RECIPE_VERSION}:
+        raise ValueError(f"unsupported RT-DETR recipe version: {recipe_version}")
+    scheduler_horizon = int(
+        overrides.get("scheduler_horizon_epochs", args.scheduler_horizon)
     )
-    cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=max(1, args.scheduler_horizon - warmup_epochs)
-    )
-    if warmup_epochs > 0:
-        warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
-            optimizer, start_factor=0.01, total_iters=warmup_epochs
+    if scheduler_horizon < args.epochs:
+        raise ValueError("recipe scheduler horizon must be >= --epochs")
+    recipe_v2 = recipe_version == RECIPE_VERSION
+    if recipe_v2:
+        recipe = {
+            "recipe_version": recipe_version,
+            "detector_learning_rate": float(
+                overrides.get("detector_learning_rate", learning_rate)
+            ),
+            "backbone_lr_multiplier": float(
+                overrides.get("backbone_lr_multiplier", 0.1)
+            ),
+            "weight_decay": weight_decay,
+            "gradient_clip_norm": gradient_clip,
+        }
+        optimizer_build = build_optimizer(model, recipe)
+        optimizer = optimizer_build.optimizer
+        (run_dir / "parameter_groups.json").write_text(
+            json.dumps(optimizer_build.report, indent=2), encoding="utf-8"
         )
-        scheduler = torch.optim.lr_scheduler.SequentialLR(
+        updates_per_epoch = max(1, math.ceil(len(train_loader) / args.accumulation))
+        scheduler = WarmupCosineScheduler(
             optimizer,
-            schedulers=[warmup_scheduler, cosine_scheduler],
-            milestones=[warmup_epochs],
+            total_updates=scheduler_horizon * updates_per_epoch,
+            warmup_updates=int(
+                overrides.get("warmup_steps", warmup_epochs * updates_per_epoch)
+            ),
+            warmup_start_factor=float(overrides.get("warmup_start_factor", 0.01)),
+            minimum_factor=float(overrides.get("minimum_lr_factor", 0.01)),
         )
     else:
-        scheduler = cosine_scheduler
+        optimizer = torch.optim.AdamW(
+            model.parameters(), lr=learning_rate, weight_decay=weight_decay
+        )
+        cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=max(1, scheduler_horizon - warmup_epochs)
+        )
+        if warmup_epochs > 0:
+            warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
+                optimizer, start_factor=0.01, total_iters=warmup_epochs
+            )
+            scheduler = torch.optim.lr_scheduler.SequentialLR(
+                optimizer,
+                schedulers=[warmup_scheduler, cosine_scheduler],
+                milestones=[warmup_epochs],
+            )
+        else:
+            scheduler = cosine_scheduler
     scaler = torch.amp.GradScaler(
         "cuda", enabled=args.amp and torch.cuda.is_available()
+    )
+    batch_report = effective_batch(
+        args.batch_size,
+        args.accumulation,
+        int(os.environ.get("WORLD_SIZE", "1")),
+    )
+    expected_effective_batch = int(
+        overrides.get("effective_batch_size", batch_report.effective_batch_size)
+    )
+    if batch_report.effective_batch_size != expected_effective_batch:
+        raise ValueError(
+            "effective batch mismatch: "
+            f"calculated={batch_report.effective_batch_size}, "
+            f"configured={expected_effective_batch}"
+        )
+    ema = (
+        ModelEMA(model, decay=float(overrides.get("ema_decay", 0.9998)))
+        if bool(overrides.get("ema_enabled", False))
+        else None
     )
     if args.lr_range_test_steps:
         if args.resume:
@@ -250,7 +318,7 @@ def main() -> None:
         model.train()
         for optimizer_step, step_learning_rate in enumerate(schedule, start=1):
             for group in optimizer.param_groups:
-                group["lr"] = step_learning_rate
+                group["lr"] = step_learning_rate * float(group.get("lr_scale", 1.0))
             optimizer.zero_grad(set_to_none=True)
             step_losses: list[float] = []
             for _ in range(args.accumulation):
@@ -308,7 +376,13 @@ def main() -> None:
         return
     history = EpochHistoryWriter(run_dir)
     best = BestMetricState()
+    checkpoint_selector = BestCheckpointState()
+    early_stopping = EarlyStopping(
+        patience=int(overrides.get("early_stopping_patience", 10)),
+        min_delta=float(overrides.get("early_stopping_min_delta", 0.0)),
+    )
     start_epoch = 1
+    optimizer_updates_completed = 0
     if args.resume and (run_dir / "last.pth").exists():
         state = torch.load(
             run_dir / "last.pth", map_location="cpu", weights_only=False
@@ -322,16 +396,26 @@ def main() -> None:
         scaler_state = state.get("scaler_state_dict", state.get("scaler"))
         if scaler_state:
             scaler.load_state_dict(scaler_state)
+        if ema is not None and not load_ema_checkpoint(ema, state):
+            ema = ModelEMA(model, decay=ema.decay)
+        optimizer_updates_completed = int(state.get("optimizer_updates", 0))
         start_epoch = int(state["epoch"]) + 1
         best.best_map = float(state.get("best_map", float("-inf")))
         best.best_aptiny = float(state.get("best_aptiny", float("-inf")))
         best.best_map_epoch = int(state.get("best_map_epoch", 0))
         best.best_aptiny_epoch = int(state.get("best_aptiny_epoch", 0))
-        checkpoint_horizon = int(state.get("scheduler_horizon", args.scheduler_horizon))
-        if checkpoint_horizon != args.scheduler_horizon:
+        if state.get("checkpoint_selection_state"):
+            checkpoint_selector.load_state_dict(state["checkpoint_selection_state"])
+        else:
+            checkpoint_selector.best_raw = best.best_map
+            checkpoint_selector.best_raw_epoch = best.best_map_epoch
+        if state.get("early_stopping_state"):
+            early_stopping.load_state_dict(state["early_stopping_state"])
+        checkpoint_horizon = int(state.get("scheduler_horizon", scheduler_horizon))
+        if checkpoint_horizon != scheduler_horizon:
             raise ValueError(
                 "scheduler horizon changed across resume: "
-                f"checkpoint={checkpoint_horizon}, requested={args.scheduler_horizon}"
+                f"checkpoint={checkpoint_horizon}, requested={scheduler_horizon}"
             )
         if state.get("rng_state"):
             restore_rng_state(state["rng_state"])
@@ -394,12 +478,18 @@ def main() -> None:
                 )
                 scaler.step(optimizer)
                 scaler.update()
+                optimizer_updates_completed += 1
+                if ema is not None:
+                    ema.update(model)
+                if recipe_v2:
+                    scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
                 if torch.cuda.is_available():
                     torch.cuda.synchronize()
                 optimizer_time += time.perf_counter() - optimizer_start
             last_batch_end = time.perf_counter()
-        scheduler.step()
+        if not recipe_v2:
+            scheduler.step()
 
         checkpoint_state = {
             "epoch": epoch,
@@ -421,9 +511,13 @@ def main() -> None:
             "best_aptiny": best.best_aptiny,
             "best_map_epoch": best.best_map_epoch,
             "best_aptiny_epoch": best.best_aptiny_epoch,
-            "scheduler_horizon": args.scheduler_horizon,
+            "scheduler_horizon": scheduler_horizon,
             "rng_state": capture_rng_state(),
             "sampler_generator_state": sampler_generator.get_state(),
+            "optimizer_updates": optimizer_updates_completed,
+            "checkpoint_selection_state": checkpoint_selector.state_dict(),
+            "early_stopping_state": early_stopping.state_dict(),
+            **ema_checkpoint_fields(ema),
         }
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
 
@@ -434,6 +528,7 @@ def main() -> None:
         validation_seconds = 0.0
         metrics: dict[str, float] = {}
         flags = {"best_map": False, "best_aptiny": False}
+        selection_flags = {"best_raw": False, "best_ema": False}
         if should_validate:
             validation_start = time.perf_counter()
             model.eval()
@@ -477,6 +572,12 @@ def main() -> None:
             prediction_path.write_text(json.dumps(predictions), encoding="utf-8")
             metrics = evaluate_coco(args.val_ann, prediction_path)
             flags = best.update(epoch, metrics)
+            selection_flags = checkpoint_selector.update(
+                epoch, raw_metric=float(metrics.get("mAP", float("-inf")))
+            )
+            early_stopping.update(
+                epoch, float(metrics.get("mAP", float("-inf")))
+            )
         # Save the updated best-state metadata in the canonical last checkpoint.
         checkpoint_state.update(
             {
@@ -486,11 +587,15 @@ def main() -> None:
                 "best_aptiny_epoch": best.best_aptiny_epoch,
                 "rng_state": capture_rng_state(),
                 "sampler_generator_state": sampler_generator.get_state(),
+                "checkpoint_selection_state": checkpoint_selector.state_dict(),
+                "early_stopping_state": early_stopping.state_dict(),
             }
         )
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
-        if flags["best_map"]:
-            materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_map.pth")
+        if selection_flags["best_raw"]:
+            materialize_best_checkpoint(
+                run_dir / "last.pth", run_dir, weight_variant="raw"
+            )
         if flags["best_aptiny"]:
             materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_aptiny.pth")
 
@@ -498,7 +603,22 @@ def main() -> None:
         row: dict[str, Any] = {
             "epoch": epoch,
             "training_loss": float(np.mean(losses)),
-            "learning_rate": optimizer.param_groups[0]["lr"],
+            "learning_rate": next(
+                (
+                    group["lr"]
+                    for group in optimizer.param_groups
+                    if group.get("name") == "detector"
+                ),
+                optimizer.param_groups[0]["lr"],
+            ),
+            "backbone_learning_rate": next(
+                (
+                    group["lr"]
+                    for group in optimizer.param_groups
+                    if group.get("name") == "backbone"
+                ),
+                optimizer.param_groups[0]["lr"],
+            ),
             "gradient_norm": gradient_norm,
             "epoch_seconds": epoch_seconds,
             "data_loading_seconds": data_time,
@@ -517,6 +637,7 @@ def main() -> None:
             if torch.cuda.is_available()
             else 0,
             "cpu_ram_bytes": psutil.Process().memory_info().rss,
+            "optimizer_updates": optimizer_updates_completed,
             **{
                 f"loss_{key}": float(np.mean(values))
                 for key, values in component_values.items()
@@ -530,7 +651,19 @@ def main() -> None:
         history.append(row)
         save_training_curves(history.rows, run_dir / "training_curves.png")
         print(json.dumps(row))
+        if early_stopping.stopped:
+            break
 
+    if not (run_dir / "best_raw.pth").exists():
+        materialize_best_checkpoint(
+            (
+                run_dir / "best_map.pth"
+                if (run_dir / "best_map.pth").is_file()
+                else run_dir / "last.pth"
+            ),
+            run_dir,
+            weight_variant="raw",
+        )
     if not (run_dir / "best_map.pth").exists():
         materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_map.pth")
     if not (run_dir / "best_aptiny.pth").exists():
@@ -552,6 +685,12 @@ def main() -> None:
             time_to_best_tiny = cumulative
     summary = {
         "checkpoint_best_map": str(run_dir / "best_map.pth"),
+        "checkpoint_best_raw": str(run_dir / "best_raw.pth"),
+        "checkpoint_best_ema": (
+            str(run_dir / "best_ema.pth")
+            if (run_dir / "best_ema.pth").is_file()
+            else None
+        ),
         "checkpoint_best_aptiny": str(run_dir / "best_aptiny.pth"),
         "checkpoint_last": str(run_dir / "last.pth"),
         "total_parameters": total,
@@ -571,6 +710,16 @@ def main() -> None:
         "pretrained_revision": args.model_revision,
         "num_queries": int(model.config.num_queries),
         "hyperparameter_overrides": override_report,
+        "optimizer_updates": optimizer_updates_completed,
+        "effective_batch": batch_report.as_dict(),
+        "ema": {
+            "enabled": ema is not None,
+            "decay": ema.decay if ema is not None else None,
+            "updates": ema.num_updates if ema is not None else 0,
+            "raw_and_ema_states_separate": True,
+            "evaluation_weights": "raw",
+        },
+        "early_stopping": early_stopping.state_dict(),
     }
     (run_dir / "final_metrics.json").write_text(
         json.dumps(summary, indent=2), encoding="utf-8"

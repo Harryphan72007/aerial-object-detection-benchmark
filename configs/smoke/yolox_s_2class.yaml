@@ -1,0 +1,13 @@
+schema_version: 1
+model_id: yolox_s
+dataset_track: 2class
+execution_mode: smoke
+image_size: 128
+batch_size: 1
+gradient_accumulation_steps: 1
+epochs: 1
+seed: 42
+use_amp: false
+max_detections_per_image: 50
+learning_rate: 0.0001
+weight_decay: 0.05

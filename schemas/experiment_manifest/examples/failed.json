@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "experiment_id": "example-failed",
+  "model_id": "rtdetrv2_l",
+  "dataset_track": "2class",
+  "execution_mode": "smoke",
+  "code": {"repository": "aerial-object-detection-benchmark", "revision": "1111111111111111111111111111111111111111"},
+  "config": {"path": "configs/smoke/rtdetrv2_l_2class.yaml", "sha256": "2222222222222222222222222222222222222222222222222222222222222222"},
+  "dataset": {"name": "VisDrone2019-DET", "version": "2019", "hashes": {"validation": "3333333333333333333333333333333333333333333333333333333333333333"}},
+  "environment": {"python_version": "3.11", "dependencies_sha256": "4444444444444444444444444444444444444444444444444444444444444444"},
+  "hardware": {"device_type": "cpu", "device_name": "example-cpu"},
+  "seed": 42,
+  "output_path": "artifacts/smoke/example-failed",
+  "status": "failed",
+  "created_at": "2026-08-01T00:00:00+00:00",
+  "completed_at": "2026-08-01T00:00:05+00:00",
+  "failure": "synthetic failure",
+  "result": null
+}

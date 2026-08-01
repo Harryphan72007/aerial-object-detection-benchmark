@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tiled dataset manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "tile_version", "source_dataset_hash", "tiled_dataset_hash", "tile_size", "overlap", "minimum_visible_fraction", "tiles"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "tile_version": {"type": "string", "minLength": 1},
+    "source_dataset_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "tiled_dataset_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "tile_size": {"type": "integer", "minimum": 1},
+    "overlap": {"type": "integer", "minimum": 0},
+    "minimum_visible_fraction": {"type": "number", "minimum": 0, "maximum": 1},
+    "tiles": {"type": "array"}
+  }
+}

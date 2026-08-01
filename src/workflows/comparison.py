@@ -11,14 +11,21 @@ from src.paths import ProjectPaths
 from src.training.checkpointing import RunRegistry
 from src.utils.serialization import read_json, read_yaml
 from src.workflows.contract import PRIMARY_MODELS, validate_final_config
+from src.config.benchmark_tracks import require_comparison_track
 
 
 def compare_completed_models(
     drive_root: str | Path,
     output_dir: str | Path | None = None,
+    *,
+    benchmark_track: str = "controlled",
 ) -> dict[str, Any]:
     paths = ProjectPaths.from_value(drive_root)
-    output = Path(output_dir) if output_dir else paths.reports / "comparison"
+    output = (
+        Path(output_dir)
+        if output_dir
+        else paths.reports / "comparison" / benchmark_track
+    )
     rows: list[dict[str, Any]] = []
     rejected: list[dict[str, str]] = []
     completed = RunRegistry(paths).list_available_runs(
@@ -42,7 +49,9 @@ def compare_completed_models(
                 )
             )
             try:
+                require_comparison_track(run, benchmark_track)
                 config = read_yaml(run_dir / "training_config.yaml")
+                require_comparison_track(config, benchmark_track)
                 validate_final_config(config)
                 metric_path = (
                     paths.evaluation / f"{run['run_id']}__res640__metrics.json"
@@ -103,7 +112,7 @@ def compare_completed_models(
     frame = pd.DataFrame(rows)
     frame.to_csv(output / "comparison.csv", index=False)
     markdown = [
-        "# Controlled 2-class model comparison",
+        f"# {benchmark_track.title()} 2-class model comparison",
         "",
         frame.to_markdown(index=False),
         "",

@@ -1,3 +1,4 @@
+# Python, tooling, and editor state
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -5,51 +6,24 @@ __pycache__/
 .mypy_cache/
 .venv/
 venv/
-.env
 *.egg-info/
 build/
 dist/
 .ipynb_checkpoints/
-frameworks/
+.notebook-smoke/
+.jupyter/
+.migration-*/
+.codex-pr-body.md
+.DS_Store
+Thumbs.db
+
+# Compiled extensions and model exports
 *.so
 *.pyd
 *.dylib
 *.cu.o
-.DS_Store
-Thumbs.db
-
-# Data and source datasets
-data/
-datasets/
-VisDrone*/
-*.zip
-*.tar
-*.tar.gz
-
-# Keep the Python source package named `src/data` tracked.
-!src/data/
-!src/data/*.py
-
-# Research artifacts
-/datasets/
-/checkpoints/
-/predictions/
-/evaluation/
-/reports/
-/cache/
-/data/
 *.safetensors
 *.weights
-tensorboard/
-mlruns/
-optuna/*.db
-*.db
-/local_artifacts/*
-!/local_artifacts/.gitkeep
-*.trt
-profiling/raw/
-predictions/raw/
-optuna/*.db
 *.pth
 *.pt
 *.ckpt
@@ -58,34 +32,52 @@ optuna/*.db
 *.trt
 *.npz
 *.npy
-wandb/
-runs/
-lightning_logs/
-checkpoints/
-weights/
-predictions/
-data/raw/
-data/processed/
-plots/generated/
+
+# Archives and databases belong on Drive, not GitHub
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.db
+*.sqlite
+*.sqlite3
+
+# Persistent and disposable research artifacts
+/data/
+/datasets/
+/VisDrone*/
+/checkpoints/
+/weights/
+/predictions/
+/evaluation/
+/reports/
+/cache/
+/frameworks/
+/optuna/
+/wandb/
+/runs/
+/mlruns/
+/tensorboard/
+/lightning_logs/
+/plots/generated/
+/profiling/raw/
+/local_artifacts/*
+!/local_artifacts/.gitkeep
 *.log
 
-# Secrets and local paths
+# Small reviewed fixtures are allowed; size/content policy is enforced by
+# scripts/validation/check_prohibited_files.py.
+!tests/fixtures/
+!tests/fixtures/**
+
+# Secrets and private machine configuration
 .env*
 !.env.example
 credentials*.json
 *token*.json
 service-account*.json
-credentials.json
-token.json
 github_token.txt
 *.pem
 *.key
 local_paths.yaml
-
-# Local notebook/runtime state
-*.ipynb_checkpoints/
-.notebook-smoke/
-.jupyter/
-
-# Generated experimental reports stay outside tracked repository documentation.
-/reports/

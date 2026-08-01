@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -28,6 +29,8 @@ from src.training.recipes import (
 )
 from src.models.rtdetrv2.optimizer import RECIPE_VERSION, build_optimizer
 from src.models.rtdetrv2.scheduler import WarmupCosineScheduler
+from src.training.accumulation import effective_batch
+from src.training.ema import ModelEMA, ema_checkpoint_fields, load_ema_checkpoint
 
 
 def parse_args() -> argparse.Namespace:
@@ -130,6 +133,9 @@ def main() -> None:
             "minimum_lr_factor",
             "scheduler_horizon_epochs",
             "recipe_version",
+            "ema_enabled",
+            "ema_decay",
+            "effective_batch_size",
             "max_detections",
         }:
             applied_overrides[key] = value
@@ -262,6 +268,25 @@ def main() -> None:
     scaler = torch.amp.GradScaler(
         "cuda", enabled=args.amp and torch.cuda.is_available()
     )
+    batch_report = effective_batch(
+        args.batch_size,
+        args.accumulation,
+        int(os.environ.get("WORLD_SIZE", "1")),
+    )
+    expected_effective_batch = int(
+        overrides.get("effective_batch_size", batch_report.effective_batch_size)
+    )
+    if batch_report.effective_batch_size != expected_effective_batch:
+        raise ValueError(
+            "effective batch mismatch: "
+            f"calculated={batch_report.effective_batch_size}, "
+            f"configured={expected_effective_batch}"
+        )
+    ema = (
+        ModelEMA(model, decay=float(overrides.get("ema_decay", 0.9998)))
+        if bool(overrides.get("ema_enabled", False))
+        else None
+    )
     if args.lr_range_test_steps:
         if args.resume:
             raise ValueError("the LR range test must start from pretrained weights")
@@ -342,6 +367,7 @@ def main() -> None:
     history = EpochHistoryWriter(run_dir)
     best = BestMetricState()
     start_epoch = 1
+    optimizer_updates_completed = 0
     if args.resume and (run_dir / "last.pth").exists():
         state = torch.load(
             run_dir / "last.pth", map_location="cpu", weights_only=False
@@ -355,6 +381,9 @@ def main() -> None:
         scaler_state = state.get("scaler_state_dict", state.get("scaler"))
         if scaler_state:
             scaler.load_state_dict(scaler_state)
+        if ema is not None and not load_ema_checkpoint(ema, state):
+            ema = ModelEMA(model, decay=ema.decay)
+        optimizer_updates_completed = int(state.get("optimizer_updates", 0))
         start_epoch = int(state["epoch"]) + 1
         best.best_map = float(state.get("best_map", float("-inf")))
         best.best_aptiny = float(state.get("best_aptiny", float("-inf")))
@@ -427,6 +456,9 @@ def main() -> None:
                 )
                 scaler.step(optimizer)
                 scaler.update()
+                optimizer_updates_completed += 1
+                if ema is not None:
+                    ema.update(model)
                 if recipe_v2:
                     scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
@@ -460,6 +492,8 @@ def main() -> None:
             "scheduler_horizon": scheduler_horizon,
             "rng_state": capture_rng_state(),
             "sampler_generator_state": sampler_generator.get_state(),
+            "optimizer_updates": optimizer_updates_completed,
+            **ema_checkpoint_fields(ema),
         }
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
 
@@ -568,6 +602,7 @@ def main() -> None:
             if torch.cuda.is_available()
             else 0,
             "cpu_ram_bytes": psutil.Process().memory_info().rss,
+            "optimizer_updates": optimizer_updates_completed,
             **{
                 f"loss_{key}": float(np.mean(values))
                 for key, values in component_values.items()
@@ -622,6 +657,15 @@ def main() -> None:
         "pretrained_revision": args.model_revision,
         "num_queries": int(model.config.num_queries),
         "hyperparameter_overrides": override_report,
+        "optimizer_updates": optimizer_updates_completed,
+        "effective_batch": batch_report.as_dict(),
+        "ema": {
+            "enabled": ema is not None,
+            "decay": ema.decay if ema is not None else None,
+            "updates": ema.num_updates if ema is not None else 0,
+            "raw_and_ema_states_separate": True,
+            "evaluation_weights": "raw",
+        },
     }
     (run_dir / "final_metrics.json").write_text(
         json.dumps(summary, indent=2), encoding="utf-8"

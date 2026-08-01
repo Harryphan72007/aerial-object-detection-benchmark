@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Iterable
 
 from src.training.state import TrainingState
+from src.training.accumulation import is_optimizer_boundary
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,7 @@ class TrainingEngine:
         optimizer: Any,
         scheduler: Any | None = None,
         amp_context: Callable[[], Any] | None = None,
+        after_optimizer_step: Callable[[], None] | None = None,
     ) -> EpochResult:
         materialized = tuple(batches)
         if not materialized:
@@ -47,10 +49,12 @@ class TrainingEngine:
             backward(loss / self.accumulation_steps)
             losses.append(float(loss))
             state.global_micro_step += 1
-            if index % self.accumulation_steps == 0 or index == len(materialized):
+            if is_optimizer_boundary(index, len(materialized), self.accumulation_steps):
                 optimizer.step()
                 optimizer.zero_grad()
                 state.optimizer_step += 1
+                if after_optimizer_step is not None:
+                    after_optimizer_step()
                 if scheduler is not None:
                     scheduler.step()
         state.epoch += 1

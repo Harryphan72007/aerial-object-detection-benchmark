@@ -109,7 +109,36 @@ resolved SHA.
 - Deviation: repository uses flat `src` package, so modules live under
   `src/diagnostics` rather than `src/visdrone_benchmark/diagnostics`
 - Rollback: revert PR 4 and regenerate the PR 1 inventory; PR 2 reporter remains
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `726ed529bb1fe18239aa9127bd0dae63ef3f7926`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/11
 - Remaining risks: OS access and `nvidia-smi` metadata do not prove framework
   compatibility
+
+## PR 5 — Canonical Colab bootstrap
+
+- Status: completed with live G0 pending
+- Dependencies: PR 1–4
+- Files changed: canonical bootstrap notebook; safe branch/tag/commit checkout
+  helper; first/later-session docs; notebook and local-Git tests; migration log;
+  regenerated notebook/source inventory
+- Conceptual change: provide one GitHub-openable entry point for a disposable
+  Colab clone, Drive mount, shared install, exact ref selection, and diagnostics
+- Preserved behavior: all existing canonical notebooks and Drive layout; no model
+  training is started by bootstrap
+- Tests executed: notebook JSON/output/syntax checks; local fresh clone and
+  branch/tag/commit selection; dirty-tree refusal; full CPU/static suite;
+  hygiene, secret, and inventory checks
+- Observed result: 123 passed, 2 skipped because PyTorch was unavailable;
+  local Git fixtures verified fresh clone, branch/tag/commit selection, and
+  dirty-tree refusal; notebook/static checks passed
+- Validation level: CPU/static; G0 pending because Colab was not available
+- Unverified: live GitHub-to-Colab open, Google Drive mount/write, hosted pip
+  install, and Colab clean-tree completion
+- Compatibility effect: additive notebook and backward-compatible helper API
+- Deviation: actual repository already had `src.colab_setup`; it was extended
+  instead of introducing duplicate bootstrap logic in a new package
+- Rollback: revert PR 5; existing notebooks and setup cells remain usable
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: a stale pre-PR-5 clone lacks the new helper and should be
+  recloned; hosted dependency availability can drift

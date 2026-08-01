@@ -47,12 +47,97 @@ def clone_or_update_repository(
             f"Refusing to clone into an existing non-Git directory: {path}. "
             "Choose an empty path or move the local files first."
         )
+    checkout_repository_ref(path, branch, "branch")
+
+
+def checkout_repository_ref(
+    repository_path: str | Path,
+    reference: str,
+    reference_type: str = "branch",
+) -> dict[str, str | bool]:
+    """Fetch and select a branch, tag, or commit without resetting a clone."""
+    path = Path(repository_path)
+    if not (path / ".git").exists():
+        raise RuntimeError(f"Not a Git checkout: {path}")
+    if reference_type not in {"branch", "tag", "commit"}:
+        raise ValueError("reference_type must be branch, tag, or commit")
     ensure_clean_for_update(path)
-    subprocess.run(["git", "-C", str(path), "fetch", "origin"], check=True)
-    subprocess.run(["git", "-C", str(path), "checkout", branch], check=True)
     subprocess.run(
-        ["git", "-C", str(path), "pull", "--ff-only", "origin", branch], check=True
+        ["git", "-C", str(path), "fetch", "--tags", "--prune", "origin"],
+        check=True,
     )
+    if reference_type == "branch":
+        remote = f"refs/remotes/origin/{reference}"
+        subprocess.run(
+            ["git", "-C", str(path), "show-ref", "--verify", remote], check=True
+        )
+        local = subprocess.run(
+            ["git", "-C", str(path), "show-ref", "--verify", f"refs/heads/{reference}"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if local.returncode == 0:
+            subprocess.run(["git", "-C", str(path), "checkout", reference], check=True)
+        else:
+            subprocess.run(
+                ["git", "-C", str(path), "checkout", "--track", "-b", reference, f"origin/{reference}"],
+                check=True,
+            )
+        subprocess.run(
+            ["git", "-C", str(path), "merge", "--ff-only", f"origin/{reference}"],
+            check=True,
+        )
+    elif reference_type == "tag":
+        tag = f"refs/tags/{reference}"
+        subprocess.run(
+            ["git", "-C", str(path), "show-ref", "--verify", tag], check=True
+        )
+        subprocess.run(
+            ["git", "-C", str(path), "checkout", "--detach", tag], check=True
+        )
+    else:
+        subprocess.run(
+            ["git", "-C", str(path), "cat-file", "-e", f"{reference}^{{commit}}"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(path), "checkout", "--detach", reference], check=True
+        )
+    commit = subprocess.check_output(
+        ["git", "-C", str(path), "rev-parse", "HEAD"], text=True
+    ).strip()
+    branch = subprocess.run(
+        ["git", "-C", str(path), "branch", "--show-current"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    return {
+        "reference": reference,
+        "reference_type": reference_type,
+        "commit": commit,
+        "branch": branch,
+        "detached": not bool(branch),
+    }
+
+
+def clone_or_checkout_repository(
+    repository_url: str,
+    local_path: str | Path,
+    reference: str = "main",
+    reference_type: str = "branch",
+) -> dict[str, str | bool]:
+    """Clone when absent, then safely select an exact repository reference."""
+    path = Path(local_path)
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "clone", repository_url, str(path)], check=True)
+    elif not (path / ".git").exists():
+        raise RuntimeError(
+            f"Refusing to use an existing non-Git directory: {path}"
+        )
+    return checkout_repository_ref(path, reference, reference_type)
 
 
 def install_project(repository_path: str | Path) -> None:
@@ -87,6 +172,8 @@ def print_environment_summary() -> None:
 __all__ = [
     "DirtyRepositoryError",
     "clone_or_update_repository",
+    "clone_or_checkout_repository",
+    "checkout_repository_ref",
     "initialize_drive_directories",
     "install_project",
     "load_project_config",

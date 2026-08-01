@@ -1,7 +1,75 @@
 {
-  "notebook_count": 17,
+  "notebook_count": 18,
   "notebook_root": "notebooks",
   "notebooks": [
+    {
+      "artifact_references": [
+        {
+          "cell": 1,
+          "line": 5,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = \"/content/drive/MyDrive/visdrone_architecture_benchmark\""
+        },
+        {
+          "cell": 3,
+          "line": 2,
+          "literals": [
+            "requirements/legacy-colab.txt"
+          ],
+          "operations": [],
+          "source": "subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", \"-r\", str(repository / \"requirements/legacy-colab.txt\")], check=True)"
+        },
+        {
+          "cell": 3,
+          "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "from scripts.diagnostics.run_diagnostics import build_report"
+        },
+        {
+          "cell": 3,
+          "line": 8,
+          "literals": [],
+          "operations": [],
+          "source": "paths = initialize_drive_directories(DRIVE_ROOT)"
+        },
+        {
+          "cell": 3,
+          "line": 10,
+          "literals": [],
+          "operations": [],
+          "source": "report = build_report(repository)"
+        },
+        {
+          "cell": 3,
+          "line": 11,
+          "literals": [],
+          "operations": [],
+          "source": "print(report)"
+        },
+        {
+          "cell": 3,
+          "line": 12,
+          "literals": [],
+          "operations": [],
+          "source": "if report[\"repository\"][\"dirty\"]:"
+        }
+      ],
+      "code_cell_count": 3,
+      "imports": [
+        "google.colab",
+        "importlib.util",
+        "pathlib",
+        "scripts.diagnostics.run_diagnostics",
+        "src.colab_setup",
+        "subprocess",
+        "sys"
+      ],
+      "nbformat": 4,
+      "path": "notebooks/00_bootstrap_colab.ipynb",
+      "sha256": "d7ce5393f9b2e37aaaad0aaf11c55d96dd507d08110db4323b735a6e458c62a4"
+    },
     {
       "artifact_references": [
         {
@@ -4573,7 +4641,7 @@
         "typing"
       ],
       "path": "src/colab_setup.py",
-      "sha256": "c454edf84b1342265564b0b63646dc70a0cde59ba592c6fa9524416552b58742"
+      "sha256": "308a6c0a3e616ce2623a7cdd948ce310ea10c79bb60afe570dde1ecde5ac25eb"
     },
     {
       "artifact_references": [

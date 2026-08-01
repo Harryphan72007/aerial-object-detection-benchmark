@@ -1777,7 +1777,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 88,
+  "python_source_count": 89,
   "python_sources": [
     {
       "artifact_references": [
@@ -3237,7 +3237,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 92,
+          "line": 97,
           "literals": [],
           "operations": [
             "read"
@@ -3246,7 +3246,7 @@
         },
         {
           "cell": 0,
-          "line": 96,
+          "line": 101,
           "literals": [],
           "operations": [
             "read"
@@ -3255,7 +3255,7 @@
         },
         {
           "cell": 0,
-          "line": 156,
+          "line": 164,
           "literals": [
             "applied_overrides.json"
           ],
@@ -3266,7 +3266,7 @@
         },
         {
           "cell": 0,
-          "line": 157,
+          "line": 165,
           "literals": [],
           "operations": [
             "write"
@@ -3275,7 +3275,7 @@
         },
         {
           "cell": 0,
-          "line": 239,
+          "line": 247,
           "literals": [
             "parameter_groups.json"
           ],
@@ -3286,7 +3286,7 @@
         },
         {
           "cell": 0,
-          "line": 240,
+          "line": 248,
           "literals": [],
           "operations": [
             "write"
@@ -3295,7 +3295,7 @@
         },
         {
           "cell": 0,
-          "line": 365,
+          "line": 375,
           "literals": [],
           "operations": [
             "write"
@@ -3304,7 +3304,7 @@
         },
         {
           "cell": 0,
-          "line": 371,
+          "line": 386,
           "literals": [
             "last.pth"
           ],
@@ -3313,7 +3313,7 @@
         },
         {
           "cell": 0,
-          "line": 372,
+          "line": 387,
           "literals": [],
           "operations": [
             "read"
@@ -3322,7 +3322,7 @@
         },
         {
           "cell": 0,
-          "line": 373,
+          "line": 388,
           "literals": [
             "last.pth"
           ],
@@ -3331,7 +3331,7 @@
         },
         {
           "cell": 0,
-          "line": 498,
+          "line": 522,
           "literals": [
             "last.pth"
           ],
@@ -3340,7 +3340,7 @@
         },
         {
           "cell": 0,
-          "line": 546,
+          "line": 571,
           "literals": [
             "predictions_epoch_{epoch:03d}.json"
           ],
@@ -3349,7 +3349,7 @@
         },
         {
           "cell": 0,
-          "line": 547,
+          "line": 572,
           "literals": [],
           "operations": [
             "write"
@@ -3358,7 +3358,7 @@
         },
         {
           "cell": 0,
-          "line": 561,
+          "line": 594,
           "literals": [
             "last.pth"
           ],
@@ -3367,17 +3367,16 @@
         },
         {
           "cell": 0,
-          "line": 563,
+          "line": 597,
           "literals": [
-            "best_map.pth",
             "last.pth"
           ],
           "operations": [],
-          "source": "materialize_checkpoint_alias(run_dir / \"last.pth\", run_dir / \"best_map.pth\")"
+          "source": "run_dir / \"last.pth\", run_dir, weight_variant=\"raw\""
         },
         {
           "cell": 0,
-          "line": 565,
+          "line": 600,
           "literals": [
             "best_aptiny.pth",
             "last.pth"
@@ -3387,7 +3386,7 @@
         },
         {
           "cell": 0,
-          "line": 617,
+          "line": 652,
           "literals": [
             "training_curves.png"
           ],
@@ -3396,7 +3395,7 @@
         },
         {
           "cell": 0,
-          "line": 618,
+          "line": 653,
           "literals": [],
           "operations": [
             "write"
@@ -3405,7 +3404,43 @@
         },
         {
           "cell": 0,
-          "line": 620,
+          "line": 657,
+          "literals": [
+            "best_raw.pth"
+          ],
+          "operations": [],
+          "source": "if not (run_dir / \"best_raw.pth\").exists():"
+        },
+        {
+          "cell": 0,
+          "line": 660,
+          "literals": [
+            "best_map.pth"
+          ],
+          "operations": [],
+          "source": "run_dir / \"best_map.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 661,
+          "literals": [
+            "best_map.pth"
+          ],
+          "operations": [],
+          "source": "if (run_dir / \"best_map.pth\").is_file()"
+        },
+        {
+          "cell": 0,
+          "line": 662,
+          "literals": [
+            "last.pth"
+          ],
+          "operations": [],
+          "source": "else run_dir / \"last.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 667,
           "literals": [
             "best_map.pth"
           ],
@@ -3414,7 +3449,7 @@
         },
         {
           "cell": 0,
-          "line": 621,
+          "line": 668,
           "literals": [
             "best_map.pth",
             "last.pth"
@@ -3424,7 +3459,7 @@
         },
         {
           "cell": 0,
-          "line": 622,
+          "line": 669,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -3433,7 +3468,7 @@
         },
         {
           "cell": 0,
-          "line": 624,
+          "line": 671,
           "literals": [
             "best_aptiny.pth",
             "last.pth"
@@ -3443,7 +3478,7 @@
         },
         {
           "cell": 0,
-          "line": 640,
+          "line": 687,
           "literals": [
             "best_map.pth"
           ],
@@ -3452,7 +3487,34 @@
         },
         {
           "cell": 0,
-          "line": 641,
+          "line": 688,
+          "literals": [
+            "best_raw.pth"
+          ],
+          "operations": [],
+          "source": "\"checkpoint_best_raw\": str(run_dir / \"best_raw.pth\"),"
+        },
+        {
+          "cell": 0,
+          "line": 690,
+          "literals": [
+            "best_ema.pth"
+          ],
+          "operations": [],
+          "source": "str(run_dir / \"best_ema.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 691,
+          "literals": [
+            "best_ema.pth"
+          ],
+          "operations": [],
+          "source": "if (run_dir / \"best_ema.pth\").is_file()"
+        },
+        {
+          "cell": 0,
+          "line": 694,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -3461,7 +3523,7 @@
         },
         {
           "cell": 0,
-          "line": 642,
+          "line": 695,
           "literals": [
             "last.pth"
           ],
@@ -3470,7 +3532,7 @@
         },
         {
           "cell": 0,
-          "line": 670,
+          "line": 724,
           "literals": [
             "final_metrics.json"
           ],
@@ -3481,7 +3543,7 @@
         },
         {
           "cell": 0,
-          "line": 671,
+          "line": 725,
           "literals": [],
           "operations": [
             "write"
@@ -3507,7 +3569,9 @@
         "src.runtime_manifest",
         "src.training.accumulation",
         "src.training.callbacks",
+        "src.training.checkpoint_selection",
         "src.training.checkpointing",
+        "src.training.early_stopping",
         "src.training.ema",
         "src.training.lr_range",
         "src.training.recipes",
@@ -3518,7 +3582,7 @@
         "typing"
       ],
       "path": "scripts/run_rtdetr_training.py",
-      "sha256": "541cbb34a573c2ee229323df34dc0513cb5673d80e52f938bc14bdca928b8a9d"
+      "sha256": "ed1a2cb03ee7e70cea37cece85a3c5b61737f74f6d1072089408c9ab852cbce1"
     },
     {
       "artifact_references": [
@@ -7003,7 +7067,7 @@
         "typing"
       ],
       "path": "src/hpo/rtdetr_v2.py",
-      "sha256": "05bfc8b8c828fa256d5763cd9141c63dc14ccbed8f7fee137d0a182083c7c9a9"
+      "sha256": "578275d00ff70adbf05bc6861d5b6f669187fa5833faaecb1f0639683cf0eca3"
     },
     {
       "artifact_references": [
@@ -9289,6 +9353,68 @@
       ],
       "path": "src/training/callbacks.py",
       "sha256": "2806951994325076489819482e575bc43471dc87e1e47a887b9c4e0002c127ca"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 55,
+          "literals": [
+            "best_{weight_variant}.pth"
+          ],
+          "operations": [],
+          "source": "selected = root / f\"best_{weight_variant}.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 58,
+          "literals": [
+            "best_map.pth"
+          ],
+          "operations": [],
+          "source": "legacy = root / \"best_map.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 61,
+          "literals": [
+            "best.pt"
+          ],
+          "operations": [],
+          "source": "materialize_checkpoint_alias(last_checkpoint, root / \"best.pt\")"
+        },
+        {
+          "cell": 0,
+          "line": 68,
+          "literals": [
+            "best.pt",
+            "best_ema.pth",
+            "best_raw.pth"
+          ],
+          "operations": [],
+          "source": "(root / \"best_ema.pth\", root / \"best.pt\", root / \"best_raw.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 70,
+          "literals": [
+            "best.pt",
+            "best_map.pth",
+            "best_raw.pth"
+          ],
+          "operations": [],
+          "source": "else (root / \"best.pt\", root / \"best_raw.pth\", root / \"best_map.pth\")"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "dataclasses",
+        "pathlib",
+        "src.training.checkpointing",
+        "typing"
+      ],
+      "path": "src/training/checkpoint_selection.py",
+      "sha256": "9933fdb2946ff735f48835e0bf019b81d675ef1edc2ea32dba073db60e9c110b"
     },
     {
       "artifact_references": [

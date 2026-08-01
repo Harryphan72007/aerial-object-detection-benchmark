@@ -31,6 +31,11 @@ from src.models.rtdetrv2.optimizer import RECIPE_VERSION, build_optimizer
 from src.models.rtdetrv2.scheduler import WarmupCosineScheduler
 from src.training.accumulation import effective_batch
 from src.training.ema import ModelEMA, ema_checkpoint_fields, load_ema_checkpoint
+from src.training.checkpoint_selection import (
+    BestCheckpointState,
+    materialize_best_checkpoint,
+)
+from src.training.early_stopping import EarlyStopping
 
 
 def parse_args() -> argparse.Namespace:
@@ -129,6 +134,7 @@ def main() -> None:
             "gradient_clip",
             "gradient_clip_norm",
             "warmup_epochs",
+            "warmup_steps",
             "warmup_start_factor",
             "minimum_lr_factor",
             "scheduler_horizon_epochs",
@@ -136,6 +142,8 @@ def main() -> None:
             "ema_enabled",
             "ema_decay",
             "effective_batch_size",
+            "early_stopping_patience",
+            "early_stopping_min_delta",
             "max_detections",
         }:
             applied_overrides[key] = value
@@ -243,7 +251,9 @@ def main() -> None:
         scheduler = WarmupCosineScheduler(
             optimizer,
             total_updates=scheduler_horizon * updates_per_epoch,
-            warmup_updates=warmup_epochs * updates_per_epoch,
+            warmup_updates=int(
+                overrides.get("warmup_steps", warmup_epochs * updates_per_epoch)
+            ),
             warmup_start_factor=float(overrides.get("warmup_start_factor", 0.01)),
             minimum_factor=float(overrides.get("minimum_lr_factor", 0.01)),
         )
@@ -366,6 +376,11 @@ def main() -> None:
         return
     history = EpochHistoryWriter(run_dir)
     best = BestMetricState()
+    checkpoint_selector = BestCheckpointState()
+    early_stopping = EarlyStopping(
+        patience=int(overrides.get("early_stopping_patience", 10)),
+        min_delta=float(overrides.get("early_stopping_min_delta", 0.0)),
+    )
     start_epoch = 1
     optimizer_updates_completed = 0
     if args.resume and (run_dir / "last.pth").exists():
@@ -389,6 +404,13 @@ def main() -> None:
         best.best_aptiny = float(state.get("best_aptiny", float("-inf")))
         best.best_map_epoch = int(state.get("best_map_epoch", 0))
         best.best_aptiny_epoch = int(state.get("best_aptiny_epoch", 0))
+        if state.get("checkpoint_selection_state"):
+            checkpoint_selector.load_state_dict(state["checkpoint_selection_state"])
+        else:
+            checkpoint_selector.best_raw = best.best_map
+            checkpoint_selector.best_raw_epoch = best.best_map_epoch
+        if state.get("early_stopping_state"):
+            early_stopping.load_state_dict(state["early_stopping_state"])
         checkpoint_horizon = int(state.get("scheduler_horizon", scheduler_horizon))
         if checkpoint_horizon != scheduler_horizon:
             raise ValueError(
@@ -493,6 +515,8 @@ def main() -> None:
             "rng_state": capture_rng_state(),
             "sampler_generator_state": sampler_generator.get_state(),
             "optimizer_updates": optimizer_updates_completed,
+            "checkpoint_selection_state": checkpoint_selector.state_dict(),
+            "early_stopping_state": early_stopping.state_dict(),
             **ema_checkpoint_fields(ema),
         }
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
@@ -504,6 +528,7 @@ def main() -> None:
         validation_seconds = 0.0
         metrics: dict[str, float] = {}
         flags = {"best_map": False, "best_aptiny": False}
+        selection_flags = {"best_raw": False, "best_ema": False}
         if should_validate:
             validation_start = time.perf_counter()
             model.eval()
@@ -547,6 +572,12 @@ def main() -> None:
             prediction_path.write_text(json.dumps(predictions), encoding="utf-8")
             metrics = evaluate_coco(args.val_ann, prediction_path)
             flags = best.update(epoch, metrics)
+            selection_flags = checkpoint_selector.update(
+                epoch, raw_metric=float(metrics.get("mAP", float("-inf")))
+            )
+            early_stopping.update(
+                epoch, float(metrics.get("mAP", float("-inf")))
+            )
         # Save the updated best-state metadata in the canonical last checkpoint.
         checkpoint_state.update(
             {
@@ -556,11 +587,15 @@ def main() -> None:
                 "best_aptiny_epoch": best.best_aptiny_epoch,
                 "rng_state": capture_rng_state(),
                 "sampler_generator_state": sampler_generator.get_state(),
+                "checkpoint_selection_state": checkpoint_selector.state_dict(),
+                "early_stopping_state": early_stopping.state_dict(),
             }
         )
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
-        if flags["best_map"]:
-            materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_map.pth")
+        if selection_flags["best_raw"]:
+            materialize_best_checkpoint(
+                run_dir / "last.pth", run_dir, weight_variant="raw"
+            )
         if flags["best_aptiny"]:
             materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_aptiny.pth")
 
@@ -616,7 +651,19 @@ def main() -> None:
         history.append(row)
         save_training_curves(history.rows, run_dir / "training_curves.png")
         print(json.dumps(row))
+        if early_stopping.stopped:
+            break
 
+    if not (run_dir / "best_raw.pth").exists():
+        materialize_best_checkpoint(
+            (
+                run_dir / "best_map.pth"
+                if (run_dir / "best_map.pth").is_file()
+                else run_dir / "last.pth"
+            ),
+            run_dir,
+            weight_variant="raw",
+        )
     if not (run_dir / "best_map.pth").exists():
         materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_map.pth")
     if not (run_dir / "best_aptiny.pth").exists():
@@ -638,6 +685,12 @@ def main() -> None:
             time_to_best_tiny = cumulative
     summary = {
         "checkpoint_best_map": str(run_dir / "best_map.pth"),
+        "checkpoint_best_raw": str(run_dir / "best_raw.pth"),
+        "checkpoint_best_ema": (
+            str(run_dir / "best_ema.pth")
+            if (run_dir / "best_ema.pth").is_file()
+            else None
+        ),
         "checkpoint_best_aptiny": str(run_dir / "best_aptiny.pth"),
         "checkpoint_last": str(run_dir / "last.pth"),
         "total_parameters": total,
@@ -666,6 +719,7 @@ def main() -> None:
             "raw_and_ema_states_separate": True,
             "evaluation_weights": "raw",
         },
+        "early_stopping": early_stopping.state_dict(),
     }
     (run_dir / "final_metrics.json").write_text(
         json.dumps(summary, indent=2), encoding="utf-8"

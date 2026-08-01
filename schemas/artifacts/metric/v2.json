@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Versioned evaluation metrics v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "identity", "weight_variant", "metrics"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "artifact_type": {"const": "evaluation_metrics"},
+    "identity": {"$ref": "../shared/identity_v1.json"},
+    "weight_variant": {"enum": ["raw", "ema"]},
+    "checkpoint_role": {"enum": ["last", "best_raw", "best_ema", "compatibility_alias"]},
+    "metrics": {"type": "object"}
+  }
+}

@@ -23,9 +23,12 @@ def test_v2_search_config_has_all_five_parameters() -> None:
         "detector_learning_rate",
         "backbone_lr_multiplier",
         "weight_decay",
-        "warmup_epochs",
+        "warmup_steps",
         "gradient_clip_norm",
     }
+    assert config["search_space"]["detector_learning_rate"]["low"] == 3e-5
+    assert config["search_space"]["detector_learning_rate"]["high"] == 2e-4
+    assert config["search_space"]["warmup_steps"]["choices"] == [500, 1000, 2000]
 
 
 def test_v2_storage_is_persistent_and_legacy_database_is_untouched(tmp_path: Path) -> None:

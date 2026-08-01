@@ -613,6 +613,27 @@ resolved SHA.
 - Deviation: SQLite backup is atomic at the file target and replaces a rolling latest
   snapshot rather than retaining an unbounded snapshot per trial
 - Rollback: revert PR 19 and quarantine the v2 DB; the legacy DB remains unchanged
+- Commit SHA: `b906488586af7292ca392cd0e3b8ed24fc4ce109`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/29
+- Remaining risks: Drive-mounted SQLite locking still requires the planned Colab trial
+
+## PR 20 — Best checkpoint and early stopping
+
+- Status: completed with live training resume pending
+- Dependencies: PR 1–19
+- Files changed: checkpoint-selection and early-stopping modules; metric schema v2;
+  RT-DETR trainer/performance config; tests/docs/log
+- Conceptual change: separate resumable last, best raw, optional best EMA, and alias
+- Preserved behavior: `best_map.pth` and `best.pt` resolve to the raw best checkpoint
+- Tests executed: synthetic early peak; patience save/resume; raw/EMA independence;
+  legacy alias resolution; last preservation; full CPU/static suite
+- Observed result: 203 passed, 2 skipped because PyTorch was unavailable; early
+  peak, persisted patience, raw/EMA selection, and legacy alias checks passed
+- Validation level: CPU filesystem/state tests
+- Unverified: interrupt/resume during a real RT-DETR run
+- Compatibility effect: additive checkpoint names/state and metric schema v2
+- Deviation: early stopping keys off raw mAP until EMA evaluation is explicitly enabled
+- Rollback: revert PR 20 and recreate `best.pt` from the last known-good raw checkpoint
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: Drive-mounted SQLite locking still requires the planned Colab trial
+- Remaining risks: older checkpoint producers continue using legacy best-map names until PR 22

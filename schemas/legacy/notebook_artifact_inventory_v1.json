@@ -1135,28 +1135,28 @@
         },
         {
           "cell": 3,
-          "line": 3,
+          "line": 5,
           "literals": [],
           "operations": [],
           "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 9,
           "literals": [],
           "operations": [],
           "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 10,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 11,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1169,13 +1169,14 @@
         "os",
         "pathlib",
         "src.hpo.final_workflow",
+        "src.models.swin_frcnn.trainer",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "5bcae94879b18fe1ee1c6a57d721d045397c2f7b0caf2e87d824ae6084a6ec7d"
+      "sha256": "f855c199c55c9752425505b5653c518b22671bf9c2995bc54805f69c3be82ee9"
     },
     {
       "artifact_references": [

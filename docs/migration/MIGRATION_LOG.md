@@ -228,7 +228,35 @@ resolved SHA.
   `src/manifests`
 - Rollback: revert PR 8; any generated experiment manifests are harmless metadata
   and may be retained or moved to quarantine
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `71ff516665517fb224981dbfef9643f69e730941`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/15
 - Remaining risks: until producer integration, callers must explicitly finalize
   a running manifest after interruption handling
+
+## PR 9 — Namespace guards
+
+- Status: completed
+- Dependencies: PR 1–8
+- Files changed: pre-write namespace guard API; public pathing exports;
+  namespace policy documentation; collision matrix tests; migration log and
+  regenerated source inventory
+- Conceptual change: reject cross-track, cross-mode, and cross-artifact writes by
+  comparing proposed destinations with the exact resolved run namespace
+- Preserved behavior: no directories are created, and legacy producers remain
+  unchanged until their model-specific migrations
+- Tests executed: smoke/full, controlled/performance, full/sliced, artifact-kind,
+  duplicate-root, descendant, and read-only creation cases; full CPU/static suite
+  and repository checks
+- Observed result: 153 passed, 2 skipped because PyTorch was unavailable; every
+  invalid namespace pairing was rejected before directory creation and all
+  static checks passed
+- Validation level: CPU/static
+- Unverified: enforcement inside not-yet-migrated GPU producers
+- Compatibility effect: additive guards for new namespaced producers
+- Deviation: implementation lives in the existing `src/pathing` package
+- Rollback: revert PR 9; no test directories were created, so no cleanup is
+  required
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: legacy writers remain outside guard coverage until explicitly
+  migrated

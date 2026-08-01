@@ -855,6 +855,6 @@ resolved SHA.
 - Deviation: planned notebooks 04–06 are represented by model-specific 10–23 and versioned
   30–31 flows, avoiding duplicate canonical entry points
 - Rollback: revert PR 28 notebook/docs changes; keep package and compatibility code intact
-- Commit SHA: `5d50b462cc8452c9815e37abc5d7412c90a394ea`
+- Commit SHA: `9cfa488dc04e49485a8b7cdffb8051d5ca754247`
 - PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/40
 - Remaining risks: framework/GPU behavior still requires the documented manual checklist

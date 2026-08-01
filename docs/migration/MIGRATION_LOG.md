@@ -434,7 +434,38 @@ resolved SHA.
   notebook receives the non-constructing VMamba hook
 - Rollback: revert PR 13C and continue through the existing registered-import
   launcher path
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `121523246f6ebec27be70af8ece030d2d8451486`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/22
 - Remaining risks: G1 must prove the pinned extension is the implementation used by
   real SS2D blocks rather than merely importable
+
+## PR 13D — RT-DETR legacy model factory
+
+- Status: completed with live G1 pending
+- Dependencies: PR 1–13C
+- Files changed: RT-DETRv2 construction/result factory; adapter delegation; legacy
+  evaluation-weight and forward contract tests; generic notebook hook; migration
+  log and inventory
+- Conceptual change: extract construction, pinned processor/model provenance, strict
+  legacy weight loading, device selection, and inference context from the adapter
+- Preserved behavior: base model/revision, input size, label metadata, strict state
+  loading, device/eval transition, adapter API, optimizer, and scheduler
+- Tests executed: injected pretrained construction; one synthetic legacy checkpoint;
+  strict incompatible-key failure; one injected forward; source guard against
+  optimizer/scheduler logic; full CPU/static suite and repository checks
+- Observed result: 179 passed, 2 skipped because PyTorch was unavailable; pinned
+  construction calls, strict legacy-weight loading, incompatibility rejection,
+  injected forward, adapter imports, notebook, and static checks passed
+- Validation level: CPU/static with model/processor test doubles
+- Unverified: real Transformers/PyTorch construction, legacy tensor checkpoint,
+  parameter count, CUDA, and forward output parity
+- Compatibility effect: existing RT-DETR adapter now delegates construction while
+  keeping its public loading/prediction contract
+- Deviation: the actual notebook 04 does not exist, so the generic model-day
+  notebook receives the non-constructing RT-DETR hook
+- Rollback: revert PR 13D to restore construction inside `RTDetrV2Adapter`; optimizer
+  and scheduler need no rollback because they were untouched
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: G1 must confirm the legacy checkpoint's serialized tensor keys
+  against the pinned Transformers implementation

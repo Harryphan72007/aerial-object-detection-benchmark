@@ -634,6 +634,28 @@ resolved SHA.
 - Compatibility effect: additive checkpoint names/state and metric schema v2
 - Deviation: early stopping keys off raw mAP until EMA evaluation is explicitly enabled
 - Rollback: revert PR 20 and recreate `best.pt` from the last known-good raw checkpoint
+- Commit SHA: `a76ad959957c3b21ea1a2e27a40b4b704586c16f`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/30
+- Remaining risks: older checkpoint producers continue using legacy best-map names until PR 22
+
+## PR 21 — Controlled/performance config split
+
+- Status: completed
+- Dependencies: PR 1–20
+- Files changed: controlled/performance configs and validator; comparison guard;
+  canonical notebook selectors; tests/protocol docs/log
+- Conceptual change: formalize disjoint option sets, output roots, and summary tables
+- Preserved behavior: untagged legacy artifacts remain controlled-compatible
+- Tests executed: performance-only rejection; root/table separation; explicit cross-track
+  rejection; notebook parameter/format checks; full CPU/static suite
+- Observed result: 206 passed, 2 skipped because PyTorch was unavailable; track
+  option, namespace, comparison, legacy fallback, and notebook contracts passed
+- Validation level: CPU/static config, artifact identity, and notebook contracts
+- Unverified: live performance-run output production in Colab
+- Compatibility effect: additive track tags; controlled comparison explicitly guards them
+- Deviation: actual canonical notebooks 01–03 and 30–31 receive selectors because the
+  plan's notebook 01–06 numbering does not exist in this repository
+- Rollback: revert PR 21 and exclude tagged performance runs from legacy summaries
 - Commit SHA: SELF
 - PR URL: pending
-- Remaining risks: older checkpoint producers continue using legacy best-map names until PR 22
+- Remaining risks: performance producers added in PRs 23–25 must use the new root helper

@@ -291,14 +291,23 @@
         },
         {
           "cell": 3,
-          "line": 10,
+          "line": 12,
+          "literals": [
+            "Benchmark track: {BENCHMARK_TRACK}; outputs: {track_output_root(DRIVE_ROOT, BENCHMARK_TRACK)}"
+          ],
+          "operations": [],
+          "source": "print(f\"Benchmark track: {BENCHMARK_TRACK}; outputs: {track_output_root(DRIVE_ROOT, BENCHMARK_TRACK)}\")"
+        },
+        {
+          "cell": 3,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "paths = resolve_legacy_paths(DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 19,
+          "line": 22,
           "literals": [
             "Parameter-group report: diagnostic global-LR mode"
           ],
@@ -307,21 +316,21 @@
         },
         {
           "cell": 3,
-          "line": 26,
+          "line": 29,
           "literals": [],
           "operations": [],
           "source": "def require_verified_data(report):"
         },
         {
           "cell": 3,
-          "line": 27,
+          "line": 30,
           "literals": [],
           "operations": [],
           "source": "if report.verified:"
         },
         {
           "cell": 3,
-          "line": 30,
+          "line": 33,
           "literals": [
             "Dataset setup is incomplete or was interrupted."
           ],
@@ -330,14 +339,14 @@
         },
         {
           "cell": 3,
-          "line": 31,
+          "line": 34,
           "literals": [],
           "operations": [],
           "source": "if any(\"staging directory\" in error for error in report.errors):"
         },
         {
           "cell": 3,
-          "line": 35,
+          "line": 38,
           "literals": [
             "Notebook 01 stopped safely before caching or training because dataset preparation is incomplete."
           ],
@@ -346,7 +355,7 @@
         },
         {
           "cell": 3,
-          "line": 57,
+          "line": 60,
           "literals": [],
           "operations": [
             "write"
@@ -355,14 +364,14 @@
         },
         {
           "cell": 3,
-          "line": 60,
+          "line": 63,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 66,
+          "line": 69,
           "literals": [],
           "operations": [
             "write"
@@ -371,7 +380,7 @@
         },
         {
           "cell": 3,
-          "line": 69,
+          "line": 72,
           "literals": [
             "Dataset setup is incomplete. Run 00_prepare_visdrone.ipynb, then rerun this notebook."
           ],
@@ -508,6 +517,7 @@
         "json",
         "os",
         "pathlib",
+        "src.config.benchmark_tracks",
         "src.data.contract",
         "src.data.download",
         "src.data.local_cache",
@@ -522,13 +532,13 @@
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "746e8cf556d0923f2efac5d2b7c2f093863a878d06b08d56c506f20e62df8763"
+      "sha256": "d89715bc0f11bb5f547a0dc44009ad1a3925aa57c07961ddd2d4d1dbed980f08"
     },
     {
       "artifact_references": [
         {
           "cell": 1,
-          "line": 3,
+          "line": 4,
           "literals": [],
           "operations": [
             "write"
@@ -554,14 +564,23 @@
         },
         {
           "cell": 3,
-          "line": 2,
+          "line": 4,
+          "literals": [
+            "Legacy publisher accepts controlled artifacts only"
+          ],
+          "operations": [],
+          "source": "raise RuntimeError(\"Legacy publisher accepts controlled artifacts only\")"
+        },
+        {
+          "cell": 3,
+          "line": 6,
           "literals": [],
           "operations": [],
           "source": "result = {"
         },
         {
           "cell": 3,
-          "line": 4,
+          "line": 8,
           "literals": [
             "publish_results"
           ],
@@ -572,7 +591,7 @@
         },
         {
           "cell": 3,
-          "line": 5,
+          "line": 9,
           "literals": [
             "Smoke mode validates notebook control flow without requiring completed GPU artifacts."
           ],
@@ -581,7 +600,7 @@
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [
             "write"
@@ -590,7 +609,7 @@
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [
             "write"
@@ -599,14 +618,14 @@
         },
         {
           "cell": 3,
-          "line": 11,
+          "line": 15,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 13,
+          "line": 17,
           "literals": [],
           "operations": [
             "write"
@@ -615,7 +634,7 @@
         },
         {
           "cell": 3,
-          "line": 16,
+          "line": 20,
           "literals": [],
           "operations": [
             "write"
@@ -648,25 +667,26 @@
         "json",
         "os",
         "pathlib",
+        "src.config.benchmark_tracks",
         "src.workflows.publishing",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/02_publish_results.ipynb",
-      "sha256": "d7d7968c7686cca635cb36071782cc0568365472c6845f486394c28709f882cd"
+      "sha256": "cbb06c74f07cabe4beb0f8ee103873b5f57136b5104e84a8294a963a98337e02"
     },
     {
       "artifact_references": [
         {
-          "cell": 1,
+          "cell": 2,
           "line": 24,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = ("
         },
         {
-          "cell": 1,
+          "cell": 2,
           "line": 27,
           "literals": [
             "VISDRONE_DRIVE_ROOT",
@@ -676,22 +696,22 @@
           "source": "else Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", REPO_PATH / \"local_artifacts\"))"
         },
         {
-          "cell": 2,
+          "cell": 3,
           "line": 2,
           "literals": [],
           "operations": [],
           "source": "result = {\"message\": \"Smoke mode: comparison requires at least two measured completed models.\"}"
         },
         {
-          "cell": 2,
-          "line": 5,
+          "cell": 3,
+          "line": 7,
           "literals": [],
           "operations": [],
-          "source": "result = compare_completed_models(DRIVE_ROOT)"
+          "source": "result = compare_completed_models(DRIVE_ROOT, benchmark_track=BENCHMARK_TRACK)"
         },
         {
-          "cell": 2,
-          "line": 6,
+          "cell": 3,
+          "line": 8,
           "literals": [],
           "operations": [
             "write"
@@ -699,14 +719,14 @@
           "source": "print(json.dumps(result, indent=2, default=str))"
         },
         {
-          "cell": 3,
+          "cell": 4,
           "line": 3,
           "literals": [],
           "operations": [],
           "source": "report = Path(result[\"output\"]) / \"comparison.md\""
         },
         {
-          "cell": 3,
+          "cell": 4,
           "line": 4,
           "literals": [],
           "operations": [
@@ -715,7 +735,7 @@
           "source": "display(Markdown(report.read_text(encoding=\"utf-8\")))"
         },
         {
-          "cell": 3,
+          "cell": 4,
           "line": 5,
           "literals": [
             "accuracy_latency.png"
@@ -724,7 +744,7 @@
           "source": "figure = Path(result[\"output\"]) / \"accuracy_latency.png\""
         }
       ],
-      "code_cell_count": 3,
+      "code_cell_count": 4,
       "imports": [
         "IPython.display",
         "google.colab",
@@ -732,13 +752,14 @@
         "json",
         "os",
         "pathlib",
+        "src.config.benchmark_tracks",
         "src.workflows.comparison",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/03_compare_all_models.ipynb",
-      "sha256": "2290807c85862d5abaeab060424d097a1e31a55e685545815b555fcda0f49ea1"
+      "sha256": "77bfa2487cd8b0142e45af6307d2ece35ba874d4ccb23f010dea72e797f22677"
     },
     {
       "artifact_references": [
@@ -1300,7 +1321,16 @@
         },
         {
           "cell": 2,
-          "line": 7,
+          "line": 9,
+          "literals": [
+            "Legacy evaluator accepts controlled artifacts only"
+          ],
+          "operations": [],
+          "source": "raise RuntimeError(\"Legacy evaluator accepts controlled artifacts only\")"
+        },
+        {
+          "cell": 2,
+          "line": 11,
           "literals": [
             "dataset_track"
           ],
@@ -1309,7 +1339,7 @@
         },
         {
           "cell": 2,
-          "line": 9,
+          "line": 13,
           "literals": [
             "--dataset-track"
           ],
@@ -1318,7 +1348,7 @@
         },
         {
           "cell": 2,
-          "line": 13,
+          "line": 17,
           "literals": [
             "comparison.json",
             "report",
@@ -1329,7 +1359,7 @@
         },
         {
           "cell": 2,
-          "line": 14,
+          "line": 18,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1339,12 +1369,13 @@
       "imports": [
         "os",
         "pathlib",
+        "src.config.benchmark_tracks",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "f9d77cebd7b38c7fc20a9134807238a2e5154a4cbb90558bd93332c3f4bff79e"
+      "sha256": "0f6a3ee326c7f3ac1404e7f2103ca74926bc3795902dd65357999c317766dd57"
     },
     {
       "artifact_references": [
@@ -1357,7 +1388,7 @@
         },
         {
           "cell": 1,
-          "line": 3,
+          "line": 4,
           "literals": [],
           "operations": [
             "write"
@@ -1375,14 +1406,23 @@
         },
         {
           "cell": 2,
-          "line": 7,
+          "line": 9,
+          "literals": [
+            "Legacy publisher accepts controlled artifacts only"
+          ],
+          "operations": [],
+          "source": "raise RuntimeError(\"Legacy publisher accepts controlled artifacts only\")"
+        },
+        {
+          "cell": 2,
+          "line": 11,
           "literals": [],
           "operations": [],
           "source": "result = {\"status\": \"guarded\", \"published\": False}"
         },
         {
           "cell": 2,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [
             "write"
@@ -1391,7 +1431,7 @@
         },
         {
           "cell": 2,
-          "line": 10,
+          "line": 14,
           "literals": [],
           "operations": [
             "write"
@@ -1400,7 +1440,7 @@
         },
         {
           "cell": 2,
-          "line": 11,
+          "line": 15,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1410,11 +1450,12 @@
       "imports": [
         "os",
         "pathlib",
+        "src.config.benchmark_tracks",
         "src.workflows.publishing"
       ],
       "nbformat": 4,
       "path": "notebooks/31_publish_results.ipynb",
-      "sha256": "97865f4fba3b258918bdc0cd8c7176ef6528f4978e08e17b0fa37138f8ccee76"
+      "sha256": "4d4102695494a76e70bf02a0d65f6247d7dc85e3b49b0c42ad9494758b4d1abc"
     },
     {
       "artifact_references": [
@@ -1777,7 +1818,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 89,
+  "python_source_count": 90,
   "python_sources": [
     {
       "artifact_references": [
@@ -4967,6 +5008,38 @@
       ],
       "path": "src/compatibility/legacy_writer.py",
       "sha256": "6c9f020fd0f5f071d3b98c2ea3078ad44690d17d84cdca9e647882651228e043"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 8,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_yaml"
+        },
+        {
+          "cell": 0,
+          "line": 54,
+          "literals": [
+            "benchmark.yaml"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "read_yaml(Path(repo_root) / \"configs\" / track / \"benchmark.yaml\")"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/config/benchmark_tracks.py",
+      "sha256": "fc35e0bc01c58f466ea4d85cdd1cdde7cbf1b117f30a6de33a459979a460bd56"
     },
     {
       "artifact_references": [
@@ -11386,7 +11459,7 @@
         },
         {
           "cell": 0,
-          "line": 24,
+          "line": 31,
           "literals": [],
           "operations": [
             "discover"
@@ -11395,7 +11468,7 @@
         },
         {
           "cell": 0,
-          "line": 45,
+          "line": 53,
           "literals": [
             "training_config.yaml"
           ],
@@ -11406,7 +11479,7 @@
         },
         {
           "cell": 0,
-          "line": 48,
+          "line": 57,
           "literals": [
             "{run['run_id']}__res640__metrics.json"
           ],
@@ -11415,7 +11488,7 @@
         },
         {
           "cell": 0,
-          "line": 50,
+          "line": 59,
           "literals": [
             "{run['run_id']}__profile.json"
           ],
@@ -11424,7 +11497,7 @@
         },
         {
           "cell": 0,
-          "line": 53,
+          "line": 62,
           "literals": [],
           "operations": [
             "read"
@@ -11433,7 +11506,7 @@
         },
         {
           "cell": 0,
-          "line": 60,
+          "line": 69,
           "literals": [],
           "operations": [
             "read"
@@ -11442,7 +11515,7 @@
         },
         {
           "cell": 0,
-          "line": 104,
+          "line": 113,
           "literals": [
             "comparison.csv"
           ],
@@ -11453,7 +11526,7 @@
         },
         {
           "cell": 0,
-          "line": 113,
+          "line": 122,
           "literals": [],
           "operations": [
             "write"
@@ -11462,7 +11535,7 @@
         },
         {
           "cell": 0,
-          "line": 114,
+          "line": 123,
           "literals": [
             "comparison.json"
           ],
@@ -11473,7 +11546,7 @@
         },
         {
           "cell": 0,
-          "line": 115,
+          "line": 124,
           "literals": [],
           "operations": [
             "write"
@@ -11482,7 +11555,7 @@
         },
         {
           "cell": 0,
-          "line": 123,
+          "line": 132,
           "literals": [
             "accuracy_latency.png"
           ],
@@ -11491,7 +11564,7 @@
         },
         {
           "cell": 0,
-          "line": 124,
+          "line": 133,
           "literals": [
             "accuracy_memory.png"
           ],
@@ -11505,6 +11578,7 @@
         "matplotlib.pyplot",
         "pandas",
         "pathlib",
+        "src.config.benchmark_tracks",
         "src.paths",
         "src.training.checkpointing",
         "src.utils.serialization",
@@ -11512,7 +11586,7 @@
         "typing"
       ],
       "path": "src/workflows/comparison.py",
-      "sha256": "810bc9c3c1cc02f7308cf38278b34d6d14eaed5110904023eaf833acf2b5eda6"
+      "sha256": "1dd466d096a17c917b1e82584221a96a4decb46e403658ea543abcbe607b7ede"
     },
     {
       "artifact_references": [

@@ -149,8 +149,9 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "REDOWNLOAD",
             "SMOKE_TEST",
         },
-        "01_run_model_day.ipynb": {
-            "MODEL_ID",
+            "01_run_model_day.ipynb": {
+                "MODEL_ID",
+                "BENCHMARK_TRACK",
             "RUN_MODE",
             "RUN_LR_RANGE_TEST",
             "RUN_BOUNDARY_EXTENSION",
@@ -158,7 +159,12 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "ALLOW_OVER_BUDGET_RUN",
             "DATA_ACCESS_MODE",
         },
-        "02_publish_results.ipynb": {"MODEL_ID", "PUBLISH_RESULTS", "DRY_RUN"},
+            "02_publish_results.ipynb": {
+                "MODEL_ID",
+                "BENCHMARK_TRACK",
+                "PUBLISH_RESULTS",
+                "DRY_RUN",
+            },
         "10_hpo_resnet50.ipynb": {"DATASET_TRACK", "START_HPO"},
         "11_hpo_swin_t.ipynb": {"DATASET_TRACK", "START_HPO"},
         "12_hpo_vmamba_t.ipynb": {"DATASET_TRACK", "START_HPO"},
@@ -179,13 +185,15 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
             "DATASET_TRACK",
             "START_FINETUNING",
         },
-        "30_evaluate_all_models.ipynb": {
-            "DATASET_TRACK",
-            "EVALUATE_MISSING",
+            "30_evaluate_all_models.ipynb": {
+                "DATASET_TRACK",
+                "BENCHMARK_TRACK",
+                "EVALUATE_MISSING",
         },
         "31_publish_results.ipynb": {
-            "MODEL_ID",
-            "DATASET_TRACK",
+                "MODEL_ID",
+                "DATASET_TRACK",
+                "BENCHMARK_TRACK",
             "PUBLISH_RESULTS",
             "DRY_RUN",
         },

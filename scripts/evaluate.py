@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from src.data.dataloaders import CocoDetectionRecords
+from src.data.dataset import CocoDetectionRecords
 from src.evaluation.calibration import detection_calibration
 from src.evaluation.coco_evaluator import evaluate_coco
 from src.evaluation.detection_metrics import confidence_curves, detailed_metrics

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from src.data.collapse_classes import ClassMapping, VISDRONE_CLASSES
+from src.data.class_mapping import ClassMapping, VISDRONE_CLASSES
 from src.data.convert_visdrone import convert_split
 from src.data.download import EXTRACTION_MANIFEST_SCHEMA_VERSION, sha256_file
 from src.data.statistics import compute_statistics

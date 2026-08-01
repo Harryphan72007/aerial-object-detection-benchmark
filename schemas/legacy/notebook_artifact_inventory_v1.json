@@ -206,6 +206,13 @@
         },
         {
           "cell": 4,
+          "line": 5,
+          "literals": [],
+          "operations": [],
+          "source": "from src.data.dataset import CocoDetectionRecords, detection_collate"
+        },
+        {
+          "cell": 4,
           "line": 8,
           "literals": [
             "instances_train.json"
@@ -242,7 +249,7 @@
         "os",
         "pathlib",
         "random",
-        "src.data.dataloaders",
+        "src.data.dataset",
         "src.data.download",
         "src.data.smoke_dataset",
         "src.workflows.dataset_setup",
@@ -252,7 +259,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/00_prepare_visdrone.ipynb",
-      "sha256": "b1fac8659230b8302afafe726343563eb59988b87bef244928952ff554787bce"
+      "sha256": "4d04c495aebade6b7172ba2a5d5adc73f1fe27e8bf123990ccf8999da7e46571"
     },
     {
       "artifact_references": [
@@ -1757,7 +1764,7 @@
       "sha256": "749e3793303873fa195bfc001bc9d6d1df0c15d9c12bce9d3989542bebf213bf"
     }
   ],
-  "python_source_count": 78,
+  "python_source_count": 79,
   "python_sources": [
     {
       "artifact_references": [
@@ -2282,7 +2289,7 @@
         "json",
         "mmengine.config",
         "pathlib",
-        "src.data.dataloaders",
+        "src.data.dataset",
         "src.drive_sync",
         "src.evaluation.calibration",
         "src.evaluation.coco_evaluator",
@@ -2295,7 +2302,7 @@
         "typing"
       ],
       "path": "scripts/evaluate.py",
-      "sha256": "f92f6a07a1eaf0adb4c5cf78ad45441577da2265ba1f486f4fb14e32daaa7ccf"
+      "sha256": "1f3c09dbde2d066ab7fa6a0b330b211fd6c79506a313b27e2328d4482523563c"
     },
     {
       "artifact_references": [
@@ -3217,7 +3224,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 87,
+          "line": 88,
           "literals": [],
           "operations": [
             "read"
@@ -3226,25 +3233,7 @@
         },
         {
           "cell": 0,
-          "line": 88,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "validation_data = json.loads("
-        },
-        {
-          "cell": 0,
-          "line": 89,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "Path(args.val_ann).read_text(encoding=\"utf-8\")"
-        },
-        {
-          "cell": 0,
-          "line": 94,
+          "line": 92,
           "literals": [],
           "operations": [
             "read"
@@ -3253,7 +3242,7 @@
         },
         {
           "cell": 0,
-          "line": 144,
+          "line": 142,
           "literals": [
             "applied_overrides.json"
           ],
@@ -3264,7 +3253,7 @@
         },
         {
           "cell": 0,
-          "line": 145,
+          "line": 143,
           "literals": [],
           "operations": [
             "write"
@@ -3273,7 +3262,7 @@
         },
         {
           "cell": 0,
-          "line": 307,
+          "line": 292,
           "literals": [],
           "operations": [
             "write"
@@ -3282,7 +3271,7 @@
         },
         {
           "cell": 0,
-          "line": 312,
+          "line": 297,
           "literals": [
             "last.pth"
           ],
@@ -3291,7 +3280,7 @@
         },
         {
           "cell": 0,
-          "line": 313,
+          "line": 298,
           "literals": [],
           "operations": [
             "read"
@@ -3300,7 +3289,7 @@
         },
         {
           "cell": 0,
-          "line": 314,
+          "line": 299,
           "literals": [
             "last.pth"
           ],
@@ -3309,7 +3298,7 @@
         },
         {
           "cell": 0,
-          "line": 428,
+          "line": 413,
           "literals": [
             "last.pth"
           ],
@@ -3318,7 +3307,7 @@
         },
         {
           "cell": 0,
-          "line": 476,
+          "line": 461,
           "literals": [
             "predictions_epoch_{epoch:03d}.json"
           ],
@@ -3327,7 +3316,7 @@
         },
         {
           "cell": 0,
-          "line": 477,
+          "line": 462,
           "literals": [],
           "operations": [
             "write"
@@ -3336,7 +3325,7 @@
         },
         {
           "cell": 0,
-          "line": 491,
+          "line": 476,
           "literals": [
             "last.pth"
           ],
@@ -3345,7 +3334,7 @@
         },
         {
           "cell": 0,
-          "line": 493,
+          "line": 478,
           "literals": [
             "best_map.pth",
             "last.pth"
@@ -3355,7 +3344,7 @@
         },
         {
           "cell": 0,
-          "line": 495,
+          "line": 480,
           "literals": [
             "best_aptiny.pth",
             "last.pth"
@@ -3365,7 +3354,7 @@
         },
         {
           "cell": 0,
-          "line": 531,
+          "line": 516,
           "literals": [
             "training_curves.png"
           ],
@@ -3374,7 +3363,7 @@
         },
         {
           "cell": 0,
-          "line": 532,
+          "line": 517,
           "literals": [],
           "operations": [
             "write"
@@ -3383,7 +3372,7 @@
         },
         {
           "cell": 0,
-          "line": 534,
+          "line": 519,
           "literals": [
             "best_map.pth"
           ],
@@ -3392,7 +3381,7 @@
         },
         {
           "cell": 0,
-          "line": 535,
+          "line": 520,
           "literals": [
             "best_map.pth",
             "last.pth"
@@ -3402,7 +3391,7 @@
         },
         {
           "cell": 0,
-          "line": 536,
+          "line": 521,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -3411,7 +3400,7 @@
         },
         {
           "cell": 0,
-          "line": 538,
+          "line": 523,
           "literals": [
             "best_aptiny.pth",
             "last.pth"
@@ -3421,7 +3410,7 @@
         },
         {
           "cell": 0,
-          "line": 554,
+          "line": 539,
           "literals": [
             "best_map.pth"
           ],
@@ -3430,7 +3419,7 @@
         },
         {
           "cell": 0,
-          "line": 555,
+          "line": 540,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -3439,7 +3428,7 @@
         },
         {
           "cell": 0,
-          "line": 556,
+          "line": 541,
           "literals": [
             "last.pth"
           ],
@@ -3448,7 +3437,7 @@
         },
         {
           "cell": 0,
-          "line": 575,
+          "line": 560,
           "literals": [
             "final_metrics.json"
           ],
@@ -3459,7 +3448,7 @@
         },
         {
           "cell": 0,
-          "line": 576,
+          "line": 561,
           "literals": [],
           "operations": [
             "write"
@@ -3468,7 +3457,6 @@
         }
       ],
       "imports": [
-        "PIL",
         "__future__",
         "argparse",
         "collections",
@@ -3476,6 +3464,7 @@
         "numpy",
         "pathlib",
         "psutil",
+        "src.data.dataset",
         "src.evaluation.coco_evaluator",
         "src.reproducibility",
         "src.runtime_manifest",
@@ -3490,7 +3479,7 @@
         "typing"
       ],
       "path": "scripts/run_rtdetr_training.py",
-      "sha256": "fcae484635581e5ac9639fd863f26764f61aa3ee555e0cb829d1408b99342c99"
+      "sha256": "dca5a0ea8a0765cf1bd9a6dc54357bf1482d31c1c5417213ae9f81a8452cef1e"
     },
     {
       "artifact_references": [
@@ -4905,7 +4894,7 @@
         "datetime",
         "json",
         "pathlib",
-        "src.data.collapse_classes",
+        "src.data.class_mapping",
         "src.data.convert_visdrone",
         "src.data.download",
         "src.data.statistics",
@@ -4916,7 +4905,7 @@
         "typing"
       ],
       "path": "src/data/conversion.py",
-      "sha256": "74c1a55aef799a18ee866e6fd64984aa6513e9656118021550195ee81aa523cc"
+      "sha256": "f3c259c7e54031e23abd0eb64d563179850f7edabc91a4b31567ee2b73001057"
     },
     {
       "artifact_references": [
@@ -5003,22 +4992,22 @@
         "json",
         "math",
         "pathlib",
-        "src.data.collapse_classes",
+        "src.data.class_mapping",
         "typing"
       ],
       "path": "src/data/convert_visdrone.py",
-      "sha256": "89ec2d6e3acdf6c02714865b3173cf50d3de66d97ff8762e3747c605d2f05de3"
+      "sha256": "f76acc1ab5262aa923cbf48820689b7e82607c8335fbb4bd73ea8d265afb4b17"
     },
     {
       "artifact_references": [
         {
           "cell": 0,
-          "line": 11,
+          "line": 24,
           "literals": [],
           "operations": [
             "read"
           ],
-          "source": "self.image_dir=Path(image_dir); self.data=json.loads(Path(annotation_file).read_text(encoding=\"utf-8\")); self.transform=transform"
+          "source": "self.data = json.loads(self.annotation_file.read_text(encoding=\"utf-8\"))"
         }
       ],
       "imports": [
@@ -5029,8 +5018,8 @@
         "pathlib",
         "typing"
       ],
-      "path": "src/data/dataloaders.py",
-      "sha256": "b4fda810bc4a2cd62c40f967628148b932b920fa7c56b8e2eada186d9612239e"
+      "path": "src/data/dataset.py",
+      "sha256": "db65c9c2f105483a542af9741dd072b73e66ed04b1e7241d49e8dc810ff472ae"
     },
     {
       "artifact_references": [
@@ -5401,6 +5390,48 @@
       ],
       "path": "src/data/local_cache.py",
       "sha256": "6c1a2e3786382e378cebc2df7ea1d34c4e5ae93f8e70d369e40672c3129383df"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 11,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import sha256_file, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 24,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "payload = json.loads(source.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 82,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(destination, manifest)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "collections",
+        "json",
+        "pathlib",
+        "src.data.class_mapping",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "src/data/manifests.py",
+      "sha256": "47afba0808a4548d45640eb1f5ec8d036a0d6476ab17bddab36e3aa3559457a6"
     },
     {
       "artifact_references": [

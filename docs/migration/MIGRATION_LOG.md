@@ -283,7 +283,38 @@ resolved SHA.
   avoid committing generated images or checkpoints
 - Rollback: revert PR 10; evaluator and notebooks require no restoration because
   runtime code was unchanged
-- Commit SHA: SELF
-- PR URL: pending
+- Commit SHA: `55975f7059e30bf6a6447a05146e80582504a672`
+- PR URL: https://github.com/Harryphan72007/aerial-object-detection-benchmark/pull/17
 - Remaining risks: synthetic fixtures cannot reveal scale- or ordering-dependent
   behavior in a full VisDrone evaluation
+
+## PR 11 — Shared dataset and class mapping
+
+- Status: completed
+- Dependencies: PR 1–10
+- Files changed: canonical class mapping, COCO dataset, and dataset manifest
+  modules; legacy import adapters; tiny COCO fixture; notebook 00, evaluator, and
+  RT-DETR trainer imports; parity and one-batch tests; migration log/inventory
+- Conceptual change: one implementation now owns official IDs, two-class collapse,
+  ignored-region IDs, stable record loading, collating, and dataset summaries
+- Preserved behavior: old `collapse_classes` and `dataloaders` imports remain
+  valid; converted annotations and RT-DETR zero-based processor labels are unchanged
+- Tests executed: one two-image batch; class IDs, boxes, areas, image IDs, ignored
+  counts, deterministic manifests, legacy/new parity; full CPU/static suite and
+  repository checks
+- Observed result: 158 passed, 2 skipped because PyTorch was unavailable; shared
+  mapping, manifest, one-batch, legacy/new parity, notebook, trainer syntax, and
+  all static checks passed
+- Validation level: CPU/static; one-batch loader without PyTorch
+- Unverified: live RT-DETR processor/DataLoader execution because PyTorch and
+  Transformers model assets are unavailable
+- Compatibility effect: compatibility re-exports preserve old imports while new
+  consumers use canonical modules
+- Deviation: the repository's trainer is an external-framework launcher; notebook
+  00, the evaluator consumer, and the native RT-DETR trainer were minimally migrated
+- Rollback: revert PR 11; source datasets are never modified, and legacy modules
+  return to their prior implementations
+- Commit SHA: SELF
+- PR URL: pending
+- Remaining risks: full-dataset file corruption and framework worker behavior
+  require later G1/G2 and Colab validation

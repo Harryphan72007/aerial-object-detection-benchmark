@@ -60,7 +60,7 @@ def main() -> None:
     args = parse_args()
     import psutil
     import torch
-    from torch.utils.data import DataLoader, Dataset
+    from torch.utils.data import DataLoader
     from transformers import (
         RTDetrImageProcessor,
         RTDetrV2Config,
@@ -68,6 +68,7 @@ def main() -> None:
     )
 
     from src.evaluation.coco_evaluator import evaluate_coco
+    from src.data.dataset import CocoDetectionDataset
     from src.reproducibility import (
         capture_rng_state,
         restore_rng_state,
@@ -85,9 +86,6 @@ def main() -> None:
     write_runtime_environment_manifest(run_dir, args.model_id, Path.cwd())
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_data = json.loads(Path(args.train_ann).read_text(encoding="utf-8"))
-    validation_data = json.loads(
-        Path(args.val_ann).read_text(encoding="utf-8")
-    )
     classes = [category["name"] for category in train_data["categories"]]
     id2label = {index: name for index, name in enumerate(classes)}
     label2id = {name: index for index, name in id2label.items()}
@@ -145,39 +143,22 @@ def main() -> None:
         json.dumps(override_report, indent=2), encoding="utf-8"
     )
 
-    class Records(Dataset):
-        def __init__(self, data: dict[str, Any], root: str | Path):
-            self.images = sorted(data["images"], key=lambda item: int(item["id"]))
-            self.root = Path(root)
-            self.annotations: dict[int, list[dict[str, Any]]] = defaultdict(list)
-            for annotation in data["annotations"]:
-                converted = dict(annotation)
-                # Transformers training labels are zero-based.
-                converted["category_id"] = int(converted["category_id"]) - 1
-                self.annotations[int(annotation["image_id"])].append(converted)
-
-        def __len__(self) -> int:
-            return len(self.images)
-
-        def __getitem__(self, index: int) -> dict[str, Any]:
-            from PIL import Image
-
-            metadata = self.images[index]
-            image = Image.open(self.root / metadata["file_name"]).convert("RGB")
-            encoded = processor(
-                images=image,
-                annotations={
-                    "image_id": int(metadata["id"]),
-                    "annotations": self.annotations[int(metadata["id"])],
-                },
-                return_tensors="pt",
-            )
-            return {
-                "pixel_values": encoded["pixel_values"].squeeze(0),
-                "labels": encoded["labels"][0],
-                "image_id": int(metadata["id"]),
-                "image": image,
-            }
+    def encode_record(record: dict[str, Any]) -> dict[str, Any]:
+        annotations = [
+            {**annotation, "category_id": int(annotation["category_id"]) - 1}
+            for annotation in record["annotations"]
+        ]
+        encoded = processor(
+            images=record["image"],
+            annotations={"image_id": record["image_id"], "annotations": annotations},
+            return_tensors="pt",
+        )
+        return {
+            "pixel_values": encoded["pixel_values"].squeeze(0),
+            "labels": encoded["labels"][0],
+            "image_id": record["image_id"],
+            "image": record["image"],
+        }
 
     def collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
         # The processor resizes every image to the configured square resolution.
@@ -188,8 +169,12 @@ def main() -> None:
             "labels": [item["labels"] for item in batch],
         }
 
-    train_records = Records(train_data, args.train_images)
-    validation_records = Records(validation_data, args.val_images)
+    train_records = CocoDetectionDataset(
+        args.train_images, args.train_ann, transform=encode_record
+    )
+    validation_records = CocoDetectionDataset(
+        args.val_images, args.val_ann, transform=encode_record
+    )
     sampler_generator = torch.Generator()
     sampler_generator.manual_seed(args.seed)
     train_loader = DataLoader(

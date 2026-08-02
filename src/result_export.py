@@ -14,7 +14,7 @@ from typing import Any, Iterable, Mapping
 from src.benchmark_status import find_selected_config
 from src.models.registry import MODEL_CONFIGS
 from src.paths import ProjectPaths
-from src.training.checkpointing import RunRegistry
+from src.training.checkpointing import RunRegistry, resolve_manifest_checkpoint
 from src.utils.serialization import (
     read_json,
     read_yaml,
@@ -680,10 +680,14 @@ def _verify_bundle_registry(drive_root: Path, bundle: Path) -> list[str]:
             ):
                 errors.append(f"selected run is incompatible: {run_id}")
                 continue
-            checkpoint = Path(str(run.get("checkpoint_best_map", "")))
-            if not checkpoint.is_file():
-                errors.append(f"selected checkpoint is missing: {checkpoint}")
-            elif (
+            try:
+                checkpoint = resolve_manifest_checkpoint(
+                    run, allow_legacy_aliases=True
+                )
+            except FileNotFoundError as error:
+                errors.append(str(error))
+                continue
+            if (
                 index >= len(expected_hashes)
                 or sha256_file(checkpoint) != expected_hashes[index]
             ):
@@ -700,11 +704,13 @@ def _verify_bundle_registry(drive_root: Path, bundle: Path) -> list[str]:
             errors.append(f"selected run has incompatible {field}")
     if tuple(run.get("class_names", [])) != tuple(manifest.get("class_names", [])):
         errors.append("selected run has incompatible classes")
-    checkpoint = Path(str(run.get("checkpoint_best_map", "")))
-    if not checkpoint.is_file():
-        errors.append(f"selected checkpoint is missing: {checkpoint}")
-    elif sha256_file(checkpoint) != manifest.get("checkpoint_sha256"):
-        errors.append("checkpoint hash mismatch")
+    try:
+        checkpoint = resolve_manifest_checkpoint(run, allow_legacy_aliases=True)
+    except FileNotFoundError as error:
+        errors.append(str(error))
+    else:
+        if sha256_file(checkpoint) != manifest.get("checkpoint_sha256"):
+            errors.append("checkpoint hash mismatch")
     annotation = (
         drive_root
         / "datasets"
@@ -936,7 +942,7 @@ def create_result_bundle(
     }
     if any(final_config.get(key) != value for key, value in fixed.items()):
         raise RuntimeError("Final run is not a compatible controlled-benchmark run")
-    checkpoint = Path(str(run.get("checkpoint_best_map", "")))
+    checkpoint = resolve_manifest_checkpoint(run, allow_legacy_aliases=True)
     validation = paths.coco(dataset_track) / "annotations" / "instances_val.json"
     if not checkpoint.is_file() or not validation.is_file():
         raise RuntimeError("Final checkpoint or official validation annotation is missing")

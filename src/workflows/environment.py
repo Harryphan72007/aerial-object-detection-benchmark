@@ -4,12 +4,12 @@ from __future__ import annotations
 import importlib.metadata
 import importlib.util
 import os
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
 from src.notebook_utils import in_colab
+from src.subprocess_utils import run_checked
 from src.workflows.contract import require_primary_model
 from src.workflows.isolated_environment import provision_isolated_environment
 
@@ -35,17 +35,7 @@ def _version(name: str) -> str | None:
 
 
 def _run(command: list[str], *, cwd: Path | None = None) -> None:
-    subprocess.run(command, check=True, cwd=cwd)
-
-
-def _runtime_can_import(python: str, module: str) -> bool:
-    result = subprocess.run(
-        [python, "-c", f"import {module}"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    return result.returncode == 0
+    run_checked(command, cwd=cwd, stage="model_environment_setup")
 
 
 def _clone_pinned(url: str, destination: Path, revision: str) -> None:
@@ -88,60 +78,16 @@ def ensure_model_environment(
 
     if in_colab():
         runtime = provision_isolated_environment(model_id, repo, root)
+        result = {**runtime, "restart_required": False}
         if family == "rtdetr":
-            return {
-                **runtime,
-                "checkpoint": RTDETR_CHECKPOINT,
-                "restart_required": False,
-            }
-        mmdet_root = root / "frameworks" / "mmdetection"
-        _clone_pinned(
-            "https://github.com/open-mmlab/mmdetection.git",
-            mmdet_root,
-            MMDET_REVISION,
-        )
-        os.environ["MMDET_ROOT"] = str(mmdet_root)
-        result = {
-            **runtime,
-            "MMDET_ROOT": str(mmdet_root),
-            "restart_required": False,
-        }
+            result["checkpoint"] = RTDETR_CHECKPOINT
+        if os.environ.get("MMDET_ROOT"):
+            result["MMDET_ROOT"] = os.environ["MMDET_ROOT"]
         if family == "vmamba":
-            vmamba_root = root / "frameworks" / "VMamba"
-            _clone_pinned(
-                "https://github.com/MzeroMiko/VMamba.git",
-                vmamba_root,
-                VMAMBA_REVISION,
-            )
-            os.environ["VMAMBA_ROOT"] = str(vmamba_root)
-            runtime_python = str(runtime["python_executable"])
-            if not _runtime_can_import(runtime_python, "selective_scan_cuda"):
-                _run(
-                    [
-                        sys.executable,
-                        "-m",
-                        "uv",
-                        "pip",
-                        "install",
-                        "--python",
-                        runtime_python,
-                        str(vmamba_root / "kernels" / "selective_scan"),
-                        "--no-build-isolation",
-                    ]
-                )
-            _run([runtime_python, "-c", "import selective_scan_cuda"])
-            pretrained = root / "pretrained" / "vmamba_tiny_e292.pth"
-            if not pretrained.is_file() or pretrained.stat().st_size == 0:
-                raise FileNotFoundError(
-                    "VMamba adapter validation is blocked: place the canonical "
-                    f"pretrained checkpoint at {pretrained}. Training from scratch "
-                    "is intentionally disabled."
-                )
-            os.environ["VMAMBA_T_PRETRAINED"] = str(pretrained)
             result.update(
                 {
-                    "VMAMBA_ROOT": str(vmamba_root),
-                    "VMAMBA_T_PRETRAINED": str(pretrained),
+                    "VMAMBA_ROOT": os.environ["VMAMBA_ROOT"],
+                    "VMAMBA_T_PRETRAINED": os.environ["VMAMBA_T_PRETRAINED"],
                     "selective_scan": "READY",
                 }
             )

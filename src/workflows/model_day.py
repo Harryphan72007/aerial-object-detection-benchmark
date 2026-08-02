@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
@@ -15,7 +14,12 @@ from src.data.image_files import first_supported_image
 from src.data.local_cache import DataAccessPaths, resolve_data_access
 from src.models.registry import create_adapter, load_model_config
 from src.paths import ProjectPaths
-from src.subprocess_utils import build_model_subprocess_environment, python_module_command
+from src.subprocess_utils import (
+    build_model_subprocess_environment,
+    python_module_command,
+    run_checked,
+)
+from src.training.checkpointing import model_checkpoint_files
 from src.training.lr_search import resolve_batch_policy
 from src.training.lr_workflow import LRControlledBenchmark
 from src.utils.serialization import read_json, read_yaml, write_json
@@ -303,8 +307,11 @@ def _adapter_smoke(
                     "checkpoint_reload": True,
                 },
                 "run_manifest": manifest,
+                "checkpoint_retained": False,
             }
             write_json(gate_path, gate)
+            for model_file in model_checkpoint_files(run_dir):
+                model_file.unlink()
             return gate
         except Exception as error:
             failures.append(
@@ -342,11 +349,13 @@ def _batch_policy(state: dict[str, Any]) -> tuple[int, int]:
 
 
 def _run_module(repo: Path, module: str, *arguments: str) -> None:
-    subprocess.run(
+    run_checked(
         python_module_command(module, *arguments),
-        check=True,
         cwd=repo,
         env=build_model_subprocess_environment(),
+        environment_name="model runtime",
+        stage=module,
+        python_executable=python_module_command(module)[0],
     )
 
 

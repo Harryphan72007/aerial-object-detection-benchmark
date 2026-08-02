@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import subprocess
 import sys
@@ -15,24 +16,38 @@ from src.hpo.rtdetr_v2 import RTDetrOptunaV2
 from src.optional_outputs import load_optional_warnings, run_optional_output
 from src.subprocess_utils import build_model_subprocess_environment
 from src.training.trainer import TrainingOrchestrator
+from src.utils.serialization import read_json
 
 ROOT = Path(__file__).resolve().parents[1]
 INLINE_BACKEND = "module://matplotlib_inline.backend_inline"
 
 
 def _critical_artifacts(run_dir: Path) -> dict[str, object]:
-    checkpoints: dict[str, str] = {}
-    for field, filename in (
-        ("checkpoint_best_map", "best_map.pth"),
-        ("checkpoint_best_aptiny", "best_aptiny.pth"),
-        ("checkpoint_last", "last.pth"),
-    ):
-        path = run_dir / filename
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(b"valid-checkpoint")
-        checkpoints[field] = str(path)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    best = run_dir / "best.pth"
+    resume = run_dir / "last.pth"
+    best.write_bytes(b"valid-checkpoint")
+    resume.write_bytes(b"resume-checkpoint")
+    identity = {
+        "run_id": run_dir.name,
+        "model_id": "rtdetrv2_l",
+        "seed": 42,
+        "configuration_hash": "config-hash",
+        "epoch": 1,
+        "selection_metric": "validation_mAP",
+        "selection_metric_value": 0.25,
+        "weight_variant": "raw",
+    }
+    (run_dir / "training_config.yaml").write_text(
+        "model_id: rtdetrv2_l\nseed: 42\nconfiguration_hash: config-hash\n",
+        encoding="utf-8",
+    )
     summary: dict[str, object] = {
-        **checkpoints,
+        "checkpoint_best": str(best),
+        "checkpoint_resume": str(resume),
+        "checkpoint_sha256": hashlib.sha256(best.read_bytes()).hexdigest(),
+        "checkpoint_identity": identity,
+        "checkpoint_load_verified": True,
         "best_validation_map": 0.25,
         "best_validation_aptiny": 0.10,
     }
@@ -151,7 +166,7 @@ def test_direct_backend_rejects_inherited_distributed_world_size(
             42,
         )
     (tmp_path / "final_metrics.json").write_text("{}", encoding="utf-8")
-    with pytest.raises(FileNotFoundError, match="checkpoint_best_map"):
+    with pytest.raises(FileNotFoundError, match="checkpoint_best"):
         TrainingOrchestrator._load_backend_summary(tmp_path)
 
 
@@ -211,9 +226,15 @@ def test_completed_hpo_trial_with_plot_warning_is_not_repeated(
     workflow._run_phase(study, "phase_a", workflow._broad_search_space())
 
     assert calls == [0]
+    assert workflow.study_path.is_file()
     assert study.trials[0].state.name == "COMPLETE"
     assert study.trials[0].user_attrs["trial_status"] == "COMPLETE"
     run_dir = Path(study.trials[0].user_attrs["run_dir"])
     assert (run_dir / "final_metrics.json").is_file()
-    assert (run_dir / "best_map.pth").is_file()
-    assert load_optional_warnings(run_dir)[0]["operation"] == "save_training_curves"
+    assert not list(run_dir.glob("*.pth"))
+    assert not list(run_dir.glob("*.pt"))
+    assert (run_dir / "trial_record.json").is_file()
+    assert read_json(run_dir / "final_metrics.json")["best_validation_map"] == 0.25
+    assert study.trials[0].user_attrs["checkpoint_policy"] == (
+        "local_scratch_deleted"
+    )

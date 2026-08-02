@@ -137,6 +137,7 @@ class RTDetrOptunaV2(TwoStageRandomHPO):
             "storage_policy": {
                 "database": "study_v2.db",
                 "snapshot": "snapshots/study_v2_latest.db",
+                "trial_weights": "local_scratch_deleted",
                 "old_study_mutated": False,
             },
         }

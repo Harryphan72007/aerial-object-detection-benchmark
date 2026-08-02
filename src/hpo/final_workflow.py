@@ -10,12 +10,11 @@ from typing import Any
 from src.hpo.workflow import HPO_PROTOCOL_ID, _cleanup_accelerator_memory
 from src.hpo.rtdetr_v2 import RTDETR_HPO_PROTOCOL_ID
 from src.models.registry import load_model_config
-from src.optional_outputs import run_optional_output
 from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
-from src.training.checkpointing import make_run_id, materialize_checkpoint_alias
+from src.training.checkpointing import enforce_completed_checkpoint_policy, make_run_id
 from src.training.trainer import TrainingOrchestrator
-from src.utils.serialization import read_json, read_yaml, write_json
+from src.utils.serialization import read_json, read_yaml, sha256_file, write_json
 
 FINAL_SEEDS = (17, 42, 3407)
 FINAL_EPOCHS = 25
@@ -185,21 +184,21 @@ class FinalExperimentWorkflow:
         }
 
     @staticmethod
-    def _materialize_expected_aliases(run_dir: Path) -> None:
-        """Keep legacy notebook consumers compatible with canonical checkpoints."""
-        aliases = (
-            (run_dir / "last.pth", run_dir / "latest.pt"),
-            (run_dir / "best_map.pth", run_dir / "best.pt"),
-        )
-        for source, destination in aliases:
-            if source.is_file():
-                run_optional_output(
-                    f"materialize_legacy_checkpoint_alias:{destination.name}",
-                    run_dir,
-                    lambda source=source, destination=destination: (
-                        materialize_checkpoint_alias(source, destination)
-                    ),
-                )
+    def _finish_v2_cleanup(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+        """Recover a v2 run interrupted after its completed-manifest write."""
+        if int(manifest.get("schema_version", 1)) < 2:
+            return manifest
+        best = Path(str(manifest.get("checkpoint_best", "")))
+        if not best.is_file() or sha256_file(best) != manifest.get("checkpoint_sha256"):
+            raise RuntimeError("completed v2 run has an invalid canonical checkpoint")
+        removed = enforce_completed_checkpoint_policy(run_dir)
+        manifest["checkpoint_resume"] = None
+        manifest["checkpoint_cleanup"] = {
+            "policy": "single_best_v2",
+            "removed": removed,
+        }
+        write_json(run_dir / "run_manifest.json", manifest)
+        return manifest
 
     def run(
         self,
@@ -233,8 +232,11 @@ class FinalExperimentWorkflow:
                 )
                 run_id, run_dir, resume = self._resumable(contract)
                 if resume == "completed":
-                    self._materialize_expected_aliases(run_dir)
-                    manifests.append(read_json(run_dir / "run_manifest.json"))
+                    manifests.append(
+                        self._finish_v2_cleanup(
+                            run_dir, read_json(run_dir / "run_manifest.json")
+                        )
+                    )
                     continue
                 run_dir.mkdir(parents=True, exist_ok=True)
                 write_json(run_dir / "resume_contract.json", contract)
@@ -269,6 +271,5 @@ class FinalExperimentWorkflow:
                     )
                 finally:
                     _cleanup_accelerator_memory()
-                self._materialize_expected_aliases(run_dir)
                 manifests.append(manifest)
         return {**preview, "preview": False, "runs": manifests}

@@ -2,20 +2,21 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import os
 import shutil
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Mapping
 
 from filelock import FileLock
 
 from src.paths import ProjectPaths
 from src.utils.serialization import read_json, write_json
 
-MANIFEST_REQUIRED = {
+LEGACY_MANIFEST_REQUIRED = {
     "run_id",
     "model_id",
     "architecture_family",
@@ -42,6 +43,21 @@ MANIFEST_REQUIRED = {
     "total_training_seconds",
     "status",
 }
+# Public compatibility name for the frozen v1 contract.
+MANIFEST_REQUIRED = LEGACY_MANIFEST_REQUIRED
+
+MANIFEST_REQUIRED_V2 = (
+    LEGACY_MANIFEST_REQUIRED
+    - {"checkpoint_best_map", "checkpoint_best_aptiny", "checkpoint_last"}
+) | {
+    "schema_version",
+    "checkpoint_best",
+    "checkpoint_sha256",
+    "checkpoint_selection_metric",
+    "weight_variant",
+}
+
+MODEL_CHECKPOINT_SUFFIXES = frozenset({".pth", ".pt", ".ckpt"})
 
 
 def make_run_id(
@@ -72,8 +88,13 @@ def initialize_run(
 def validate_manifest_dict(
     manifest: dict[str, Any], check_files: bool = False
 ) -> list[str]:
+    required = (
+        MANIFEST_REQUIRED_V2
+        if int(manifest.get("schema_version", 1)) >= 2
+        else LEGACY_MANIFEST_REQUIRED
+    )
     errors = [
-        f"missing field: {key}" for key in sorted(MANIFEST_REQUIRED - set(manifest))
+        f"missing field: {key}" for key in sorted(required - set(manifest))
     ]
     if manifest.get("dataset_track") not in {"2class", "10class"}:
         errors.append("invalid dataset_track")
@@ -85,7 +106,13 @@ def validate_manifest_dict(
         "interrupted",
     }:
         errors.append("invalid status")
-    if check_files:
+    if check_files and int(manifest.get("schema_version", 1)) >= 2:
+        value = manifest.get("checkpoint_best")
+        if manifest.get("status") == "completed" and (
+            not value or not Path(str(value)).is_file()
+        ):
+            errors.append(f"checkpoint_best does not exist: {value}")
+    elif check_files:
         for field in (
             "checkpoint_best_map",
             "checkpoint_best_aptiny",
@@ -115,6 +142,10 @@ class RunRegistry:
         with lock:
             registry = self._load()
             registry.setdefault("schema_version", 1)
+            registry["schema_version"] = max(
+                int(registry["schema_version"]),
+                int(manifest.get("schema_version", 1)),
+            )
             registry.setdefault("runs", {})
             registry["runs"][manifest["run_id"]] = manifest
             if self.paths.checkpoint_registry.exists():
@@ -178,20 +209,18 @@ class RunRegistry:
         return max(runs, key=lambda run: float(run.get(metric, float("-inf"))))
 
     def load_checkpoint_from_registry(
-        self, run_id: str, preference: str = "best_map"
+        self, run_id: str, preference: str = "best"
     ) -> Path:
         manifest = self._load().get("runs", {}).get(run_id)
         if not manifest:
             raise KeyError(f"run not found: {run_id}")
-        field = {
-            "best_map": "checkpoint_best_map",
-            "best_aptiny": "checkpoint_best_aptiny",
-            "last": "checkpoint_last",
-        }[preference]
-        path = Path(manifest[field])
-        if not path.exists():
-            raise FileNotFoundError(path)
-        return path
+        if preference not in {"best", "best_map", "best_aptiny", "last"}:
+            raise ValueError(f"unsupported checkpoint preference: {preference}")
+        return resolve_manifest_checkpoint(
+            manifest,
+            allow_resume=preference == "last",
+            allow_legacy_aliases=True,
+        )
 
     def validate_checkpoint_manifest(self, run_id: str) -> list[str]:
         manifest = self._load().get("runs", {}).get(run_id)
@@ -208,6 +237,8 @@ def materialize_checkpoint_alias(
     destination_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination_path.with_suffix(destination_path.suffix + ".tmp")
     shutil.copy2(source_path, temporary)
+    with temporary.open("rb+") as handle:
+        os.fsync(handle.fileno())
     os.replace(temporary, destination_path)
 
 
@@ -229,3 +260,181 @@ def atomic_torch_save(value: Any, destination: str | Path) -> None:
     finally:
         if os.path.exists(name):
             os.unlink(name)
+
+
+def model_checkpoint_files(run_dir: str | Path) -> list[Path]:
+    """Return only direct child model files; never traverse outside a run."""
+    root = Path(run_dir).resolve()
+    if not root.is_dir():
+        return []
+    return sorted(
+        path
+        for path in root.iterdir()
+        if path.is_file() and path.suffix.lower() in MODEL_CHECKPOINT_SUFFIXES
+    )
+
+
+def resolve_manifest_checkpoint(
+    manifest: Mapping[str, Any],
+    run_dir: str | Path | None = None,
+    *,
+    allow_resume: bool = False,
+    allow_legacy_aliases: bool = False,
+) -> Path:
+    """Resolve a canonical or legacy checkpoint without filename guessing."""
+    root_value = run_dir or manifest.get("run_dir")
+    root = Path(str(root_value)).resolve() if root_value else None
+    candidates: list[Path] = []
+
+    def add(value: Any) -> None:
+        if value:
+            candidate = Path(str(value))
+            if not candidate.is_absolute() and root is not None:
+                candidate = root / candidate
+            if candidate not in candidates:
+                candidates.append(candidate)
+
+    if root is not None:
+        add(root / "best.pth")
+    add(manifest.get("checkpoint_best"))
+    if root is not None:
+        add(root / "best_map.pth")
+    add(manifest.get("checkpoint_best_map"))
+    if root is not None:
+        add(root / "best_raw.pth")
+    add(manifest.get("checkpoint_best_raw"))
+    if allow_legacy_aliases:
+        if root is not None:
+            add(root / "best.pt")
+            add(root / "best_aptiny.pth")
+        add(manifest.get("checkpoint_best_aptiny"))
+    if allow_resume:
+        add(manifest.get("checkpoint_resume"))
+        add(manifest.get("checkpoint_last"))
+        if root is not None:
+            add(root / "last.pth")
+            if allow_legacy_aliases:
+                add(root / "latest.pt")
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    rendered = ", ".join(str(path) for path in candidates) or "<none>"
+    raise FileNotFoundError(f"no compatible checkpoint found; checked: {rendered}")
+
+
+def _torch_checkpoint_loader(path: Path) -> Mapping[str, Any]:
+    try:
+        import torch
+    except ImportError as exc:
+        raise RuntimeError("PyTorch is required to validate checkpoints") from exc
+    value = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(value, Mapping):
+        raise ValueError("checkpoint payload must be a mapping")
+    return value
+
+
+def validate_checkpoint_identity(
+    checkpoint: str | Path,
+    expected: Mapping[str, Any] | None = None,
+    *,
+    loader: Callable[[Path], Mapping[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Load a checkpoint and validate the v2 identity when one is expected."""
+    path = Path(checkpoint)
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    payload = dict((loader or _torch_checkpoint_loader)(path))
+    identity = payload.get("checkpoint_identity")
+    if expected is not None:
+        if not isinstance(identity, Mapping):
+            raise ValueError("checkpoint is missing checkpoint_identity")
+        mismatches = {
+            key: (identity.get(key), value)
+            for key, value in expected.items()
+            if identity.get(key) != value
+        }
+        if mismatches:
+            raise ValueError(f"checkpoint identity mismatch: {mismatches}")
+    return payload
+
+
+def materialize_canonical_best(
+    resume_checkpoint: str | Path,
+    destination: str | Path,
+    identity: Mapping[str, Any],
+    *,
+    loader: Callable[[Path], Mapping[str, Any]] | None = None,
+    saver: Callable[[Mapping[str, Any], Path], None] | None = None,
+) -> tuple[Path, str]:
+    """Extract the selected weights from one rolling resume checkpoint."""
+    source = Path(resume_checkpoint)
+    state = dict((loader or _torch_checkpoint_loader)(source))
+    selected = state.get("best_model_state_dict")
+    if selected is None:
+        selected = state.get("model_state_dict", state.get("model", state.get("state_dict")))
+    if selected is None:
+        raise ValueError("resume checkpoint contains no selected model state")
+    output: dict[str, Any] = {
+        "checkpoint_schema_version": 2,
+        "checkpoint_identity": dict(identity),
+        "weight_variant": identity.get("weight_variant", "raw"),
+        "selection_metric": identity.get("selection_metric"),
+        "selection_metric_value": identity.get("selection_metric_value"),
+    }
+    if "state_dict" in state and "model" not in state:
+        output["state_dict"] = selected
+        if isinstance(state.get("meta"), Mapping):
+            output["meta"] = dict(state["meta"])
+    else:
+        output["model"] = selected
+        output["model_state_dict"] = selected
+        for key in ("id2label", "model_name", "config"):
+            if key in state:
+                output[key] = state[key]
+    target = Path(destination)
+    if saver is None:
+        atomic_torch_save(output, target)
+    else:
+        saver(output, target)
+    validate_checkpoint_identity(target, identity, loader=loader)
+    checksum = hashlib.sha256(target.read_bytes()).hexdigest()
+    return target, checksum
+
+
+def enforce_completed_checkpoint_policy(run_dir: str | Path) -> list[str]:
+    """Remove duplicate model files only after a validated best.pth exists."""
+    root = Path(run_dir).resolve()
+    canonical = root / "best.pth"
+    if not canonical.is_file():
+        raise FileNotFoundError(canonical)
+    removed: list[str] = []
+    temporary_files = [
+        path
+        for path in root.iterdir()
+        if path.is_file()
+        and (
+            path.name == "last_checkpoint"
+            or path.name.endswith((".pth.tmp", ".pt.tmp", ".ckpt.tmp"))
+        )
+    ]
+    for path in temporary_files:
+        if path.resolve().parent != root:
+            raise ValueError(f"checkpoint cleanup escaped run directory: {path}")
+        path.unlink()
+        removed.append(path.name)
+    files = [path for path in model_checkpoint_files(root) if path != canonical]
+    # The resume file is deliberately removed last. Any earlier failure therefore
+    # leaves the run resumable instead of half-cleaned without recovery state.
+    files.sort(key=lambda path: path.name == "last.pth")
+    for path in files:
+        resolved = path.resolve()
+        if resolved.parent != root:
+            raise ValueError(f"checkpoint cleanup escaped run directory: {path}")
+        path.unlink()
+        removed.append(path.name)
+    remaining = model_checkpoint_files(root)
+    if remaining != [canonical]:
+        raise RuntimeError(
+            f"completed run checkpoint policy failed: {[p.name for p in remaining]}"
+        )
+    return removed

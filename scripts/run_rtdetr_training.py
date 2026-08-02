@@ -19,7 +19,10 @@ from src.training.callbacks import (
     safe_save_training_curves,
 )
 from src.runtime_manifest import write_runtime_environment_manifest
-from src.training.checkpointing import atomic_torch_save, materialize_checkpoint_alias
+from src.training.checkpointing import (
+    atomic_torch_save,
+    materialize_canonical_best,
+)
 from src.training.recipes import (
     RTDETR_BASELINE_LR,
     RTDETR_GRADIENT_CLIP,
@@ -31,12 +34,9 @@ from src.models.rtdetrv2.optimizer import RECIPE_VERSION, build_optimizer
 from src.models.rtdetrv2.scheduler import WarmupCosineScheduler
 from src.training.accumulation import effective_batch
 from src.training.ema import ModelEMA, ema_checkpoint_fields, load_ema_checkpoint
-from src.training.checkpoint_selection import (
-    BestCheckpointState,
-    materialize_best_checkpoint,
-)
+from src.training.checkpoint_selection import BestCheckpointState
 from src.training.early_stopping import EarlyStopping
-from src.utils.serialization import write_json, write_text_atomic
+from src.utils.serialization import read_yaml, write_json, write_text_atomic
 
 
 def parse_args() -> argparse.Namespace:
@@ -93,6 +93,8 @@ def main() -> None:
         raise ValueError("--validation-interval must be non-negative")
     run_dir = Path(args.run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
+    training_config = read_yaml(run_dir / "training_config.yaml")
+    configuration_hash = str(training_config["configuration_hash"])
     write_runtime_environment_manifest(run_dir, args.model_id, Path.cwd())
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_data = json.loads(Path(args.train_ann).read_text(encoding="utf-8"))
@@ -384,6 +386,7 @@ def main() -> None:
     )
     start_epoch = 1
     optimizer_updates_completed = 0
+    best_model_state_dict: dict[str, Any] | None = None
     if args.resume and (run_dir / "last.pth").exists():
         state = torch.load(
             run_dir / "last.pth", map_location="cpu", weights_only=False
@@ -400,6 +403,7 @@ def main() -> None:
         if ema is not None and not load_ema_checkpoint(ema, state):
             ema = ModelEMA(model, decay=ema.decay)
         optimizer_updates_completed = int(state.get("optimizer_updates", 0))
+        best_model_state_dict = state.get("best_model_state_dict")
         start_epoch = int(state["epoch"]) + 1
         best.best_map = float(state.get("best_map", float("-inf")))
         best.best_aptiny = float(state.get("best_aptiny", float("-inf")))
@@ -518,6 +522,8 @@ def main() -> None:
             "optimizer_updates": optimizer_updates_completed,
             "checkpoint_selection_state": checkpoint_selector.state_dict(),
             "early_stopping_state": early_stopping.state_dict(),
+            "best_model_state_dict": best_model_state_dict,
+            "configuration_hash": configuration_hash,
             **ema_checkpoint_fields(ema),
         }
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
@@ -576,6 +582,11 @@ def main() -> None:
             selection_flags = checkpoint_selector.update(
                 epoch, raw_metric=float(metrics.get("mAP", float("-inf")))
             )
+            if selection_flags["best_raw"]:
+                best_model_state_dict = {
+                    key: value.detach().cpu().clone()
+                    for key, value in model.state_dict().items()
+                }
             early_stopping.update(
                 epoch, float(metrics.get("mAP", float("-inf")))
             )
@@ -590,15 +601,10 @@ def main() -> None:
                 "sampler_generator_state": sampler_generator.get_state(),
                 "checkpoint_selection_state": checkpoint_selector.state_dict(),
                 "early_stopping_state": early_stopping.state_dict(),
+                "best_model_state_dict": best_model_state_dict,
             }
         )
         atomic_torch_save(checkpoint_state, run_dir / "last.pth")
-        if selection_flags["best_raw"]:
-            materialize_best_checkpoint(
-                run_dir / "last.pth", run_dir, weight_variant="raw"
-            )
-        if flags["best_aptiny"]:
-            materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_aptiny.pth")
 
         epoch_seconds = time.perf_counter() - epoch_start
         row: dict[str, Any] = {
@@ -654,22 +660,30 @@ def main() -> None:
         if early_stopping.stopped:
             break
 
-    if not (run_dir / "best_raw.pth").exists():
-        materialize_best_checkpoint(
-            (
-                run_dir / "best_map.pth"
-                if (run_dir / "best_map.pth").is_file()
-                else run_dir / "last.pth"
-            ),
-            run_dir,
-            weight_variant="raw",
-        )
-    if not (run_dir / "best_map.pth").exists():
-        materialize_checkpoint_alias(run_dir / "last.pth", run_dir / "best_map.pth")
-    if not (run_dir / "best_aptiny.pth").exists():
-        materialize_checkpoint_alias(
-            run_dir / "last.pth", run_dir / "best_aptiny.pth"
-        )
+    selected_epoch = best.best_map_epoch or int(history.rows[-1]["epoch"])
+    selected_metric = best.best_map if np.isfinite(best.best_map) else 0.0
+    if best_model_state_dict is None:
+        best_model_state_dict = {
+            key: value.detach().cpu().clone()
+            for key, value in model.state_dict().items()
+        }
+        checkpoint_state["best_model_state_dict"] = best_model_state_dict
+        atomic_torch_save(checkpoint_state, run_dir / "last.pth")
+    checkpoint_identity = {
+        "run_id": run_dir.name,
+        "model_id": args.model_id,
+        "seed": args.seed,
+        "configuration_hash": configuration_hash,
+        "epoch": selected_epoch,
+        "selection_metric": "validation_mAP",
+        "selection_metric_value": float(selected_metric),
+        "weight_variant": "raw",
+    }
+    checkpoint_best, checkpoint_sha256 = materialize_canonical_best(
+        run_dir / "last.pth",
+        run_dir / "best.pth",
+        checkpoint_identity,
+    )
     total = sum(parameter.numel() for parameter in model.parameters())
     trainable = sum(
         parameter.numel() for parameter in model.parameters() if parameter.requires_grad
@@ -684,15 +698,13 @@ def main() -> None:
         if int(row.get("epoch", 0)) == best.best_aptiny_epoch:
             time_to_best_tiny = cumulative
     summary = {
-        "checkpoint_best_map": str(run_dir / "best_map.pth"),
-        "checkpoint_best_raw": str(run_dir / "best_raw.pth"),
-        "checkpoint_best_ema": (
-            str(run_dir / "best_ema.pth")
-            if (run_dir / "best_ema.pth").is_file()
-            else None
-        ),
-        "checkpoint_best_aptiny": str(run_dir / "best_aptiny.pth"),
-        "checkpoint_last": str(run_dir / "last.pth"),
+        "checkpoint_best": str(checkpoint_best),
+        "checkpoint_resume": str(run_dir / "last.pth"),
+        "checkpoint_sha256": checkpoint_sha256,
+        "checkpoint_selection_metric": "validation_mAP",
+        "weight_variant": "raw",
+        "checkpoint_identity": checkpoint_identity,
+        "checkpoint_load_verified": True,
         "total_parameters": total,
         "trainable_parameters": trainable,
         "frozen_parameters": total - trainable,

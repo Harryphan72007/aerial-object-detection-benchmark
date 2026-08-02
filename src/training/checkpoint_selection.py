@@ -1,4 +1,4 @@
-"""Versioned best-checkpoint selection and compatibility aliases."""
+"""Best-metric state and canonical/legacy checkpoint resolution."""
 
 from __future__ import annotations
 
@@ -52,23 +52,17 @@ def materialize_best_checkpoint(
     if weight_variant not in {"raw", "ema"}:
         raise ValueError("weight_variant must be raw or ema")
     root = Path(run_dir)
-    selected = root / f"best_{weight_variant}.pth"
+    selected = root / "best.pth"
     materialize_checkpoint_alias(last_checkpoint, selected)
-    if weight_variant == "raw":
-        legacy = root / "best_map.pth"
-        if Path(last_checkpoint).resolve() != legacy.resolve():
-            materialize_checkpoint_alias(last_checkpoint, legacy)
-        materialize_checkpoint_alias(last_checkpoint, root / "best.pt")
     return selected
 
 
 def resolve_best_checkpoint(run_dir: str | Path, *, prefer_ema: bool = False) -> Path:
     root = Path(run_dir)
-    candidates = (
-        (root / "best_ema.pth", root / "best.pt", root / "best_raw.pth")
-        if prefer_ema
-        else (root / "best.pt", root / "best_raw.pth", root / "best_map.pth")
-    )
+    candidates = [root / "best.pth", root / "best_map.pth", root / "best_raw.pth"]
+    if prefer_ema:
+        candidates.append(root / "best_ema.pth")
+    candidates.extend((root / "best.pt", root / "best_aptiny.pth"))
     for candidate in candidates:
         if candidate.is_file():
             return candidate

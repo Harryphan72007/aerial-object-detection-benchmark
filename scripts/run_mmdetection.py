@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import time
 from pathlib import Path
@@ -12,9 +11,17 @@ from typing import Any
 
 from src.optional_outputs import run_optional_output
 from src.training.callbacks import safe_save_training_curves
-from src.training.checkpointing import materialize_checkpoint_alias
+from src.training.checkpointing import (
+    atomic_torch_save,
+    materialize_canonical_best,
+)
 from src.runtime_manifest import write_runtime_environment_manifest
-from src.utils.serialization import write_csv, write_json, write_text_atomic
+from src.utils.serialization import (
+    read_yaml,
+    write_csv,
+    write_json,
+    write_text_atomic,
+)
 
 
 def update_resize(pipeline: Any, image_size: int) -> Any:
@@ -65,36 +72,6 @@ def set_num_classes(node: Any, number_of_classes: int) -> None:
     elif isinstance(node, list):
         for value in node:
             set_num_classes(value, number_of_classes)
-
-
-def _last_epoch_checkpoint(run_dir: Path) -> Path | None:
-    pointer = run_dir / "last_checkpoint"
-    if pointer.exists():
-        raw = pointer.read_text(encoding="utf-8").strip()
-        candidate = Path(raw)
-        if not candidate.is_absolute():
-            candidate = run_dir / candidate
-        if candidate.exists():
-            return candidate
-    epoch_files = sorted(
-        run_dir.glob("epoch_*.pth"),
-        key=lambda path: int(re.search(r"epoch_(\d+)", path.name).group(1))
-        if re.search(r"epoch_(\d+)", path.name)
-        else -1,
-    )
-    return epoch_files[-1] if epoch_files else None
-
-
-def _best_checkpoint(run_dir: Path, token: str) -> Path | None:
-    candidates = sorted(
-        [
-            path
-            for path in run_dir.glob("best_*.pth")
-            if token.lower() in path.name.lower()
-        ],
-        key=lambda path: path.stat().st_mtime,
-    )
-    return candidates[-1] if candidates else None
 
 
 def _read_scalar_rows(run_dir: Path) -> list[dict[str, Any]]:
@@ -259,6 +236,7 @@ def main() -> None:
     if args.validation_interval < 0:
         raise ValueError("--validation-interval must be non-negative")
     try:
+        import torch
         from mmengine.config import Config
         from mmengine.hooks import Hook
         from mmengine.runner import Runner
@@ -270,6 +248,8 @@ def main() -> None:
     base_config = Path(args.base_config).resolve()
     run_dir = Path(args.run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
+    training_config = read_yaml(run_dir / "training_config.yaml")
+    configuration_hash = str(training_config["configuration_hash"])
     write_runtime_environment_manifest(run_dir, args.model_id, Path.cwd())
     # Both the official MMDetection and VMamba detection layouts put configs two
     # directories below the import root.
@@ -386,15 +366,17 @@ def main() -> None:
         base_optimizer["loss_scale"] = "dynamic"
         cfg.optim_wrapper = base_optimizer
     cfg.optim_wrapper["accumulative_counts"] = args.accumulation
-    cfg.default_hooks.checkpoint.update(
+    cfg.default_hooks.pop("checkpoint", None)
+    write_json(
+        run_dir / "checkpoint_policy.json",
         {
-            "type": "CheckpointHook",
-            "interval": 1,
-            "max_keep_ckpts": 5,
+            "implementation": "AtomicRollingCheckpointHook",
+            "max_keep_ckpts": 1,
             "save_last": True,
-            "save_best": ["coco/bbox_mAP", "aerial_coco/APtiny"],
-            "rule": "greater",
-        }
+            "save_best": None,
+            "filename": "last.pth",
+            "selection_metric": "validation_mAP",
+        },
     )
     cfg.default_hooks.logger.interval = 20
     cfg.visualizer.vis_backends = [{"type": "LocalVisBackend"}]
@@ -590,22 +572,96 @@ def main() -> None:
         )
         print(json.dumps(summary, indent=2))
         return
+    selection_state: dict[str, Any] = {
+        "best_metric": float("-inf"),
+        "best_epoch": 0,
+        "best_model_state_dict": None,
+    }
+
+    class AtomicRollingCheckpointHook(Hook):
+        """Atomically overwrite one full-state resume checkpoint each epoch."""
+
+        def after_train_epoch(self, runner: Any) -> None:
+            temporary_name = ".last.pth.tmp"
+            temporary = run_dir / temporary_name
+            runner.save_checkpoint(
+                str(run_dir),
+                filename=temporary_name,
+                save_optimizer=True,
+                save_param_scheduler=True,
+                meta={"epoch": int(runner.epoch + 1), "iter": int(runner.iter)},
+                by_epoch=True,
+            )
+            state = torch.load(temporary, map_location="cpu", weights_only=False)
+            if selection_state["best_model_state_dict"] is not None:
+                state["best_model_state_dict"] = selection_state[
+                    "best_model_state_dict"
+                ]
+                state["best_checkpoint_metadata"] = {
+                    "metric": "validation_mAP",
+                    "metric_value": selection_state["best_metric"],
+                    "epoch": selection_state["best_epoch"],
+                }
+            state["configuration_hash"] = configuration_hash
+            atomic_torch_save(state, run_dir / "last.pth")
+            temporary.unlink()
+
+    class SingleBestStateHook(Hook):
+        """Embed one mAP-selected weight state inside the rolling resume file."""
+
+        def before_train(self, runner: Any) -> None:
+            checkpoint = run_dir / "last.pth"
+            if not args.resume or not checkpoint.is_file():
+                return
+            state = torch.load(checkpoint, map_location="cpu", weights_only=False)
+            metadata = state.get("best_checkpoint_metadata", {})
+            selection_state["best_metric"] = float(
+                metadata.get("metric_value", float("-inf"))
+            )
+            selection_state["best_epoch"] = int(metadata.get("epoch", 0))
+            selection_state["best_model_state_dict"] = state.get(
+                "best_model_state_dict"
+            )
+
+        def after_val_epoch(
+            self, runner: Any, metrics: dict[str, Any] | None = None
+        ) -> None:
+            values = metrics or {}
+            metric = values.get("coco/bbox_mAP", values.get("bbox_mAP"))
+            if metric is None or float(metric) <= selection_state["best_metric"]:
+                return
+            checkpoint = run_dir / "last.pth"
+            if not checkpoint.is_file():
+                raise FileNotFoundError(checkpoint)
+            state = torch.load(checkpoint, map_location="cpu", weights_only=False)
+            model = runner.model.module if hasattr(runner.model, "module") else runner.model
+            selection_state["best_model_state_dict"] = {
+                key: value.detach().cpu().clone()
+                for key, value in model.state_dict().items()
+            }
+            state["best_model_state_dict"] = selection_state[
+                "best_model_state_dict"
+            ]
+            selection_state["best_metric"] = float(metric)
+            selection_state["best_epoch"] = int(runner.epoch)
+            state["best_checkpoint_metadata"] = {
+                "metric": "validation_mAP",
+                "metric_value": selection_state["best_metric"],
+                "epoch": selection_state["best_epoch"],
+            }
+            state["configuration_hash"] = configuration_hash
+            atomic_torch_save(state, checkpoint)
+
+    runner.register_hook(AtomicRollingCheckpointHook(), priority="VERY_LOW")
+    runner.register_hook(SingleBestStateHook(), priority="LOWEST")
     runner.train()
     elapsed = time.perf_counter() - started
 
-    last_checkpoint = _last_epoch_checkpoint(run_dir)
-    if last_checkpoint is None:
+    last_checkpoint = run_dir / "last.pth"
+    if not last_checkpoint.is_file():
         raise FileNotFoundError(
-            f"MMDetection completed without a required epoch checkpoint in {run_dir}"
+            f"MMDetection completed without required rolling checkpoint {last_checkpoint}"
         )
-    best_map = _best_checkpoint(run_dir, "bbox_map") or last_checkpoint
-    best_tiny = _best_checkpoint(run_dir, "aptiny") or best_map
-    if last_checkpoint:
-        materialize_checkpoint_alias(last_checkpoint, run_dir / "last.pth")
-    if best_map:
-        materialize_checkpoint_alias(best_map, run_dir / "best_map.pth")
-    if best_tiny:
-        materialize_checkpoint_alias(best_tiny, run_dir / "best_aptiny.pth")
 
     model = runner.model.module if hasattr(runner.model, "module") else runner.model
     total = sum(parameter.numel() for parameter in model.parameters())
@@ -631,10 +687,30 @@ def main() -> None:
         if tiny is not None:
             best_tiny_value = max(best_tiny_value, float(tiny))
 
+    checkpoint_identity = {
+        "run_id": run_dir.name,
+        "model_id": args.model_id,
+        "seed": args.seed,
+        "configuration_hash": configuration_hash,
+        "epoch": best_epoch or args.epochs,
+        "selection_metric": "validation_mAP",
+        "selection_metric_value": float(best_map_value),
+        "weight_variant": "raw",
+    }
+    checkpoint_best, checkpoint_sha256 = materialize_canonical_best(
+        last_checkpoint,
+        run_dir / "best.pth",
+        checkpoint_identity,
+    )
+
     summary = {
-        "checkpoint_best_map": str(run_dir / "best_map.pth"),
-        "checkpoint_best_aptiny": str(run_dir / "best_aptiny.pth"),
-        "checkpoint_last": str(run_dir / "last.pth"),
+        "checkpoint_best": str(checkpoint_best),
+        "checkpoint_resume": str(last_checkpoint),
+        "checkpoint_sha256": checkpoint_sha256,
+        "checkpoint_selection_metric": "validation_mAP",
+        "weight_variant": "raw",
+        "checkpoint_identity": checkpoint_identity,
+        "checkpoint_load_verified": True,
         "total_parameters": int(total),
         "trainable_parameters": int(trainable),
         "frozen_parameters": int(total - trainable),

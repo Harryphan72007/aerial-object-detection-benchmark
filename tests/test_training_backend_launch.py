@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import json
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -10,20 +11,33 @@ from src.training.trainer import TrainingOrchestrator
 from src.workflows import model_day
 
 
-def _write_backend_contract(run_dir: Path) -> None:
-    checkpoints = {}
-    for field, filename in (
-        ("checkpoint_best_map", "best_map.pth"),
-        ("checkpoint_best_aptiny", "best_aptiny.pth"),
-        ("checkpoint_last", "last.pth"),
-    ):
-        path = run_dir / filename
-        path.write_bytes(b"checkpoint")
-        checkpoints[field] = str(path)
+def _write_backend_contract(run_dir: Path, model_id: str) -> None:
+    best = run_dir / "best.pth"
+    resume = run_dir / "last.pth"
+    best.write_bytes(b"checkpoint")
+    resume.write_bytes(b"resume")
+    identity = {
+        "run_id": run_dir.name,
+        "model_id": model_id,
+        "seed": 42,
+        "configuration_hash": "config-hash",
+        "epoch": 1,
+        "selection_metric": "validation_mAP",
+        "selection_metric_value": 0.25,
+        "weight_variant": "raw",
+    }
+    (run_dir / "training_config.yaml").write_text(
+        f"model_id: {model_id}\nseed: 42\nconfiguration_hash: config-hash\n",
+        encoding="utf-8",
+    )
     (run_dir / "final_metrics.json").write_text(
         json.dumps(
             {
-                **checkpoints,
+                "checkpoint_best": str(best),
+                "checkpoint_resume": str(resume),
+                "checkpoint_sha256": hashlib.sha256(best.read_bytes()).hexdigest(),
+                "checkpoint_identity": identity,
+                "checkpoint_load_verified": True,
                 "best_validation_map": 0.25,
                 "best_validation_aptiny": 0.10,
             }
@@ -37,7 +51,7 @@ def test_rtdetr_backend_is_launched_as_repository_module(tmp_path: Path) -> None
     orchestrator.repo_root = tmp_path
     run_dir = tmp_path / "run"
     (run_dir / "logs").mkdir(parents=True)
-    _write_backend_contract(run_dir)
+    _write_backend_contract(run_dir, "rtdetrv2_l")
 
     launched: dict[str, object] = {}
 
@@ -95,7 +109,7 @@ def test_mmdetection_backend_is_launched_as_repository_module(
     upstream_config.parent.mkdir(parents=True)
     upstream_config.write_text("", encoding="utf-8")
     monkeypatch.setenv("TEST_MMDET_ROOT", str(upstream_root))
-    _write_backend_contract(run_dir)
+    _write_backend_contract(run_dir, "example")
 
     launched: dict[str, object] = {}
 
@@ -172,17 +186,32 @@ def test_model_day_downstream_stage_is_launched_as_module(
     launched: dict[str, object] = {}
 
     def capture(
-        command: list[str], *, check: bool, cwd: Path, env: dict[str, str]
+        command: list[str],
+        *,
+        cwd: Path,
+        env: dict[str, str],
+        environment_name: str,
+        stage: str,
+        python_executable: str,
     ) -> None:
-        launched.update(command=command, check=check, cwd=cwd, env=env)
+        launched.update(
+            command=command,
+            cwd=cwd,
+            env=env,
+            environment_name=environment_name,
+            stage=stage,
+            python_executable=python_executable,
+        )
 
-    monkeypatch.setattr(model_day.subprocess, "run", capture)
+    monkeypatch.setattr(model_day, "run_checked", capture)
     model_day._run_module(tmp_path, module, "--help")
 
     assert launched["command"] == [sys.executable, "-m", module, "--help"]
-    assert launched["check"] is True
     assert launched["cwd"] == tmp_path
     assert launched["env"]["MPLBACKEND"] == "Agg"
+    assert launched["environment_name"] == "model runtime"
+    assert launched["stage"] == module
+    assert launched["python_executable"] == sys.executable
 
 
 @pytest.mark.parametrize(

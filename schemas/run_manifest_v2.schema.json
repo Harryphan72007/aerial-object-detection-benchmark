@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "run_manifest_v2.schema.json",
+  "title": "VisDrone completed run manifest v2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_dir",
+    "model_id",
+    "dataset_track",
+    "seed",
+    "configuration_hash",
+    "checkpoint_best",
+    "checkpoint_sha256",
+    "checkpoint_selection_metric",
+    "checkpoint_identity",
+    "weight_variant",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "run_id": {"type": "string", "minLength": 1},
+    "run_dir": {"type": "string", "minLength": 1},
+    "model_id": {"type": "string", "minLength": 1},
+    "dataset_track": {"enum": ["2class", "10class"]},
+    "seed": {"type": "integer", "minimum": 0},
+    "configuration_hash": {"type": "string", "minLength": 1},
+    "checkpoint_best": {"type": "string", "pattern": "best\\.pth$"},
+    "checkpoint_resume": {"type": ["string", "null"]},
+    "checkpoint_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "checkpoint_selection_metric": {"const": "validation_mAP"},
+    "checkpoint_identity": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "model_id",
+        "seed",
+        "configuration_hash",
+        "epoch",
+        "selection_metric",
+        "selection_metric_value",
+        "weight_variant"
+      ]
+    },
+    "weight_variant": {"enum": ["raw", "ema"]},
+    "status": {"enum": ["created", "running", "completed", "failed", "interrupted"]}
+  },
+  "additionalProperties": true
+}

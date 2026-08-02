@@ -803,21 +803,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -836,7 +836,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/10_hpo_resnet50.ipynb",
-      "sha256": "7362252b0fd08a326122f600f34de02b9ceb99ae53380e613b66d1a7a5458695"
+      "sha256": "e8165c8208cdbd2657c8743a33f9f5f67769e4060988d31f4b818bcd78b6093d"
     },
     {
       "artifact_references": [
@@ -876,21 +876,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -909,7 +909,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/11_hpo_swin_t.ipynb",
-      "sha256": "079ee0369d6746612a8c18d6d2efa2fdbbfa257b6cfea4413fffa23dc9023e85"
+      "sha256": "5349cf1516eb61d08c70bbaf2093dcdeb3fd9410b91625e598b41e7475ee3259"
     },
     {
       "artifact_references": [
@@ -949,21 +949,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -982,7 +982,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/12_hpo_vmamba_t.ipynb",
-      "sha256": "78bf46460b46d3cb783e12cf4a124b100546fd91dc4eb5a543bd9ff08e50a133"
+      "sha256": "fbc10f9c5304a940d774e744d03b213b4567c3cceadb62156c5378f4e6ed28d9"
     },
     {
       "artifact_references": [
@@ -1022,21 +1022,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = RTDetrOptunaV2(REPO_PATH, DRIVE_ROOT, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1055,7 +1055,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "3c24f9fe2cd2b8d7ce88c60a4e208743da274a28e708d2ddc84cee5573de93c4"
+      "sha256": "fb0ac7bd294ccf822598eb1f8effe9055fe858195912204a52d61186d670c55e"
     },
     {
       "artifact_references": [
@@ -1084,21 +1084,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1117,7 +1117,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/20_finetune_resnet50.ipynb",
-      "sha256": "487f241bf81f105a469c1cf403b963b6e34841f37a1a53e98369f7642e2d1563"
+      "sha256": "a264c0e15f6ba4588236889916d7e6e3e684ff55278bbb0d6e073a9088d0c253"
     },
     {
       "artifact_references": [
@@ -1146,21 +1146,21 @@
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 10,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 10,
+          "line": 14,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 11,
+          "line": 15,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1180,7 +1180,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "9aaf50f46cbde692972c28319c71e44eb7046843bab8f19d7220af9f1d2b1cd6"
+      "sha256": "30bf4b390555eab62b431e8f123c19e42667a63505d8ef177889c8231e857bf5"
     },
     {
       "artifact_references": [
@@ -1209,21 +1209,21 @@
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 10,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 10,
+          "line": 14,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 11,
+          "line": 15,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1243,7 +1243,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "1f59d7f490a2e45d9ccfd27143a3ac7afbaa0d042bb57bbe9388453a48c9a465"
+      "sha256": "dd7b43ca41c544417d1791a8d8f7de7b259e8114a95a6c6d520a9bf9e1b23f48"
     },
     {
       "artifact_references": [
@@ -1272,21 +1272,21 @@
         },
         {
           "cell": 3,
-          "line": 10,
+          "line": 11,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 11,
+          "line": 15,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 12,
+          "line": 16,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1306,7 +1306,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "c92ea2a677ebfb3af4df204715e8f903806fd9f34d50c1f63840c971d327a740"
+      "sha256": "f357354b981b54e1adfb5a040cb3236bc93c0001444e7b76c33fff472d8aae01"
     },
     {
       "artifact_references": [
@@ -1328,14 +1328,14 @@
         },
         {
           "cell": 2,
-          "line": 8,
+          "line": 9,
           "literals": [],
           "operations": [],
           "source": "from src.evaluation.versioned import evaluate_prediction_artifact"
         },
         {
           "cell": 2,
-          "line": 11,
+          "line": 12,
           "literals": [
             "Legacy evaluator accepts controlled artifacts only"
           ],
@@ -1344,7 +1344,7 @@
         },
         {
           "cell": 2,
-          "line": 13,
+          "line": 14,
           "literals": [
             "dataset_track"
           ],
@@ -1353,7 +1353,7 @@
         },
         {
           "cell": 2,
-          "line": 15,
+          "line": 16,
           "literals": [
             "--dataset-track"
           ],
@@ -1362,7 +1362,7 @@
         },
         {
           "cell": 2,
-          "line": 19,
+          "line": 20,
           "literals": [
             "comparison.json",
             "report",
@@ -1373,7 +1373,7 @@
         },
         {
           "cell": 2,
-          "line": 20,
+          "line": 21,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1385,12 +1385,12 @@
         "pathlib",
         "src.config.benchmark_tracks",
         "src.evaluation.versioned",
-        "subprocess",
+        "src.subprocess_utils",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "16bd15e2231080a337fe5e90c8e8f18122042613763ffe9cd5d09263fdb0c0ec"
+      "sha256": "c26e89464f4354d2d126e6ce4eea05b3d69ea26ad21352c71bc5dea41e1d01b0"
     },
     {
       "artifact_references": [
@@ -1833,7 +1833,7 @@
       "sha256": "b0f201d8d5d4b86e493835c1caea12c81f3ece6cdad40f4721ed21156ef88c73"
     }
   ],
-  "python_source_count": 97,
+  "python_source_count": 99,
   "python_sources": [
     {
       "artifact_references": [
@@ -1954,6 +1954,106 @@
       ],
       "path": "scripts/clean_notebooks.py",
       "sha256": "63ec37f2adb7e279d53295024ee8830f4bfdd8b8209e4bcdc1d7da551227238e"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 20,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, sha256_file, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 34,
+          "literals": [
+            "run_manifest.json"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "manifests.extend(root.rglob(\"run_manifest.json\"))"
+        },
+        {
+          "cell": 0,
+          "line": 61,
+          "literals": [
+            "best.pth"
+          ],
+          "operations": [],
+          "source": "\"canonical_destination\": str(run_dir / \"best.pth\"),"
+        },
+        {
+          "cell": 0,
+          "line": 74,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "manifest = read_json(manifest_path)"
+        },
+        {
+          "cell": 0,
+          "line": 111,
+          "literals": [
+            "best.pth"
+          ],
+          "operations": [],
+          "source": "canonical = run_dir / \"best.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 116,
+          "literals": [
+            "best.pth"
+          ],
+          "operations": [],
+          "source": "if source != canonical and \"best.pth\" not in planned:"
+        },
+        {
+          "cell": 0,
+          "line": 119,
+          "literals": [
+            "best.pth"
+          ],
+          "operations": [],
+          "source": "planned.append(\"best.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 142,
+          "literals": [
+            "checkpoint_cleanup_latest.json"
+          ],
+          "operations": [],
+          "source": "report_path or (paths.reports / \"checkpoint_cleanup_latest.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 144,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(destination, report)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "datetime",
+        "pathlib",
+        "src.paths",
+        "src.training.checkpointing",
+        "src.utils.serialization",
+        "typing"
+      ],
+      "path": "scripts/cleanup_checkpoints.py",
+      "sha256": "1782b0027257cf69c4430131c484d210999b09168aaa372cecdfcf0e6fde51cb"
     },
     {
       "artifact_references": [
@@ -2371,13 +2471,13 @@
         "typing"
       ],
       "path": "scripts/evaluate.py",
-      "sha256": "06d12cd1fb967e2a06454213485b797eb1b73b08a05a2870a40d6bab6cc9b432"
+      "sha256": "ed80f21763b9e3a525b70cfd1442efb314afff081999e45a62e524df919855c7"
     },
     {
       "artifact_references": [
         {
           "cell": 0,
-          "line": 29,
+          "line": 32,
           "literals": [
             "project_config.yaml"
           ],
@@ -2386,7 +2486,7 @@
         },
         {
           "cell": 0,
-          "line": 44,
+          "line": 47,
           "literals": [
             "evaluation"
           ],
@@ -2395,7 +2495,7 @@
         },
         {
           "cell": 0,
-          "line": 45,
+          "line": 48,
           "literals": [
             "{run['run_id']}__res{IMAGE_SIZE}__metrics.json"
           ],
@@ -2404,7 +2504,16 @@
         },
         {
           "cell": 0,
-          "line": 76,
+          "line": 77,
+          "literals": [
+            "evaluation"
+          ],
+          "operations": [],
+          "source": "stage=\"evaluation\","
+        },
+        {
+          "cell": 0,
+          "line": 81,
           "literals": [],
           "operations": [
             "write"
@@ -2421,11 +2530,10 @@
         "src.paths",
         "src.subprocess_utils",
         "src.workflows.environment",
-        "src.workflows.hpo_comparison",
-        "subprocess"
+        "src.workflows.hpo_comparison"
       ],
       "path": "scripts/evaluate_all_models.py",
-      "sha256": "d8f70c10d58d7e4613032fde37cbc8254667900296c7e9792c4513aa9cb87522"
+      "sha256": "de18e05667d7da41761e4af4805822dbd72a17326059f38586edda6321cd35d0"
     },
     {
       "artifact_references": [
@@ -2894,47 +3002,43 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 17,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "from src.utils.serialization import write_csv, write_json, write_text_atomic"
-        },
-        {
-          "cell": 0,
-          "line": 73,
+          "line": 20,
           "literals": [],
           "operations": [
             "read"
           ],
-          "source": "raw = pointer.read_text(encoding=\"utf-8\").strip()"
+          "source": "read_yaml,"
         },
         {
           "cell": 0,
-          "line": 80,
-          "literals": [
-            "epoch_*.pth"
-          ],
+          "line": 21,
+          "literals": [],
           "operations": [
-            "discover"
+            "write"
           ],
-          "source": "run_dir.glob(\"epoch_*.pth\"),"
+          "source": "write_csv,"
         },
         {
           "cell": 0,
-          "line": 92,
-          "literals": [
-            "best_*.pth"
-          ],
+          "line": 22,
+          "literals": [],
           "operations": [
-            "discover"
+            "write"
           ],
-          "source": "for path in run_dir.glob(\"best_*.pth\")"
+          "source": "write_json,"
         },
         {
           "cell": 0,
-          "line": 101,
+          "line": 23,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_text_atomic,"
+        },
+        {
+          "cell": 0,
+          "line": 78,
           "literals": [
             "scalars.json"
           ],
@@ -2943,7 +3047,7 @@
         },
         {
           "cell": 0,
-          "line": 105,
+          "line": 82,
           "literals": [],
           "operations": [
             "read"
@@ -2952,7 +3056,7 @@
         },
         {
           "cell": 0,
-          "line": 109,
+          "line": 86,
           "literals": [],
           "operations": [
             "read"
@@ -2961,7 +3065,7 @@
         },
         {
           "cell": 0,
-          "line": 118,
+          "line": 95,
           "literals": [],
           "operations": [
             "write"
@@ -2970,7 +3074,7 @@
         },
         {
           "cell": 0,
-          "line": 119,
+          "line": 96,
           "literals": [
             "epoch_metrics.jsonl"
           ],
@@ -2979,7 +3083,7 @@
         },
         {
           "cell": 0,
-          "line": 120,
+          "line": 97,
           "literals": [],
           "operations": [
             "write"
@@ -2988,7 +3092,7 @@
         },
         {
           "cell": 0,
-          "line": 123,
+          "line": 100,
           "literals": [
             "metrics_history.csv"
           ],
@@ -2999,7 +3103,18 @@
         },
         {
           "cell": 0,
-          "line": 287,
+          "line": 251,
+          "literals": [
+            "training_config.yaml"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "training_config = read_yaml(run_dir / \"training_config.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 267,
           "literals": [
             "pretrained"
           ],
@@ -3008,7 +3123,7 @@
         },
         {
           "cell": 0,
-          "line": 291,
+          "line": 271,
           "literals": [
             "PRETRAINING_WARNING.txt"
           ],
@@ -3019,7 +3134,7 @@
         },
         {
           "cell": 0,
-          "line": 297,
+          "line": 277,
           "literals": [],
           "operations": [
             "read"
@@ -3028,7 +3143,7 @@
         },
         {
           "cell": 0,
-          "line": 298,
+          "line": 278,
           "literals": [],
           "operations": [
             "read"
@@ -3037,7 +3152,7 @@
         },
         {
           "cell": 0,
-          "line": 300,
+          "line": 280,
           "literals": [
             "applied_overrides.json"
           ],
@@ -3048,7 +3163,7 @@
         },
         {
           "cell": 0,
-          "line": 301,
+          "line": 281,
           "literals": [],
           "operations": [
             "write"
@@ -3057,7 +3172,7 @@
         },
         {
           "cell": 0,
-          "line": 380,
+          "line": 360,
           "literals": [
             "last.pth"
           ],
@@ -3066,7 +3181,7 @@
         },
         {
           "cell": 0,
-          "line": 381,
+          "line": 361,
           "literals": [
             "last.pth"
           ],
@@ -3075,7 +3190,34 @@
         },
         {
           "cell": 0,
-          "line": 414,
+          "line": 370,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json("
+        },
+        {
+          "cell": 0,
+          "line": 371,
+          "literals": [
+            "checkpoint_policy.json"
+          ],
+          "operations": [],
+          "source": "run_dir / \"checkpoint_policy.json\","
+        },
+        {
+          "cell": 0,
+          "line": 377,
+          "literals": [
+            "last.pth"
+          ],
+          "operations": [],
+          "source": "\"filename\": \"last.pth\","
+        },
+        {
+          "cell": 0,
+          "line": 396,
           "literals": [
             "scheduler_contract.json"
           ],
@@ -3084,7 +3226,7 @@
         },
         {
           "cell": 0,
-          "line": 416,
+          "line": 398,
           "literals": [],
           "operations": [
             "read"
@@ -3093,7 +3235,7 @@
         },
         {
           "cell": 0,
-          "line": 417,
+          "line": 399,
           "literals": [],
           "operations": [
             "read"
@@ -3102,7 +3244,7 @@
         },
         {
           "cell": 0,
-          "line": 425,
+          "line": 407,
           "literals": [],
           "operations": [
             "write"
@@ -3111,7 +3253,7 @@
         },
         {
           "cell": 0,
-          "line": 426,
+          "line": 408,
           "literals": [],
           "operations": [
             "write"
@@ -3120,7 +3262,7 @@
         },
         {
           "cell": 0,
-          "line": 591,
+          "line": 573,
           "literals": [],
           "operations": [
             "write"
@@ -3129,61 +3271,79 @@
         },
         {
           "cell": 0,
-          "line": 604,
-          "literals": [
-            "last.pth"
+          "line": 595,
+          "literals": [],
+          "operations": [
+            "read"
           ],
-          "operations": [],
-          "source": "materialize_checkpoint_alias(last_checkpoint, run_dir / \"last.pth\")"
+          "source": "state = torch.load(temporary, map_location=\"cpu\", weights_only=False)"
         },
         {
           "cell": 0,
           "line": 606,
           "literals": [
-            "best_map.pth"
+            "last.pth"
           ],
           "operations": [],
-          "source": "materialize_checkpoint_alias(best_map, run_dir / \"best_map.pth\")"
+          "source": "atomic_torch_save(state, run_dir / \"last.pth\")"
         },
         {
           "cell": 0,
-          "line": 608,
-          "literals": [
-            "best_aptiny.pth"
-          ],
-          "operations": [],
-          "source": "materialize_checkpoint_alias(best_tiny, run_dir / \"best_aptiny.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 635,
-          "literals": [
-            "best_map.pth"
-          ],
-          "operations": [],
-          "source": "\"checkpoint_best_map\": str(run_dir / \"best_map.pth\"),"
-        },
-        {
-          "cell": 0,
-          "line": 636,
-          "literals": [
-            "best_aptiny.pth"
-          ],
-          "operations": [],
-          "source": "\"checkpoint_best_aptiny\": str(run_dir / \"best_aptiny.pth\"),"
-        },
-        {
-          "cell": 0,
-          "line": 637,
+          "line": 613,
           "literals": [
             "last.pth"
           ],
           "operations": [],
-          "source": "\"checkpoint_last\": str(run_dir / \"last.pth\"),"
+          "source": "checkpoint = run_dir / \"last.pth\""
         },
         {
           "cell": 0,
-          "line": 652,
+          "line": 616,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "state = torch.load(checkpoint, map_location=\"cpu\", weights_only=False)"
+        },
+        {
+          "cell": 0,
+          "line": 633,
+          "literals": [
+            "last.pth"
+          ],
+          "operations": [],
+          "source": "checkpoint = run_dir / \"last.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 636,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "state = torch.load(checkpoint, map_location=\"cpu\", weights_only=False)"
+        },
+        {
+          "cell": 0,
+          "line": 660,
+          "literals": [
+            "last.pth"
+          ],
+          "operations": [],
+          "source": "last_checkpoint = run_dir / \"last.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 702,
+          "literals": [
+            "best.pth"
+          ],
+          "operations": [],
+          "source": "run_dir / \"best.pth\","
+        },
+        {
+          "cell": 0,
+          "line": 728,
           "literals": [
             "final_metrics.json"
           ],
@@ -3194,7 +3354,7 @@
         },
         {
           "cell": 0,
-          "line": 655,
+          "line": 731,
           "literals": [
             "training_curves.png"
           ],
@@ -3211,7 +3371,6 @@
         "mmengine.hooks",
         "mmengine.runner",
         "pathlib",
-        "re",
         "src.optional_outputs",
         "src.reproducibility",
         "src.runtime_manifest",
@@ -3225,7 +3384,7 @@
         "typing"
       ],
       "path": "scripts/run_mmdetection.py",
-      "sha256": "1d1b24f9536e18a437ab6d85d517ea88d88d2734e93c09c5853ca4292eda7781"
+      "sha256": "535ed57aed06f3228b1d6bd8e221340d358f08e42c425b8f88d440dd2f276ba6"
     },
     {
       "artifact_references": [
@@ -3308,13 +3467,25 @@
           "line": 39,
           "literals": [],
           "operations": [
+            "read",
             "write"
           ],
-          "source": "from src.utils.serialization import write_json, write_text_atomic"
+          "source": "from src.utils.serialization import read_yaml, write_json, write_text_atomic"
         },
         {
           "cell": 0,
-          "line": 98,
+          "line": 96,
+          "literals": [
+            "training_config.yaml"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "training_config = read_yaml(run_dir / \"training_config.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 100,
           "literals": [],
           "operations": [
             "read"
@@ -3323,7 +3494,7 @@
         },
         {
           "cell": 0,
-          "line": 102,
+          "line": 104,
           "literals": [],
           "operations": [
             "read"
@@ -3332,7 +3503,7 @@
         },
         {
           "cell": 0,
-          "line": 165,
+          "line": 167,
           "literals": [
             "applied_overrides.json"
           ],
@@ -3343,7 +3514,7 @@
         },
         {
           "cell": 0,
-          "line": 166,
+          "line": 168,
           "literals": [],
           "operations": [
             "write"
@@ -3352,7 +3523,7 @@
         },
         {
           "cell": 0,
-          "line": 248,
+          "line": 250,
           "literals": [
             "parameter_groups.json"
           ],
@@ -3363,7 +3534,7 @@
         },
         {
           "cell": 0,
-          "line": 249,
+          "line": 251,
           "literals": [],
           "operations": [
             "write"
@@ -3372,7 +3543,7 @@
         },
         {
           "cell": 0,
-          "line": 376,
+          "line": 378,
           "literals": [],
           "operations": [
             "write"
@@ -3381,7 +3552,7 @@
         },
         {
           "cell": 0,
-          "line": 387,
+          "line": 390,
           "literals": [
             "last.pth"
           ],
@@ -3390,7 +3561,7 @@
         },
         {
           "cell": 0,
-          "line": 388,
+          "line": 391,
           "literals": [],
           "operations": [
             "read"
@@ -3399,7 +3570,7 @@
         },
         {
           "cell": 0,
-          "line": 389,
+          "line": 392,
           "literals": [
             "last.pth"
           ],
@@ -3408,7 +3579,7 @@
         },
         {
           "cell": 0,
-          "line": 523,
+          "line": 529,
           "literals": [
             "last.pth"
           ],
@@ -3417,7 +3588,7 @@
         },
         {
           "cell": 0,
-          "line": 572,
+          "line": 578,
           "literals": [
             "predictions_epoch_{epoch:03d}.json"
           ],
@@ -3426,7 +3597,7 @@
         },
         {
           "cell": 0,
-          "line": 573,
+          "line": 579,
           "literals": [],
           "operations": [
             "write"
@@ -3435,7 +3606,7 @@
         },
         {
           "cell": 0,
-          "line": 595,
+          "line": 607,
           "literals": [
             "last.pth"
           ],
@@ -3444,26 +3615,7 @@
         },
         {
           "cell": 0,
-          "line": 598,
-          "literals": [
-            "last.pth"
-          ],
-          "operations": [],
-          "source": "run_dir / \"last.pth\", run_dir, weight_variant=\"raw\""
-        },
-        {
-          "cell": 0,
-          "line": 601,
-          "literals": [
-            "best_aptiny.pth",
-            "last.pth"
-          ],
-          "operations": [],
-          "source": "materialize_checkpoint_alias(run_dir / \"last.pth\", run_dir / \"best_aptiny.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 653,
+          "line": 659,
           "literals": [],
           "operations": [
             "write"
@@ -3472,135 +3624,43 @@
         },
         {
           "cell": 0,
-          "line": 657,
-          "literals": [
-            "best_raw.pth"
-          ],
-          "operations": [],
-          "source": "if not (run_dir / \"best_raw.pth\").exists():"
-        },
-        {
-          "cell": 0,
-          "line": 660,
-          "literals": [
-            "best_map.pth"
-          ],
-          "operations": [],
-          "source": "run_dir / \"best_map.pth\""
-        },
-        {
-          "cell": 0,
-          "line": 661,
-          "literals": [
-            "best_map.pth"
-          ],
-          "operations": [],
-          "source": "if (run_dir / \"best_map.pth\").is_file()"
-        },
-        {
-          "cell": 0,
-          "line": 662,
-          "literals": [
-            "last.pth"
-          ],
-          "operations": [],
-          "source": "else run_dir / \"last.pth\""
-        },
-        {
-          "cell": 0,
-          "line": 667,
-          "literals": [
-            "best_map.pth"
-          ],
-          "operations": [],
-          "source": "if not (run_dir / \"best_map.pth\").exists():"
-        },
-        {
-          "cell": 0,
-          "line": 668,
-          "literals": [
-            "best_map.pth",
-            "last.pth"
-          ],
-          "operations": [],
-          "source": "materialize_checkpoint_alias(run_dir / \"last.pth\", run_dir / \"best_map.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 669,
-          "literals": [
-            "best_aptiny.pth"
-          ],
-          "operations": [],
-          "source": "if not (run_dir / \"best_aptiny.pth\").exists():"
-        },
-        {
-          "cell": 0,
           "line": 671,
           "literals": [
-            "best_aptiny.pth",
             "last.pth"
           ],
           "operations": [],
-          "source": "run_dir / \"last.pth\", run_dir / \"best_aptiny.pth\""
+          "source": "atomic_torch_save(checkpoint_state, run_dir / \"last.pth\")"
         },
         {
           "cell": 0,
-          "line": 687,
-          "literals": [
-            "best_map.pth"
-          ],
-          "operations": [],
-          "source": "\"checkpoint_best_map\": str(run_dir / \"best_map.pth\"),"
-        },
-        {
-          "cell": 0,
-          "line": 688,
-          "literals": [
-            "best_raw.pth"
-          ],
-          "operations": [],
-          "source": "\"checkpoint_best_raw\": str(run_dir / \"best_raw.pth\"),"
-        },
-        {
-          "cell": 0,
-          "line": 690,
-          "literals": [
-            "best_ema.pth"
-          ],
-          "operations": [],
-          "source": "str(run_dir / \"best_ema.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 691,
-          "literals": [
-            "best_ema.pth"
-          ],
-          "operations": [],
-          "source": "if (run_dir / \"best_ema.pth\").is_file()"
-        },
-        {
-          "cell": 0,
-          "line": 694,
-          "literals": [
-            "best_aptiny.pth"
-          ],
-          "operations": [],
-          "source": "\"checkpoint_best_aptiny\": str(run_dir / \"best_aptiny.pth\"),"
-        },
-        {
-          "cell": 0,
-          "line": 695,
+          "line": 683,
           "literals": [
             "last.pth"
           ],
           "operations": [],
-          "source": "\"checkpoint_last\": str(run_dir / \"last.pth\"),"
+          "source": "run_dir / \"last.pth\","
         },
         {
           "cell": 0,
-          "line": 724,
+          "line": 684,
+          "literals": [
+            "best.pth"
+          ],
+          "operations": [],
+          "source": "run_dir / \"best.pth\","
+        },
+        {
+          "cell": 0,
+          "line": 702,
+          "literals": [
+            "last.pth"
+          ],
+          "operations": [],
+          "source": "\"checkpoint_resume\": str(run_dir / \"last.pth\"),"
+        },
+        {
+          "cell": 0,
+          "line": 736,
           "literals": [
             "final_metrics.json"
           ],
@@ -3611,7 +3671,7 @@
         },
         {
           "cell": 0,
-          "line": 727,
+          "line": 739,
           "literals": [
             "training_curves.png"
           ],
@@ -3651,7 +3711,7 @@
         "typing"
       ],
       "path": "scripts/run_rtdetr_training.py",
-      "sha256": "44b0353356f317914165dd2807aeefccb82d3241b24fc4b16e3f7852f07fd7b1"
+      "sha256": "558f8a9aaee6553ad3c3510c962d37a166a9b987f91f8f504f49ae9e0c0791ff"
     },
     {
       "artifact_references": [
@@ -3788,7 +3848,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 121,
+          "line": 163,
           "literals": [],
           "operations": [
             "discover"
@@ -3805,7 +3865,7 @@
         "re"
       ],
       "path": "scripts/validate_notebooks.py",
-      "sha256": "8fb760712430f79bef7c3329cdc954fbae313060e4c0475e3711f726455c9942"
+      "sha256": "0095cb9de7f9067c06407fc04ee6a6519d705d87cb3ccc7a2e3a901b4a0319f7"
     },
     {
       "artifact_references": [
@@ -4602,7 +4662,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 10,
+          "line": 19,
           "literals": [],
           "operations": [
             "write"
@@ -4611,24 +4671,45 @@
         },
         {
           "cell": 0,
-          "line": 28,
+          "line": 353,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "write_json(Path(args.json_output), environment)"
+          "source": "write_json(args.json_output, report)"
+        },
+        {
+          "cell": 0,
+          "line": 362,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(args.json_output, report)"
         }
       ],
       "imports": [
         "__future__",
         "argparse",
+        "datetime",
+        "importlib",
+        "importlib.metadata",
+        "os",
         "pathlib",
-        "src.notebook_utils",
+        "platform",
+        "src.models.vmamba_frcnn.factory",
+        "src.models.vmamba_frcnn.importer",
         "src.utils.environment",
-        "src.utils.serialization"
+        "src.utils.serialization",
+        "src.workflows.isolated_environment",
+        "subprocess",
+        "sys",
+        "traceback",
+        "transformers",
+        "typing"
       ],
       "path": "scripts/verify_model_environments.py",
-      "sha256": "e57973950e67e1c4262a5624ec1e4c6c1a428c602f4cf678e83718cb5c057601"
+      "sha256": "3becdaa5eb2a31798e4a17dbe2f4582f723821c9a5c91e20a1a5fca19e1520be"
     },
     {
       "artifact_references": [
@@ -4800,7 +4881,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 9,
+          "line": 10,
           "literals": [],
           "operations": [
             "read"
@@ -4809,7 +4890,7 @@
         },
         {
           "cell": 0,
-          "line": 22,
+          "line": 38,
           "literals": [],
           "operations": [
             "read"
@@ -4818,7 +4899,7 @@
         },
         {
           "cell": 0,
-          "line": 34,
+          "line": 50,
           "literals": [
             "{model_id}_2class_selected.yaml"
           ],
@@ -4827,7 +4908,7 @@
         },
         {
           "cell": 0,
-          "line": 62,
+          "line": 78,
           "literals": [
             "*/run_manifest.json"
           ],
@@ -4838,7 +4919,7 @@
         },
         {
           "cell": 0,
-          "line": 95,
+          "line": 111,
           "literals": [
             "last.pth"
           ],
@@ -4847,7 +4928,7 @@
         },
         {
           "cell": 0,
-          "line": 96,
+          "line": 112,
           "literals": [
             "training_config.yaml"
           ],
@@ -4856,7 +4937,7 @@
         },
         {
           "cell": 0,
-          "line": 99,
+          "line": 115,
           "literals": [],
           "operations": [
             "read"
@@ -4865,7 +4946,7 @@
         },
         {
           "cell": 0,
-          "line": 129,
+          "line": 145,
           "literals": [
             "model_failure.json"
           ],
@@ -4874,7 +4955,7 @@
         },
         {
           "cell": 0,
-          "line": 134,
+          "line": 150,
           "literals": [
             "search_state.json"
           ],
@@ -4883,7 +4964,7 @@
         },
         {
           "cell": 0,
-          "line": 153,
+          "line": 169,
           "literals": [
             "last.pth"
           ],
@@ -4892,7 +4973,7 @@
         },
         {
           "cell": 0,
-          "line": 165,
+          "line": 181,
           "literals": [
             "last.pth"
           ],
@@ -4901,7 +4982,7 @@
         },
         {
           "cell": 0,
-          "line": 176,
+          "line": 192,
           "literals": [],
           "operations": [
             "read"
@@ -4910,7 +4991,7 @@
         },
         {
           "cell": 0,
-          "line": 186,
+          "line": 202,
           "literals": [
             "*/bundle_manifest.json"
           ],
@@ -4921,7 +5002,7 @@
         },
         {
           "cell": 0,
-          "line": 217,
+          "line": 233,
           "literals": [],
           "operations": [
             "read"
@@ -4930,7 +5011,7 @@
         },
         {
           "cell": 0,
-          "line": 225,
+          "line": 241,
           "literals": [
             "{run_id}__res*__metrics.json"
           ],
@@ -4941,7 +5022,7 @@
         },
         {
           "cell": 0,
-          "line": 234,
+          "line": 250,
           "literals": [
             "final_results.json"
           ],
@@ -4950,7 +5031,7 @@
         },
         {
           "cell": 0,
-          "line": 236,
+          "line": 252,
           "literals": [
             "final_results.json"
           ],
@@ -4959,7 +5040,7 @@
         },
         {
           "cell": 0,
-          "line": 245,
+          "line": 261,
           "literals": [
             "model_failure.json"
           ],
@@ -4968,34 +5049,7 @@
         },
         {
           "cell": 0,
-          "line": 270,
-          "literals": [
-            "best_map.pth"
-          ],
-          "operations": [],
-          "source": "str(Path(str(final_run.get(\"run_dir\"))) / \"best_map.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 272,
-          "literals": [
-            "best_map.pth"
-          ],
-          "operations": [],
-          "source": "and (Path(str(final_run.get(\"run_dir\"))) / \"best_map.pth\").is_file()"
-        },
-        {
-          "cell": 0,
-          "line": 273,
-          "literals": [
-            "last.pth"
-          ],
-          "operations": [],
-          "source": "else str(Path(str(final_run.get(\"run_dir\"))) / \"last.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 319,
+          "line": 324,
           "literals": [
             "instances_train.json"
           ],
@@ -5009,11 +5063,12 @@
         "pathlib",
         "src.paths",
         "src.result_export",
+        "src.training.checkpointing",
         "src.utils.serialization",
         "typing"
       ],
       "path": "src/benchmark_status.py",
-      "sha256": "6fd4e01474e08713c080f6d28f49df6adb1041a9663c2bf47dd7c64cc8f34787"
+      "sha256": "3fa8db0822cea9f800162b21bc8144284252eb77588530947256206a7a7b3fc5"
     },
     {
       "artifact_references": [
@@ -6848,17 +6903,17 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 18,
+          "line": 17,
           "literals": [],
           "operations": [
             "read",
             "write"
           ],
-          "source": "from src.utils.serialization import read_json, read_yaml, write_json"
+          "source": "from src.utils.serialization import read_json, read_yaml, sha256_file, write_json"
         },
         {
           "cell": 0,
-          "line": 27,
+          "line": 26,
           "literals": [],
           "operations": [
             "write"
@@ -6867,7 +6922,7 @@
         },
         {
           "cell": 0,
-          "line": 69,
+          "line": 68,
           "literals": [
             "best_config.yaml"
           ],
@@ -6876,7 +6931,7 @@
         },
         {
           "cell": 0,
-          "line": 76,
+          "line": 75,
           "literals": [
             "best_config.yaml"
           ],
@@ -6885,7 +6940,7 @@
         },
         {
           "cell": 0,
-          "line": 86,
+          "line": 85,
           "literals": [],
           "operations": [
             "read"
@@ -6894,7 +6949,7 @@
         },
         {
           "cell": 0,
-          "line": 154,
+          "line": 153,
           "literals": [
             "*/resume_contract.json"
           ],
@@ -6905,7 +6960,7 @@
         },
         {
           "cell": 0,
-          "line": 158,
+          "line": 157,
           "literals": [],
           "operations": [
             "read"
@@ -6914,7 +6969,7 @@
         },
         {
           "cell": 0,
-          "line": 161,
+          "line": 160,
           "literals": [
             "run_manifest.json"
           ],
@@ -6923,7 +6978,7 @@
         },
         {
           "cell": 0,
-          "line": 163,
+          "line": 162,
           "literals": [],
           "operations": [
             "read"
@@ -6932,7 +6987,7 @@
         },
         {
           "cell": 0,
-          "line": 166,
+          "line": 165,
           "literals": [
             "last.pth"
           ],
@@ -6941,23 +6996,14 @@
         },
         {
           "cell": 0,
-          "line": 191,
+          "line": 200,
           "literals": [
-            "last.pth",
-            "latest.pt"
+            "run_manifest.json"
           ],
-          "operations": [],
-          "source": "(run_dir / \"last.pth\", run_dir / \"latest.pt\"),"
-        },
-        {
-          "cell": 0,
-          "line": 192,
-          "literals": [
-            "best.pt",
-            "best_map.pth"
+          "operations": [
+            "write"
           ],
-          "operations": [],
-          "source": "(run_dir / \"best_map.pth\", run_dir / \"best.pt\"),"
+          "source": "write_json(run_dir / \"run_manifest.json\", manifest)"
         },
         {
           "cell": 0,
@@ -6968,11 +7014,11 @@
           "operations": [
             "read"
           ],
-          "source": "manifests.append(read_json(run_dir / \"run_manifest.json\"))"
+          "source": "run_dir, read_json(run_dir / \"run_manifest.json\")"
         },
         {
           "cell": 0,
-          "line": 240,
+          "line": 242,
           "literals": [
             "resume_contract.json"
           ],
@@ -6983,7 +7029,7 @@
         },
         {
           "cell": 0,
-          "line": 254,
+          "line": 256,
           "literals": [
             "instances_train.json"
           ],
@@ -6992,7 +7038,7 @@
         },
         {
           "cell": 0,
-          "line": 257,
+          "line": 259,
           "literals": [
             "instances_val.json"
           ],
@@ -7010,7 +7056,6 @@
         "src.hpo.workflow",
         "src.models.registry",
         "src.models.rtdetrv2.optimizer",
-        "src.optional_outputs",
         "src.paths",
         "src.training.checkpointing",
         "src.training.trainer",
@@ -7018,7 +7063,7 @@
         "typing"
       ],
       "path": "src/hpo/final_workflow.py",
-      "sha256": "45cb481a0ca7a24da010f13820eaf2e09b4eedec48ed7cc7432e437bc7ba46f8"
+      "sha256": "77ace67082f35cb12a328aedd34e8484a00ca6413006ba379ef637cfda6c074f"
     },
     {
       "artifact_references": [
@@ -7323,7 +7368,7 @@
         "typing"
       ],
       "path": "src/hpo/result_bundle.py",
-      "sha256": "89104abe7384ef368e086f5866b97e81609abb299010a02d4b3ceb0814238fa9"
+      "sha256": "bbf0dd1dd3e449f9436a790eb83826a488be1fb6342a59ca18760ab1f968410c"
     },
     {
       "artifact_references": [
@@ -7393,7 +7438,7 @@
         },
         {
           "cell": 0,
-          "line": 152,
+          "line": 153,
           "literals": [
             "study_v2_latest.db"
           ],
@@ -7415,13 +7460,13 @@
         "typing"
       ],
       "path": "src/hpo/rtdetr_v2.py",
-      "sha256": "6a7983885c243852f45043bb831f95cb8f975c47b6dd8b7e97d38116fc21368b"
+      "sha256": "41a1611363bb0e6f00d61c82841ea7e66ae253c30295d53f83254e42b6efd325"
     },
     {
       "artifact_references": [
         {
           "cell": 0,
-          "line": 22,
+          "line": 24,
           "literals": [],
           "operations": [
             "read",
@@ -7431,7 +7476,7 @@
         },
         {
           "cell": 0,
-          "line": 45,
+          "line": 47,
           "literals": [],
           "operations": [
             "write"
@@ -7440,7 +7485,7 @@
         },
         {
           "cell": 0,
-          "line": 125,
+          "line": 144,
           "literals": [
             "study.db",
             "study_smoke.db"
@@ -7450,7 +7495,7 @@
         },
         {
           "cell": 0,
-          "line": 132,
+          "line": 151,
           "literals": [
             "instances_train.json"
           ],
@@ -7459,7 +7504,7 @@
         },
         {
           "cell": 0,
-          "line": 137,
+          "line": 156,
           "literals": [
             "instances_val.json"
           ],
@@ -7468,7 +7513,7 @@
         },
         {
           "cell": 0,
-          "line": 140,
+          "line": 159,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7477,7 +7522,7 @@
         },
         {
           "cell": 0,
-          "line": 141,
+          "line": 160,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7486,7 +7531,7 @@
         },
         {
           "cell": 0,
-          "line": 142,
+          "line": 161,
           "literals": [
             "official_full_train.json"
           ],
@@ -7495,7 +7540,7 @@
         },
         {
           "cell": 0,
-          "line": 143,
+          "line": 162,
           "literals": [
             "official_validation.json"
           ],
@@ -7504,7 +7549,7 @@
         },
         {
           "cell": 0,
-          "line": 144,
+          "line": 163,
           "literals": [
             "split_summary.json"
           ],
@@ -7513,7 +7558,7 @@
         },
         {
           "cell": 0,
-          "line": 152,
+          "line": 171,
           "literals": [
             "split_summary.json"
           ],
@@ -7524,7 +7569,7 @@
         },
         {
           "cell": 0,
-          "line": 210,
+          "line": 229,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7533,7 +7578,7 @@
         },
         {
           "cell": 0,
-          "line": 213,
+          "line": 232,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7542,25 +7587,93 @@
         },
         {
           "cell": 0,
-          "line": 359,
+          "line": 341,
+          "literals": [
+            "trial_record.json"
+          ],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(persistent / \"trial_record.json\", record)"
+        },
+        {
+          "cell": 0,
+          "line": 343,
+          "literals": [
+            "applied_overrides.json"
+          ],
+          "operations": [],
+          "source": "\"applied_overrides.json\","
+        },
+        {
+          "cell": 0,
+          "line": 344,
+          "literals": [
+            "runtime_environment.json"
+          ],
+          "operations": [],
+          "source": "\"runtime_environment.json\","
+        },
+        {
+          "cell": 0,
+          "line": 345,
+          "literals": [
+            "optional_output_warnings.json"
+          ],
+          "operations": [],
+          "source": "\"optional_output_warnings.json\","
+        },
+        {
+          "cell": 0,
+          "line": 349,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "write_json(persistent / filename, read_json(source))"
+        },
+        {
+          "cell": 0,
+          "line": 350,
           "literals": [
             "final_metrics.json"
           ],
           "operations": [],
-          "source": "trial.set_user_attr(\"metrics_path\", str(run_dir / \"final_metrics.json\"))"
+          "source": "metrics_source = scratch / \"final_metrics.json\""
         },
         {
           "cell": 0,
-          "line": 360,
+          "line": 352,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "metrics = read_json(metrics_source)"
+        },
+        {
+          "cell": 0,
+          "line": 359,
           "literals": [
-            "best_map.pth"
+            "final_metrics.json"
+          ],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(persistent / \"final_metrics.json\", metrics)"
+        },
+        {
+          "cell": 0,
+          "line": 470,
+          "literals": [
+            "final_metrics.json"
           ],
           "operations": [],
-          "source": "trial.set_user_attr(\"checkpoint_path\", str(run_dir / \"best_map.pth\"))"
+          "source": "\"metrics_path\", str(persistent_dir / \"final_metrics.json\")"
         },
         {
           "cell": 0,
-          "line": 426,
+          "line": 538,
           "literals": [],
           "operations": [
             "write"
@@ -7569,7 +7682,7 @@
         },
         {
           "cell": 0,
-          "line": 427,
+          "line": 539,
           "literals": [
             "{phase}_trials.csv"
           ],
@@ -7578,7 +7691,7 @@
         },
         {
           "cell": 0,
-          "line": 455,
+          "line": 567,
           "literals": [
             "search_space.json"
           ],
@@ -7589,7 +7702,7 @@
         },
         {
           "cell": 0,
-          "line": 456,
+          "line": 568,
           "literals": [
             "best_config.json"
           ],
@@ -7600,7 +7713,7 @@
         },
         {
           "cell": 0,
-          "line": 457,
+          "line": 569,
           "literals": [
             "best_config.yaml"
           ],
@@ -7611,7 +7724,7 @@
         },
         {
           "cell": 0,
-          "line": 462,
+          "line": 574,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7620,7 +7733,7 @@
         },
         {
           "cell": 0,
-          "line": 466,
+          "line": 578,
           "literals": [],
           "operations": [
             "read"
@@ -7629,7 +7742,7 @@
         },
         {
           "cell": 0,
-          "line": 468,
+          "line": 580,
           "literals": [],
           "operations": [
             "write"
@@ -7638,7 +7751,7 @@
         },
         {
           "cell": 0,
-          "line": 469,
+          "line": 581,
           "literals": [
             "parameter_application_report.json"
           ],
@@ -7647,7 +7760,7 @@
         },
         {
           "cell": 0,
-          "line": 483,
+          "line": 595,
           "literals": [
             "best_config.yaml"
           ],
@@ -7656,7 +7769,7 @@
         },
         {
           "cell": 0,
-          "line": 489,
+          "line": 601,
           "literals": [
             "search_summary.json"
           ],
@@ -7676,6 +7789,7 @@
         "os",
         "pandas",
         "pathlib",
+        "shutil",
         "src.hpo.search_spaces",
         "src.models.registry",
         "src.models.rtdetrv2.optimizer",
@@ -7685,12 +7799,13 @@
         "src.training.trainer",
         "src.utils.serialization",
         "src.workflows.adapter_gate",
+        "tempfile",
         "time",
         "torch",
         "typing"
       ],
       "path": "src/hpo/workflow.py",
-      "sha256": "f26519b423c03322a0c77d507a2581263d678541f8b4aeeadd8ee7f7fa8f61f8"
+      "sha256": "7caa37538fc8214846a7afd83e76363173755697870cf6c033788098e025d63d"
     },
     {
       "artifact_references": [
@@ -8186,7 +8301,7 @@
         },
         {
           "cell": 0,
-          "line": 134,
+          "line": 151,
           "literals": [
             "requirements-openmmlab-py310-cu118.txt"
           ],
@@ -8195,7 +8310,7 @@
         },
         {
           "cell": 0,
-          "line": 136,
+          "line": 153,
           "literals": [
             "requirements-rtdetr-colab.txt"
           ],
@@ -8209,6 +8324,7 @@
         "importlib.metadata",
         "importlib.util",
         "json",
+        "mmcv.ops",
         "os",
         "pathlib",
         "shutil",
@@ -8218,7 +8334,7 @@
         "torch"
       ],
       "path": "src/notebook_utils.py",
-      "sha256": "9ed6ef56c4dfd691670c3dd961d8cadc0b7270ed5bd5b24ef042e1f9116374a9"
+      "sha256": "394a22480750e0174b32d6bbbbb5240ab4bfb15520eb57fa6ef820fe873a10a3"
     },
     {
       "artifact_references": [
@@ -9217,7 +9333,7 @@
         },
         {
           "cell": 0,
-          "line": 710,
+          "line": 716,
           "literals": [
             "datasets"
           ],
@@ -9226,7 +9342,7 @@
         },
         {
           "cell": 0,
-          "line": 715,
+          "line": 721,
           "literals": [
             "instances_val.json"
           ],
@@ -9235,7 +9351,7 @@
         },
         {
           "cell": 0,
-          "line": 724,
+          "line": 730,
           "literals": [],
           "operations": [
             "write"
@@ -9244,7 +9360,7 @@
         },
         {
           "cell": 0,
-          "line": 749,
+          "line": 755,
           "literals": [
             "{model_id}_2class_search_summary.json"
           ],
@@ -9253,7 +9369,7 @@
         },
         {
           "cell": 0,
-          "line": 766,
+          "line": 772,
           "literals": [
             "*__metrics.json"
           ],
@@ -9264,7 +9380,7 @@
         },
         {
           "cell": 0,
-          "line": 767,
+          "line": 773,
           "literals": [],
           "operations": [
             "read"
@@ -9273,7 +9389,7 @@
         },
         {
           "cell": 0,
-          "line": 785,
+          "line": 791,
           "literals": [],
           "operations": [
             "discover"
@@ -9282,7 +9398,7 @@
         },
         {
           "cell": 0,
-          "line": 794,
+          "line": 800,
           "literals": [
             "training_config.yaml"
           ],
@@ -9291,7 +9407,7 @@
         },
         {
           "cell": 0,
-          "line": 798,
+          "line": 804,
           "literals": [],
           "operations": [
             "read"
@@ -9300,7 +9416,7 @@
         },
         {
           "cell": 0,
-          "line": 910,
+          "line": 916,
           "literals": [
             "resolved_config.yaml"
           ],
@@ -9309,7 +9425,7 @@
         },
         {
           "cell": 0,
-          "line": 917,
+          "line": 923,
           "literals": [
             "environment.json"
           ],
@@ -9318,7 +9434,7 @@
         },
         {
           "cell": 0,
-          "line": 918,
+          "line": 924,
           "literals": [
             "split_summary.json"
           ],
@@ -9327,7 +9443,7 @@
         },
         {
           "cell": 0,
-          "line": 923,
+          "line": 929,
           "literals": [],
           "operations": [
             "read"
@@ -9336,7 +9452,7 @@
         },
         {
           "cell": 0,
-          "line": 925,
+          "line": 931,
           "literals": [],
           "operations": [
             "read"
@@ -9345,7 +9461,7 @@
         },
         {
           "cell": 0,
-          "line": 940,
+          "line": 946,
           "literals": [
             "instances_val.json"
           ],
@@ -9354,7 +9470,7 @@
         },
         {
           "cell": 0,
-          "line": 943,
+          "line": 949,
           "literals": [
             "split_summary.json"
           ],
@@ -9365,7 +9481,7 @@
         },
         {
           "cell": 0,
-          "line": 946,
+          "line": 952,
           "literals": [
             "official_full_train.json"
           ],
@@ -9374,7 +9490,7 @@
         },
         {
           "cell": 0,
-          "line": 947,
+          "line": 953,
           "literals": [
             "official_validation.json"
           ],
@@ -9383,7 +9499,7 @@
         },
         {
           "cell": 0,
-          "line": 958,
+          "line": 964,
           "literals": [],
           "operations": [
             "read"
@@ -9392,7 +9508,7 @@
         },
         {
           "cell": 0,
-          "line": 959,
+          "line": 965,
           "literals": [],
           "operations": [
             "read"
@@ -9401,7 +9517,7 @@
         },
         {
           "cell": 0,
-          "line": 960,
+          "line": 966,
           "literals": [
             "official_full_train.json"
           ],
@@ -9412,7 +9528,7 @@
         },
         {
           "cell": 0,
-          "line": 961,
+          "line": 967,
           "literals": [
             "official_validation.json"
           ],
@@ -9423,7 +9539,7 @@
         },
         {
           "cell": 0,
-          "line": 1001,
+          "line": 1007,
           "literals": [],
           "operations": [
             "read"
@@ -9432,7 +9548,7 @@
         },
         {
           "cell": 0,
-          "line": 1002,
+          "line": 1008,
           "literals": [
             "selected_lr.yaml"
           ],
@@ -9443,7 +9559,7 @@
         },
         {
           "cell": 0,
-          "line": 1003,
+          "line": 1009,
           "literals": [],
           "operations": [
             "write"
@@ -9452,7 +9568,7 @@
         },
         {
           "cell": 0,
-          "line": 1004,
+          "line": 1010,
           "literals": [
             "final_resolved_config.yaml"
           ],
@@ -9461,7 +9577,7 @@
         },
         {
           "cell": 0,
-          "line": 1007,
+          "line": 1013,
           "literals": [
             "candidates.csv"
           ],
@@ -9472,7 +9588,7 @@
         },
         {
           "cell": 0,
-          "line": 1008,
+          "line": 1014,
           "literals": [],
           "operations": [
             "write"
@@ -9481,7 +9597,7 @@
         },
         {
           "cell": 0,
-          "line": 1009,
+          "line": 1015,
           "literals": [
             "promotion_history.csv"
           ],
@@ -9490,7 +9606,7 @@
         },
         {
           "cell": 0,
-          "line": 1012,
+          "line": 1018,
           "literals": [
             "search_summary.json"
           ],
@@ -9501,7 +9617,7 @@
         },
         {
           "cell": 0,
-          "line": 1019,
+          "line": 1025,
           "literals": [
             "final_metrics.json"
           ],
@@ -9512,7 +9628,7 @@
         },
         {
           "cell": 0,
-          "line": 1020,
+          "line": 1026,
           "literals": [],
           "operations": [
             "write"
@@ -9521,7 +9637,7 @@
         },
         {
           "cell": 0,
-          "line": 1021,
+          "line": 1027,
           "literals": [
             "per_class_metrics.csv"
           ],
@@ -9530,7 +9646,7 @@
         },
         {
           "cell": 0,
-          "line": 1029,
+          "line": 1035,
           "literals": [],
           "operations": [
             "write"
@@ -9539,7 +9655,7 @@
         },
         {
           "cell": 0,
-          "line": 1030,
+          "line": 1036,
           "literals": [
             "profiling_summary.json"
           ],
@@ -9548,7 +9664,7 @@
         },
         {
           "cell": 0,
-          "line": 1041,
+          "line": 1047,
           "literals": [
             "environment.json"
           ],
@@ -9559,7 +9675,7 @@
         },
         {
           "cell": 0,
-          "line": 1042,
+          "line": 1048,
           "literals": [
             "environment_summary.json"
           ],
@@ -9570,7 +9686,7 @@
         },
         {
           "cell": 0,
-          "line": 1043,
+          "line": 1049,
           "literals": [],
           "operations": [
             "write"
@@ -9579,7 +9695,7 @@
         },
         {
           "cell": 0,
-          "line": 1044,
+          "line": 1050,
           "literals": [
             "dataset_hashes.json"
           ],
@@ -9588,7 +9704,7 @@
         },
         {
           "cell": 0,
-          "line": 1062,
+          "line": 1068,
           "literals": [
             "git_commit.txt"
           ],
@@ -9599,7 +9715,7 @@
         },
         {
           "cell": 0,
-          "line": 1090,
+          "line": 1096,
           "literals": [
             "reports"
           ],
@@ -9610,7 +9726,7 @@
         },
         {
           "cell": 0,
-          "line": 1091,
+          "line": 1097,
           "literals": [],
           "operations": [
             "write"
@@ -9619,7 +9735,7 @@
         },
         {
           "cell": 0,
-          "line": 1095,
+          "line": 1101,
           "literals": [
             "*.png"
           ],
@@ -9630,7 +9746,7 @@
         },
         {
           "cell": 0,
-          "line": 1099,
+          "line": 1105,
           "literals": [
             "reports"
           ],
@@ -9639,7 +9755,7 @@
         },
         {
           "cell": 0,
-          "line": 1125,
+          "line": 1131,
           "literals": [
             "reports/figures/{path.name}"
           ],
@@ -9648,7 +9764,7 @@
         },
         {
           "cell": 0,
-          "line": 1126,
+          "line": 1132,
           "literals": [
             "reports"
           ],
@@ -9659,7 +9775,7 @@
         },
         {
           "cell": 0,
-          "line": 1132,
+          "line": 1138,
           "literals": [],
           "operations": [
             "write"
@@ -9668,7 +9784,7 @@
         },
         {
           "cell": 0,
-          "line": 1134,
+          "line": 1140,
           "literals": [
             "bundle_manifest.json"
           ],
@@ -9696,7 +9812,7 @@
         "typing"
       ],
       "path": "src/result_export.py",
-      "sha256": "19dd282057fc7a07a8ab8b6506f039f39edb0c3fa3e36edd377058efe181844d"
+      "sha256": "89de39c5e1c51e4093fb6e5384c55989432dbd610c1395b0a172605dda2ffa93"
     },
     {
       "artifact_references": [
@@ -9753,6 +9869,42 @@
       ],
       "path": "src/runtime_manifest.py",
       "sha256": "e9460773a450ed1536ac4566db5fc0522c2c1ad990c1f3b6ed4428b1208ab732"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 12,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_text_atomic"
+        },
+        {
+          "cell": 0,
+          "line": 193,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_text_atomic(log_path, rendered)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "matplotlib",
+        "os",
+        "pathlib",
+        "re",
+        "src.utils.serialization",
+        "subprocess",
+        "sys",
+        "typing",
+        "urllib.parse"
+      ],
+      "path": "src/subprocess_utils.py",
+      "sha256": "f5f61b018d8cc78a5a8199d04b27b5a335a9b6522f37b74c9a7357b66f84033c"
     },
     {
       "artifact_references": [
@@ -9826,50 +9978,40 @@
           "cell": 0,
           "line": 55,
           "literals": [
-            "best_{weight_variant}.pth"
+            "best.pth"
           ],
           "operations": [],
-          "source": "selected = root / f\"best_{weight_variant}.pth\""
+          "source": "selected = root / \"best.pth\""
         },
         {
           "cell": 0,
-          "line": 58,
+          "line": 62,
           "literals": [
-            "best_map.pth"
-          ],
-          "operations": [],
-          "source": "legacy = root / \"best_map.pth\""
-        },
-        {
-          "cell": 0,
-          "line": 61,
-          "literals": [
-            "best.pt"
-          ],
-          "operations": [],
-          "source": "materialize_checkpoint_alias(last_checkpoint, root / \"best.pt\")"
-        },
-        {
-          "cell": 0,
-          "line": 68,
-          "literals": [
-            "best.pt",
-            "best_ema.pth",
-            "best_raw.pth"
-          ],
-          "operations": [],
-          "source": "(root / \"best_ema.pth\", root / \"best.pt\", root / \"best_raw.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 70,
-          "literals": [
-            "best.pt",
+            "best.pth",
             "best_map.pth",
             "best_raw.pth"
           ],
           "operations": [],
-          "source": "else (root / \"best.pt\", root / \"best_raw.pth\", root / \"best_map.pth\")"
+          "source": "candidates = [root / \"best.pth\", root / \"best_map.pth\", root / \"best_raw.pth\"]"
+        },
+        {
+          "cell": 0,
+          "line": 64,
+          "literals": [
+            "best_ema.pth"
+          ],
+          "operations": [],
+          "source": "candidates.append(root / \"best_ema.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 65,
+          "literals": [
+            "best.pt",
+            "best_aptiny.pth"
+          ],
+          "operations": [],
+          "source": "candidates.extend((root / \"best.pt\", root / \"best_aptiny.pth\"))"
         }
       ],
       "imports": [
@@ -9880,13 +10022,13 @@
         "typing"
       ],
       "path": "src/training/checkpoint_selection.py",
-      "sha256": "9933fdb2946ff735f48835e0bf019b81d675ef1edc2ea32dba073db60e9c110b"
+      "sha256": "bfb2de1feebd61bf215147a9b5c05db9195c34f9dae29154b7e7896d7f5b3b62"
     },
     {
       "artifact_references": [
         {
           "cell": 0,
-          "line": 16,
+          "line": 17,
           "literals": [],
           "operations": [
             "read",
@@ -9896,7 +10038,18 @@
         },
         {
           "cell": 0,
-          "line": 67,
+          "line": 60,
+          "literals": [
+            ".ckpt",
+            ".pt",
+            ".pth"
+          ],
+          "operations": [],
+          "source": "MODEL_CHECKPOINT_SUFFIXES = frozenset({\".pth\", \".pt\", \".ckpt\"})"
+        },
+        {
+          "cell": 0,
+          "line": 83,
           "literals": [
             "logs"
           ],
@@ -9905,7 +10058,7 @@
         },
         {
           "cell": 0,
-          "line": 107,
+          "line": 134,
           "literals": [],
           "operations": [
             "read"
@@ -9914,7 +10067,7 @@
         },
         {
           "cell": 0,
-          "line": 110,
+          "line": 137,
           "literals": [],
           "operations": [
             "read"
@@ -9923,7 +10076,7 @@
         },
         {
           "cell": 0,
-          "line": 125,
+          "line": 156,
           "literals": [],
           "operations": [
             "write"
@@ -9932,7 +10085,7 @@
         },
         {
           "cell": 0,
-          "line": 148,
+          "line": 179,
           "literals": [],
           "operations": [
             "discover"
@@ -9941,7 +10094,7 @@
         },
         {
           "cell": 0,
-          "line": 167,
+          "line": 198,
           "literals": [],
           "operations": [
             "discover"
@@ -9950,7 +10103,7 @@
         },
         {
           "cell": 0,
-          "line": 173,
+          "line": 204,
           "literals": [],
           "operations": [
             "discover"
@@ -9959,7 +10112,7 @@
         },
         {
           "cell": 0,
-          "line": 180,
+          "line": 211,
           "literals": [],
           "operations": [
             "discover"
@@ -9968,12 +10121,102 @@
         },
         {
           "cell": 0,
-          "line": 225,
+          "line": 256,
           "literals": [],
           "operations": [
             "write"
           ],
           "source": "torch.save(value, name)"
+        },
+        {
+          "cell": 0,
+          "line": 298,
+          "literals": [
+            "best.pth"
+          ],
+          "operations": [],
+          "source": "add(root / \"best.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 301,
+          "literals": [
+            "best_map.pth"
+          ],
+          "operations": [],
+          "source": "add(root / \"best_map.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 304,
+          "literals": [
+            "best_raw.pth"
+          ],
+          "operations": [],
+          "source": "add(root / \"best_raw.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 308,
+          "literals": [
+            "best.pt"
+          ],
+          "operations": [],
+          "source": "add(root / \"best.pt\")"
+        },
+        {
+          "cell": 0,
+          "line": 309,
+          "literals": [
+            "best_aptiny.pth"
+          ],
+          "operations": [],
+          "source": "add(root / \"best_aptiny.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 315,
+          "literals": [
+            "last.pth"
+          ],
+          "operations": [],
+          "source": "add(root / \"last.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 317,
+          "literals": [
+            "latest.pt"
+          ],
+          "operations": [],
+          "source": "add(root / \"latest.pt\")"
+        },
+        {
+          "cell": 0,
+          "line": 330,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = torch.load(path, map_location=\"cpu\", weights_only=False)"
+        },
+        {
+          "cell": 0,
+          "line": 407,
+          "literals": [
+            "best.pth"
+          ],
+          "operations": [],
+          "source": "canonical = root / \"best.pth\""
+        },
+        {
+          "cell": 0,
+          "line": 428,
+          "literals": [
+            "last.pth"
+          ],
+          "operations": [],
+          "source": "files.sort(key=lambda path: path.name == \"last.pth\")"
         }
       ],
       "imports": [
@@ -9982,6 +10225,7 @@
         "dataclasses",
         "datetime",
         "filelock",
+        "hashlib",
         "os",
         "pathlib",
         "shutil",
@@ -9992,7 +10236,7 @@
         "typing"
       ],
       "path": "src/training/checkpointing.py",
-      "sha256": "f6b433123e8e1fbfbd6933a5152288095f4acaadb1f33b1eba1b45df628cee81"
+      "sha256": "a8b5a38a6f31fafde95d516302e0389d6411818e5142efddeef49e690aa19e3c"
     },
     {
       "artifact_references": [
@@ -11179,7 +11423,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 28,
+          "line": 32,
           "literals": [],
           "operations": [
             "read",
@@ -11189,7 +11433,7 @@
         },
         {
           "cell": 0,
-          "line": 88,
+          "line": 92,
           "literals": [
             "logs"
           ],
@@ -11198,7 +11442,7 @@
         },
         {
           "cell": 0,
-          "line": 91,
+          "line": 95,
           "literals": [],
           "operations": [
             "discover"
@@ -11207,7 +11451,7 @@
         },
         {
           "cell": 0,
-          "line": 109,
+          "line": 113,
           "literals": [
             "instances_train.json"
           ],
@@ -11216,7 +11460,7 @@
         },
         {
           "cell": 0,
-          "line": 112,
+          "line": 116,
           "literals": [
             "instances_val.json"
           ],
@@ -11225,7 +11469,7 @@
         },
         {
           "cell": 0,
-          "line": 160,
+          "line": 164,
           "literals": [],
           "operations": [
             "write"
@@ -11234,7 +11478,7 @@
         },
         {
           "cell": 0,
-          "line": 166,
+          "line": 170,
           "literals": [
             "training_config.yaml"
           ],
@@ -11245,7 +11489,7 @@
         },
         {
           "cell": 0,
-          "line": 167,
+          "line": 171,
           "literals": [
             "resolved_config.yaml"
           ],
@@ -11256,7 +11500,7 @@
         },
         {
           "cell": 0,
-          "line": 168,
+          "line": 172,
           "literals": [
             "model_config.yaml"
           ],
@@ -11267,7 +11511,7 @@
         },
         {
           "cell": 0,
-          "line": 169,
+          "line": 173,
           "literals": [],
           "operations": [
             "read"
@@ -11276,7 +11520,7 @@
         },
         {
           "cell": 0,
-          "line": 173,
+          "line": 177,
           "literals": [
             "dataset_{dataset_track}.yaml"
           ],
@@ -11285,7 +11529,7 @@
         },
         {
           "cell": 0,
-          "line": 175,
+          "line": 179,
           "literals": [
             "dataset_config.yaml"
           ],
@@ -11296,7 +11540,7 @@
         },
         {
           "cell": 0,
-          "line": 176,
+          "line": 180,
           "literals": [
             "environment.json"
           ],
@@ -11307,7 +11551,7 @@
         },
         {
           "cell": 0,
-          "line": 178,
+          "line": 182,
           "literals": [
             "git_provenance.json"
           ],
@@ -11318,7 +11562,7 @@
         },
         {
           "cell": 0,
-          "line": 183,
+          "line": 187,
           "literals": [
             "pip_freeze.txt"
           ],
@@ -11329,7 +11573,7 @@
         },
         {
           "cell": 0,
-          "line": 185,
+          "line": 189,
           "literals": [
             "pip_freeze.txt"
           ],
@@ -11340,7 +11584,7 @@
         },
         {
           "cell": 0,
-          "line": 188,
+          "line": 192,
           "literals": [],
           "operations": [
             "write"
@@ -11349,7 +11593,7 @@
         },
         {
           "cell": 0,
-          "line": 189,
+          "line": 193,
           "literals": [
             "label_mapping.json"
           ],
@@ -11358,7 +11602,7 @@
         },
         {
           "cell": 0,
-          "line": 206,
+          "line": 210,
           "literals": [
             "run_manifest.json"
           ],
@@ -11369,7 +11613,7 @@
         },
         {
           "cell": 0,
-          "line": 236,
+          "line": 240,
           "literals": [
             "runtime_environment.json"
           ],
@@ -11378,7 +11622,7 @@
         },
         {
           "cell": 0,
-          "line": 238,
+          "line": 242,
           "literals": [],
           "operations": [
             "read"
@@ -11387,7 +11631,7 @@
         },
         {
           "cell": 0,
-          "line": 262,
+          "line": 273,
           "literals": [
             "run_manifest.json"
           ],
@@ -11398,7 +11642,7 @@
         },
         {
           "cell": 0,
-          "line": 267,
+          "line": 287,
           "literals": [
             "run_manifest.json"
           ],
@@ -11409,7 +11653,18 @@
         },
         {
           "cell": 0,
-          "line": 269,
+          "line": 294,
+          "literals": [
+            "run_manifest.json"
+          ],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(run_dir / \"run_manifest.json\", manifest)"
+        },
+        {
+          "cell": 0,
+          "line": 296,
           "literals": [
             "run_manifest.json"
           ],
@@ -11418,34 +11673,25 @@
         },
         {
           "cell": 0,
-          "line": 302,
+          "line": 330,
           "literals": [
-            "best_map.pth"
+            "best.pth"
           ],
           "operations": [],
-          "source": "\"checkpoint_best_map\": str(run_dir / \"best_map.pth\"),"
+          "source": "\"checkpoint_best\": str(run_dir / \"best.pth\"),"
         },
         {
           "cell": 0,
-          "line": 303,
-          "literals": [
-            "best_aptiny.pth"
-          ],
-          "operations": [],
-          "source": "\"checkpoint_best_aptiny\": str(run_dir / \"best_aptiny.pth\"),"
-        },
-        {
-          "cell": 0,
-          "line": 304,
+          "line": 331,
           "literals": [
             "last.pth"
           ],
           "operations": [],
-          "source": "\"checkpoint_last\": str(run_dir / \"last.pth\"),"
+          "source": "\"checkpoint_resume\": str(run_dir / \"last.pth\"),"
         },
         {
           "cell": 0,
-          "line": 305,
+          "line": 335,
           "literals": [
             "training_config.yaml"
           ],
@@ -11454,7 +11700,7 @@
         },
         {
           "cell": 0,
-          "line": 348,
+          "line": 378,
           "literals": [
             "applied_overrides.json"
           ],
@@ -11463,7 +11709,7 @@
         },
         {
           "cell": 0,
-          "line": 351,
+          "line": 381,
           "literals": [
             "controlled benchmark did not produce applied_overrides.json"
           ],
@@ -11472,7 +11718,7 @@
         },
         {
           "cell": 0,
-          "line": 353,
+          "line": 383,
           "literals": [],
           "operations": [
             "read"
@@ -11481,7 +11727,7 @@
         },
         {
           "cell": 0,
-          "line": 407,
+          "line": 437,
           "literals": [
             "final_metrics.json"
           ],
@@ -11490,7 +11736,7 @@
         },
         {
           "cell": 0,
-          "line": 412,
+          "line": 442,
           "literals": [],
           "operations": [
             "read"
@@ -11499,7 +11745,27 @@
         },
         {
           "cell": 0,
-          "line": 459,
+          "line": 455,
+          "literals": [
+            "training_config.yaml"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "config = read_yaml(run_dir / \"training_config.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 475,
+          "literals": [
+            "backend checkpoint checksum does not match best.pth"
+          ],
+          "operations": [],
+          "source": "raise ValueError(\"backend checkpoint checksum does not match best.pth\")"
+        },
+        {
+          "cell": 0,
+          "line": 506,
           "literals": [],
           "operations": [
             "write"
@@ -11508,7 +11774,7 @@
         },
         {
           "cell": 0,
-          "line": 460,
+          "line": 507,
           "literals": [
             "dataset_config.yaml"
           ],
@@ -11519,7 +11785,7 @@
         },
         {
           "cell": 0,
-          "line": 477,
+          "line": 524,
           "literals": [],
           "operations": [
             "write"
@@ -11528,7 +11794,7 @@
         },
         {
           "cell": 0,
-          "line": 513,
+          "line": 560,
           "literals": [
             "logs"
           ],
@@ -11537,7 +11803,7 @@
         },
         {
           "cell": 0,
-          "line": 517,
+          "line": 564,
           "literals": [],
           "operations": [
             "read"
@@ -11546,7 +11812,7 @@
         },
         {
           "cell": 0,
-          "line": 523,
+          "line": 570,
           "literals": [
             "summary.json"
           ],
@@ -11555,7 +11821,7 @@
         },
         {
           "cell": 0,
-          "line": 524,
+          "line": 571,
           "literals": [],
           "operations": [
             "read"
@@ -11564,7 +11830,7 @@
         },
         {
           "cell": 0,
-          "line": 571,
+          "line": 618,
           "literals": [],
           "operations": [
             "write"
@@ -11573,7 +11839,7 @@
         },
         {
           "cell": 0,
-          "line": 590,
+          "line": 637,
           "literals": [
             "logs"
           ],
@@ -11582,7 +11848,7 @@
         },
         {
           "cell": 0,
-          "line": 594,
+          "line": 641,
           "literals": [],
           "operations": [
             "read"
@@ -11591,7 +11857,7 @@
         },
         {
           "cell": 0,
-          "line": 600,
+          "line": 647,
           "literals": [
             "summary.json"
           ],
@@ -11600,7 +11866,7 @@
         },
         {
           "cell": 0,
-          "line": 601,
+          "line": 648,
           "literals": [],
           "operations": [
             "read"
@@ -11632,7 +11898,7 @@
         "typing"
       ],
       "path": "src/training/trainer.py",
-      "sha256": "a9d0359979f1092932a8de62f4111bcb2bcf66116e7588b195d7d0f18aac50b8"
+      "sha256": "b8610b26784490042fe391ee63d355d8a735dd361723687e37db45944d52983e"
     },
     {
       "artifact_references": [
@@ -11809,7 +12075,7 @@
         "typing"
       ],
       "path": "src/workflows/adapter_gate.py",
-      "sha256": "6c254647e4f0a04b171e6f689c4dc845085b0b9847799834ec3c42085dc46a4e"
+      "sha256": "088a2df2cc07fd587584181de7813529c7951aa68d757690de0f70ddd1894c96"
     },
     {
       "artifact_references": [
@@ -12015,17 +12281,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 133,
-          "literals": [
-            "pretrained",
-            "vmamba_tiny_e292.pth"
-          ],
-          "operations": [],
-          "source": "pretrained = root / \"pretrained\" / \"vmamba_tiny_e292.pth\""
-        },
-        {
-          "cell": 0,
-          "line": 164,
+          "line": 110,
           "literals": [
             "requirements-rtdetr-colab.txt"
           ],
@@ -12034,7 +12290,7 @@
         },
         {
           "cell": 0,
-          "line": 228,
+          "line": 174,
           "literals": [
             "https://download.openmmlab.com/mmcv/dist/cu118/torch2.1/index.html"
           ],
@@ -12043,7 +12299,7 @@
         },
         {
           "cell": 0,
-          "line": 240,
+          "line": 186,
           "literals": [
             "requirements-openmmlab-py310-cu118.txt"
           ],
@@ -12052,7 +12308,7 @@
         },
         {
           "cell": 0,
-          "line": 285,
+          "line": 231,
           "literals": [
             "pretrained",
             "vmamba_tiny_e292.pth"
@@ -12068,16 +12324,16 @@
         "os",
         "pathlib",
         "src.notebook_utils",
+        "src.subprocess_utils",
         "src.workflows.contract",
         "src.workflows.isolated_environment",
-        "subprocess",
         "sys",
         "torch",
         "transformers",
         "typing"
       ],
       "path": "src/workflows/environment.py",
-      "sha256": "6f9a2c00f30cb371b1ebc765979d4aa517099108c9e87057e788f1150972fb2e"
+      "sha256": "70a8d604357e51431bd324aff5e9c91d45d4e3b5f99b2eaeb046b7188140752a"
     },
     {
       "artifact_references": [
@@ -12159,142 +12415,6 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 13,
-          "literals": [],
-          "operations": [
-            "read",
-            "write"
-          ],
-          "source": "from src.utils.serialization import read_json, read_yaml, write_json"
-        },
-        {
-          "cell": 0,
-          "line": 17,
-          "literals": [
-            "configs/runtime_environments.yaml"
-          ],
-          "operations": [],
-          "source": "RUNTIME_CONFIG = \"configs/runtime_environments.yaml\""
-        },
-        {
-          "cell": 0,
-          "line": 29,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "config = read_yaml(repo_root / RUNTIME_CONFIG)"
-        },
-        {
-          "cell": 0,
-          "line": 37,
-          "literals": [
-            "pretrained"
-          ],
-          "operations": [],
-          "source": "spec[\"pretrained\"] = config[\"vmamba\"][\"pretrained\"]"
-        },
-        {
-          "cell": 0,
-          "line": 59,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "json.dumps(spec, sort_keys=True, separators=(\",\", \":\")).encode(\"utf-8\")"
-        },
-        {
-          "cell": 0,
-          "line": 63,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "\"requirements-dataset-colab.txt\","
-        },
-        {
-          "cell": 0,
-          "line": 175,
-          "literals": [
-            "benchmark_runtime.json"
-          ],
-          "operations": [],
-          "source": "marker = environment / \"benchmark_runtime.json\""
-        },
-        {
-          "cell": 0,
-          "line": 176,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "existing = read_json(marker) if marker.is_file() else {}"
-        },
-        {
-          "cell": 0,
-          "line": 194,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json("
-        },
-        {
-          "cell": 0,
-          "line": 204,
-          "literals": [
-            "environment_probe.json"
-          ],
-          "operations": [],
-          "source": "probe_path = environment / \"environment_probe.json\""
-        },
-        {
-          "cell": 0,
-          "line": 218,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "probe = read_json(probe_path)"
-        },
-        {
-          "cell": 0,
-          "line": 243,
-          "literals": [
-            "{runtime_hash}.json"
-          ],
-          "operations": [],
-          "source": "/ f\"{runtime_hash}.json\""
-        },
-        {
-          "cell": 0,
-          "line": 245,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(manifest_path, manifest)"
-        }
-      ],
-      "imports": [
-        "__future__",
-        "hashlib",
-        "importlib.metadata",
-        "json",
-        "os",
-        "pathlib",
-        "src.utils.serialization",
-        "subprocess",
-        "sys",
-        "typing"
-      ],
-      "path": "src/workflows/isolated_environment.py",
-      "sha256": "7142acb80ac2271fb0d51ed42d97bb8d44f6471e062709760c768e29502023a3"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 0,
           "line": 21,
           "literals": [],
           "operations": [
@@ -12305,7 +12425,302 @@
         },
         {
           "cell": 0,
-          "line": 36,
+          "line": 25,
+          "literals": [
+            "configs/runtime_environments.yaml"
+          ],
+          "operations": [],
+          "source": "RUNTIME_CONFIG = \"configs/runtime_environments.yaml\""
+        },
+        {
+          "cell": 0,
+          "line": 44,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "config = read_yaml(repo_root / RUNTIME_CONFIG)"
+        },
+        {
+          "cell": 0,
+          "line": 52,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "spec[\"pretrained\"] = config[\"vmamba\"][\"pretrained\"]"
+        },
+        {
+          "cell": 0,
+          "line": 53,
+          "literals": [
+            "configs/faster_rcnn_vmamba_t/model.yaml"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "model_config = read_yaml(repo_root / \"configs/faster_rcnn_vmamba_t/model.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 74,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(spec, sort_keys=True, separators=(\",\", \":\")).encode(\"utf-8\")"
+        },
+        {
+          "cell": 0,
+          "line": 78,
+          "literals": [
+            "requirements-dataset-colab.txt"
+          ],
+          "operations": [],
+          "source": "\"requirements-dataset-colab.txt\","
+        },
+        {
+          "cell": 0,
+          "line": 89,
+          "literals": [
+            "configs/faster_rcnn_vmamba_t/model.yaml"
+          ],
+          "operations": [],
+          "source": "\"configs/faster_rcnn_vmamba_t/model.yaml\","
+        },
+        {
+          "cell": 0,
+          "line": 268,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "\"pretrained\": drive / \"pretrained\" / str(spec[\"pretrained\"][\"filename\"]),"
+        },
+        {
+          "cell": 0,
+          "line": 301,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "pretrained = paths[\"pretrained\"]"
+        },
+        {
+          "cell": 0,
+          "line": 330,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "environment[\"VMAMBA_T_PRETRAINED\"] = str(paths[\"pretrained\"])"
+        },
+        {
+          "cell": 0,
+          "line": 369,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "str(paths[\"pretrained\"]),"
+        },
+        {
+          "cell": 0,
+          "line": 386,
+          "literals": [
+            "environment_probe.json",
+            "quick_environment_probe.json"
+          ],
+          "operations": [],
+          "source": "probe = environment / (\"quick_environment_probe.json\" if quick else \"environment_probe.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 396,
+          "literals": [
+            "logs"
+          ],
+          "operations": [],
+          "source": "log_path=environment / \"logs\" / f\"{stage}.log\","
+        },
+        {
+          "cell": 0,
+          "line": 398,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "payload = read_json(probe)"
+        },
+        {
+          "cell": 0,
+          "line": 441,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(marker, record)"
+        },
+        {
+          "cell": 0,
+          "line": 479,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "os.environ[\"VMAMBA_T_PRETRAINED\"] = str(paths[\"pretrained\"])"
+        },
+        {
+          "cell": 0,
+          "line": 485,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "probe = read_json(probe_path)"
+        },
+        {
+          "cell": 0,
+          "line": 494,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "if \"pretrained\" in message:"
+        },
+        {
+          "cell": 0,
+          "line": 517,
+          "literals": [
+            "benchmark_runtime.json"
+          ],
+          "operations": [],
+          "source": "marker = environment / \"benchmark_runtime.json\""
+        },
+        {
+          "cell": 0,
+          "line": 518,
+          "literals": [
+            "environment_probe.json"
+          ],
+          "operations": [],
+          "source": "probe_path = environment / \"environment_probe.json\""
+        },
+        {
+          "cell": 0,
+          "line": 519,
+          "literals": [
+            "{runtime_hash}.json"
+          ],
+          "operations": [],
+          "source": "manifest_path = drive / \"environment_manifests\" / model_id / f\"{runtime_hash}.json\""
+        },
+        {
+          "cell": 0,
+          "line": 522,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "existing = read_json(marker) if marker.is_file() else {}"
+        },
+        {
+          "cell": 0,
+          "line": 546,
+          "literals": [
+            "quick_environment_probe.json"
+          ],
+          "operations": [],
+          "source": "probe_path=environment / \"quick_environment_probe.json\","
+        },
+        {
+          "cell": 0,
+          "line": 549,
+          "literals": [
+            "quick_environment_probe.json"
+          ],
+          "operations": [],
+          "source": "error, environment / \"quick_environment_probe.json\""
+        },
+        {
+          "cell": 0,
+          "line": 564,
+          "literals": [
+            "logs"
+          ],
+          "operations": [],
+          "source": "\"log_directory\": str(environment / \"logs\"),"
+        },
+        {
+          "cell": 0,
+          "line": 569,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(marker, manifest)"
+        },
+        {
+          "cell": 0,
+          "line": 570,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(manifest_path, manifest)"
+        },
+        {
+          "cell": 0,
+          "line": 644,
+          "literals": [
+            "logs"
+          ],
+          "operations": [],
+          "source": "\"log_directory\": str(environment / \"logs\"),"
+        },
+        {
+          "cell": 0,
+          "line": 661,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(manifest_path, manifest)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "datetime",
+        "hashlib",
+        "importlib.metadata",
+        "json",
+        "os",
+        "pathlib",
+        "shutil",
+        "src.reproducibility",
+        "src.subprocess_utils",
+        "src.utils.serialization",
+        "sys",
+        "typing"
+      ],
+      "path": "src/workflows/isolated_environment.py",
+      "sha256": "f686b049d5b8e591f5a860f67e0a1d894c338e0cd8a6004e05d299f1c43df1a9"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 25,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, read_yaml, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 40,
           "literals": [
             "EVALUATION"
           ],
@@ -12314,7 +12729,7 @@
         },
         {
           "cell": 0,
-          "line": 37,
+          "line": 41,
           "literals": [
             "PROFILING"
           ],
@@ -12323,7 +12738,7 @@
         },
         {
           "cell": 0,
-          "line": 69,
+          "line": 73,
           "literals": [
             "instances_train.json"
           ],
@@ -12332,7 +12747,7 @@
         },
         {
           "cell": 0,
-          "line": 70,
+          "line": 74,
           "literals": [
             "instances_val.json"
           ],
@@ -12341,7 +12756,7 @@
         },
         {
           "cell": 0,
-          "line": 81,
+          "line": 85,
           "literals": [],
           "operations": [
             "read"
@@ -12350,7 +12765,7 @@
         },
         {
           "cell": 0,
-          "line": 91,
+          "line": 95,
           "literals": [],
           "operations": [
             "read"
@@ -12359,7 +12774,7 @@
         },
         {
           "cell": 0,
-          "line": 130,
+          "line": 134,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12368,7 +12783,7 @@
         },
         {
           "cell": 0,
-          "line": 131,
+          "line": 135,
           "literals": [],
           "operations": [
             "read"
@@ -12377,7 +12792,7 @@
         },
         {
           "cell": 0,
-          "line": 138,
+          "line": 142,
           "literals": [
             "{run_id}__profile.json"
           ],
@@ -12386,7 +12801,7 @@
         },
         {
           "cell": 0,
-          "line": 145,
+          "line": 149,
           "literals": [
             "final_results.json"
           ],
@@ -12395,7 +12810,7 @@
         },
         {
           "cell": 0,
-          "line": 175,
+          "line": 179,
           "literals": [
             "instances_train.json"
           ],
@@ -12404,7 +12819,7 @@
         },
         {
           "cell": 0,
-          "line": 177,
+          "line": 181,
           "literals": [
             "instances_val.json"
           ],
@@ -12413,7 +12828,7 @@
         },
         {
           "cell": 0,
-          "line": 183,
+          "line": 187,
           "literals": [
             "search_state.json"
           ],
@@ -12422,7 +12837,7 @@
         },
         {
           "cell": 0,
-          "line": 207,
+          "line": 211,
           "literals": [],
           "operations": [
             "read"
@@ -12431,7 +12846,7 @@
         },
         {
           "cell": 0,
-          "line": 216,
+          "line": 220,
           "literals": [],
           "operations": [
             "write"
@@ -12440,7 +12855,7 @@
         },
         {
           "cell": 0,
-          "line": 230,
+          "line": 234,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12449,7 +12864,7 @@
         },
         {
           "cell": 0,
-          "line": 231,
+          "line": 235,
           "literals": [],
           "operations": [
             "read"
@@ -12458,7 +12873,7 @@
         },
         {
           "cell": 0,
-          "line": 243,
+          "line": 247,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -12467,7 +12882,7 @@
         },
         {
           "cell": 0,
-          "line": 244,
+          "line": 248,
           "literals": [
             "train.json"
           ],
@@ -12476,7 +12891,7 @@
         },
         {
           "cell": 0,
-          "line": 247,
+          "line": 251,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -12485,7 +12900,7 @@
         },
         {
           "cell": 0,
-          "line": 248,
+          "line": 252,
           "literals": [
             "val.json"
           ],
@@ -12494,7 +12909,7 @@
         },
         {
           "cell": 0,
-          "line": 279,
+          "line": 283,
           "literals": [
             "last.pth"
           ],
@@ -12503,7 +12918,7 @@
         },
         {
           "cell": 0,
-          "line": 281,
+          "line": 285,
           "literals": [
             "Adapter smoke did not save last.pth"
           ],
@@ -12512,7 +12927,7 @@
         },
         {
           "cell": 0,
-          "line": 289,
+          "line": 293,
           "literals": [],
           "operations": [
             "read"
@@ -12521,7 +12936,7 @@
         },
         {
           "cell": 0,
-          "line": 307,
+          "line": 312,
           "literals": [],
           "operations": [
             "write"
@@ -12530,7 +12945,7 @@
         },
         {
           "cell": 0,
-          "line": 324,
+          "line": 331,
           "literals": [],
           "operations": [
             "write"
@@ -12539,7 +12954,7 @@
         },
         {
           "cell": 0,
-          "line": 332,
+          "line": 339,
           "literals": [],
           "operations": [
             "write"
@@ -12548,7 +12963,7 @@
         },
         {
           "cell": 0,
-          "line": 419,
+          "line": 428,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12557,7 +12972,7 @@
         },
         {
           "cell": 0,
-          "line": 427,
+          "line": 436,
           "literals": [],
           "operations": [
             "write"
@@ -12566,7 +12981,7 @@
         },
         {
           "cell": 0,
-          "line": 465,
+          "line": 474,
           "literals": [
             "search_state.json"
           ],
@@ -12575,7 +12990,7 @@
         },
         {
           "cell": 0,
-          "line": 468,
+          "line": 477,
           "literals": [],
           "operations": [
             "read"
@@ -12584,7 +12999,7 @@
         },
         {
           "cell": 0,
-          "line": 479,
+          "line": 488,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12593,7 +13008,7 @@
         },
         {
           "cell": 0,
-          "line": 481,
+          "line": 490,
           "literals": [],
           "operations": [
             "read"
@@ -12602,7 +13017,7 @@
         },
         {
           "cell": 0,
-          "line": 484,
+          "line": 493,
           "literals": [],
           "operations": [
             "write"
@@ -12611,7 +13026,7 @@
         },
         {
           "cell": 0,
-          "line": 528,
+          "line": 537,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12620,7 +13035,7 @@
         },
         {
           "cell": 0,
-          "line": 530,
+          "line": 539,
           "literals": [],
           "operations": [
             "read"
@@ -12629,7 +13044,7 @@
         },
         {
           "cell": 0,
-          "line": 533,
+          "line": 542,
           "literals": [],
           "operations": [
             "write"
@@ -12638,7 +13053,7 @@
         },
         {
           "cell": 0,
-          "line": 563,
+          "line": 572,
           "literals": [
             "instances_val.json"
           ],
@@ -12647,7 +13062,7 @@
         },
         {
           "cell": 0,
-          "line": 587,
+          "line": 596,
           "literals": [],
           "operations": [
             "read"
@@ -12656,7 +13071,7 @@
         },
         {
           "cell": 0,
-          "line": 589,
+          "line": 598,
           "literals": [
             "{state['final_run_id']}__res*__metrics.json"
           ],
@@ -12681,17 +13096,17 @@
         "src.models.registry",
         "src.paths",
         "src.subprocess_utils",
+        "src.training.checkpointing",
         "src.training.lr_search",
         "src.training.lr_workflow",
         "src.utils.serialization",
         "src.workflows.adapter_gate",
         "src.workflows.contract",
         "src.workflows.environment",
-        "subprocess",
         "typing"
       ],
       "path": "src/workflows/model_day.py",
-      "sha256": "24dc865ec5cdc54619587fdb74ad86e26951cda510800a2ad8677b506f90cd99"
+      "sha256": "5a5734645608adcafb439a4a0c965bdb5a517758627a2c192e14cffc52e534df"
     },
     {
       "artifact_references": [

@@ -23,7 +23,11 @@ from src.subprocess_utils import (
     model_python_executable,
     python_module_command,
 )
-from src.training.checkpointing import RunRegistry, initialize_run
+from src.training.checkpointing import (
+    RunRegistry,
+    enforce_completed_checkpoint_policy,
+    initialize_run,
+)
 from src.utils.environment import collect_environment
 from src.utils.serialization import read_json, read_yaml, write_json, write_yaml
 
@@ -256,15 +260,38 @@ class TrainingOrchestrator:
                 "completed_with_warnings" if warnings else "completed"
             )
             manifest["status"] = "completed"
+        except KeyboardInterrupt:
+            manifest["status"] = "interrupted"
+            manifest["failure_reason"] = "KeyboardInterrupt"
+            raise
         except Exception as error:
             manifest["status"] = "failed"
             manifest["failure_reason"] = repr(error)
-            write_json(run_dir / "run_manifest.json", manifest)
             raise
         finally:
             manifest["total_training_seconds"] = time.perf_counter() - started
+            write_json(run_dir / "run_manifest.json", manifest)
 
-        write_json(run_dir / "run_manifest.json", manifest)
+        if (
+            manifest["status"] == "completed"
+            and run_config["run_kind"] == "final_complete_official_train"
+        ):
+            # Publish completion first. Cleanup is bounded to this new run and
+            # deliberately removes last.pth only after every other duplicate.
+            try:
+                removed = enforce_completed_checkpoint_policy(run_dir)
+            except Exception as error:
+                manifest["status"] = "failed"
+                manifest["completion_status"] = "checkpoint_cleanup_failed"
+                manifest["failure_reason"] = repr(error)
+                write_json(run_dir / "run_manifest.json", manifest)
+                raise
+            manifest["checkpoint_resume"] = None
+            manifest["checkpoint_cleanup"] = {
+                "policy": "single_best_v2",
+                "removed": removed,
+            }
+            write_json(run_dir / "run_manifest.json", manifest)
         if register_run:
             RunRegistry(self.paths).register_run(run_dir / "run_manifest.json")
         return manifest
@@ -285,6 +312,7 @@ class TrainingOrchestrator:
             else versions.get("transformers_version")
         )
         return {
+            "schema_version": 2,
             "run_id": run_id,
             "run_dir": str(run_dir),
             "model_id": run_config["model_id"],
@@ -299,9 +327,11 @@ class TrainingOrchestrator:
             "effective_batch_size": run_config["effective_batch_size"],
             "scheduler_horizon": run_config["scheduler_horizon"],
             "configuration_hash": run_config["configuration_hash"],
-            "checkpoint_best_map": str(run_dir / "best_map.pth"),
-            "checkpoint_best_aptiny": str(run_dir / "best_aptiny.pth"),
-            "checkpoint_last": str(run_dir / "last.pth"),
+            "checkpoint_best": str(run_dir / "best.pth"),
+            "checkpoint_resume": str(run_dir / "last.pth"),
+            "checkpoint_sha256": None,
+            "checkpoint_selection_metric": "validation_mAP",
+            "weight_variant": "raw",
             "config_path": str(run_dir / "training_config.yaml"),
             "created_at": datetime.now(timezone.utc).isoformat(),
             "framework": framework,
@@ -412,11 +442,7 @@ class TrainingOrchestrator:
         summary = read_json(final_metrics)
         if not isinstance(summary, dict):
             raise ValueError("backend final metrics must be a JSON object")
-        for field in (
-            "checkpoint_best_map",
-            "checkpoint_best_aptiny",
-            "checkpoint_last",
-        ):
+        for field in ("checkpoint_best", "checkpoint_resume"):
             value = summary.get(field)
             if not value or not Path(str(value)).is_file():
                 raise FileNotFoundError(
@@ -426,6 +452,27 @@ class TrainingOrchestrator:
             value = summary.get(field)
             if value is None or not math.isfinite(float(value)):
                 raise ValueError(f"backend completion has invalid {field}: {value}")
+        config = read_yaml(run_dir / "training_config.yaml")
+        expected_identity = {
+            "run_id": run_dir.name,
+            "model_id": config["model_id"],
+            "seed": int(config["seed"]),
+            "configuration_hash": config["configuration_hash"],
+            "selection_metric": "validation_mAP",
+            "weight_variant": "raw",
+        }
+        identity = summary.get("checkpoint_identity")
+        if not isinstance(identity, dict) or any(
+            identity.get(key) != value for key, value in expected_identity.items()
+        ):
+            raise ValueError("backend checkpoint identity does not match run contract")
+        if summary.get("checkpoint_load_verified") is not True:
+            raise ValueError("backend did not verify that best.pth is loadable")
+        checkpoint_hash = hashlib.sha256(
+            Path(str(summary["checkpoint_best"])).read_bytes()
+        ).hexdigest()
+        if summary.get("checkpoint_sha256") != checkpoint_hash:
+            raise ValueError("backend checkpoint checksum does not match best.pth")
         return summary
 
     def _run_mmdetection(

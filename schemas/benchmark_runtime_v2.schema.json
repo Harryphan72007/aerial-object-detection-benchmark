@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "benchmark_runtime_v2.schema.json",
+  "title": "Transactional isolated model runtime",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "runtime_hash",
+    "model_id",
+    "family",
+    "state",
+    "started_at",
+    "python_executable",
+    "probe_path"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "runtime_hash": {"type": "string", "minLength": 64, "maxLength": 64},
+    "model_id": {"type": "string", "minLength": 1},
+    "family": {"enum": ["openmmlab", "vmamba", "rtdetr"]},
+    "state": {
+      "enum": ["CREATING", "INSTALLING", "VERIFYING", "READY", "FAILED"]
+    },
+    "status": {
+      "enum": ["CREATING", "INSTALLING", "VERIFYING", "READY", "FAILED"]
+    },
+    "started_at": {"type": "string", "format": "date-time"},
+    "completed_at": {"type": ["string", "null"], "format": "date-time"},
+    "python_executable": {"type": "string", "minLength": 1},
+    "failed_stage": {"type": ["string", "null"]},
+    "failure_type": {"type": ["string", "null"]},
+    "failure_message": {"type": ["string", "null"]},
+    "probe_path": {"type": "string", "minLength": 1},
+    "dependency_lock_hash": {"type": "string"},
+    "source_commit": {"type": "string"},
+    "packages_changed": {"type": "boolean"},
+    "environment": {"type": "object"},
+    "verification": {"type": "object"},
+    "sources": {"type": "array"},
+    "package_contract": {"type": "object"},
+    "manifest_path": {"type": "string"},
+    "log_directory": {"type": "string"}
+  },
+  "additionalProperties": true
+}

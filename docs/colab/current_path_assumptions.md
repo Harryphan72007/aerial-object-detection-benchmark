@@ -20,7 +20,9 @@ changed. Centralization belongs to PR 6.
 `BENCHMARK_REPO_ROOT`, `BENCHMARK_REPOSITORY_URL`, and
 `BENCHMARK_REPOSITORY_BRANCH`. `VISDRONE_MODEL_PYTHON` and
 `VISDRONE_RUNTIME_MANIFEST` identify an isolated model process after
-provisioning.
+provisioning. They are cleared before setup and published only after the hashed
+runtime reaches transactional state `READY`. `FAILED`, `INSTALLING`, and
+`VERIFYING` runtimes are rebuilt only under `/content/visdrone_model_envs`.
 
 ## Notebook-family behavior
 

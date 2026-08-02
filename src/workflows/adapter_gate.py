@@ -129,6 +129,10 @@ def adapter_gate_decision(
         if differences:
             return "invalidate", differences
         return "reuse", ["persisted READY fingerprint is compatible"]
+    if status == "FAILED_ENVIRONMENT":
+        return "retry", [
+            "environment provisioning failures are retried through the transactional runtime state"
+        ]
     if status in FAILED_GATE_STATUSES:
         if differences:
             return "retry", differences

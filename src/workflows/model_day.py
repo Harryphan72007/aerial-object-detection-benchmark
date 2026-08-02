@@ -15,7 +15,7 @@ from src.data.image_files import first_supported_image
 from src.data.local_cache import DataAccessPaths, resolve_data_access
 from src.models.registry import create_adapter, load_model_config
 from src.paths import ProjectPaths
-from src.subprocess_utils import python_module_command
+from src.subprocess_utils import build_model_subprocess_environment, python_module_command
 from src.training.lr_search import resolve_batch_policy
 from src.training.lr_workflow import LRControlledBenchmark
 from src.utils.serialization import read_json, read_yaml, write_json
@@ -346,6 +346,7 @@ def _run_module(repo: Path, module: str, *arguments: str) -> None:
         python_module_command(module, *arguments),
         check=True,
         cwd=repo,
+        env=build_model_subprocess_environment(),
     )
 
 

@@ -1833,7 +1833,7 @@
       "sha256": "b0f201d8d5d4b86e493835c1caea12c81f3ece6cdad40f4721ed21156ef88c73"
     }
   ],
-  "python_source_count": 96,
+  "python_source_count": 97,
   "python_sources": [
     {
       "artifact_references": [
@@ -2199,7 +2199,7 @@
           "operations": [
             "write"
           ],
-          "source": "write_json(destination, subset, atomic=False)"
+          "source": "write_json(destination, subset)"
         },
         {
           "cell": 0,
@@ -2293,7 +2293,7 @@
           "operations": [
             "write"
           ],
-          "source": "write_json(prediction_path, coco_predictions, atomic=False)"
+          "source": "write_json(prediction_path, coco_predictions)"
         },
         {
           "cell": 0,
@@ -2371,7 +2371,7 @@
         "typing"
       ],
       "path": "scripts/evaluate.py",
-      "sha256": "1f3c09dbde2d066ab7fa6a0b330b211fd6c79506a313b27e2328d4482523563c"
+      "sha256": "06d12cd1fb967e2a06454213485b797eb1b73b08a05a2870a40d6bab6cc9b432"
     },
     {
       "artifact_references": [
@@ -2404,7 +2404,7 @@
         },
         {
           "cell": 0,
-          "line": 71,
+          "line": 76,
           "literals": [],
           "operations": [
             "write"
@@ -2425,7 +2425,7 @@
         "subprocess"
       ],
       "path": "scripts/evaluate_all_models.py",
-      "sha256": "c368fd5c099cde9ed0662cb1b082a130c117286da2ddd5acc09ad77443371076"
+      "sha256": "d8f70c10d58d7e4613032fde37cbc8254667900296c7e9792c4513aa9cb87522"
     },
     {
       "artifact_references": [
@@ -2894,7 +2894,16 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 72,
+          "line": 17,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_csv, write_json, write_text_atomic"
+        },
+        {
+          "cell": 0,
+          "line": 73,
           "literals": [],
           "operations": [
             "read"
@@ -2903,7 +2912,7 @@
         },
         {
           "cell": 0,
-          "line": 79,
+          "line": 80,
           "literals": [
             "epoch_*.pth"
           ],
@@ -2914,7 +2923,7 @@
         },
         {
           "cell": 0,
-          "line": 91,
+          "line": 92,
           "literals": [
             "best_*.pth"
           ],
@@ -2925,7 +2934,7 @@
         },
         {
           "cell": 0,
-          "line": 100,
+          "line": 101,
           "literals": [
             "scalars.json"
           ],
@@ -2934,7 +2943,7 @@
         },
         {
           "cell": 0,
-          "line": 104,
+          "line": 105,
           "literals": [],
           "operations": [
             "read"
@@ -2943,7 +2952,7 @@
         },
         {
           "cell": 0,
-          "line": 108,
+          "line": 109,
           "literals": [],
           "operations": [
             "read"
@@ -2952,43 +2961,45 @@
         },
         {
           "cell": 0,
-          "line": 117,
-          "literals": [
-            "epoch_metrics.jsonl"
-          ],
-          "operations": [],
-          "source": "with (run_dir / \"epoch_metrics.jsonl\").open(\"w\", encoding=\"utf-8\") as handle:"
-        },
-        {
-          "cell": 0,
-          "line": 119,
+          "line": 118,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "handle.write(json.dumps(row, sort_keys=True) + \"\\n\")"
+          "source": "write_text_atomic("
         },
         {
           "cell": 0,
-          "line": 121,
+          "line": 119,
+          "literals": [
+            "epoch_metrics.jsonl"
+          ],
+          "operations": [],
+          "source": "run_dir / \"epoch_metrics.jsonl\","
+        },
+        {
+          "cell": 0,
+          "line": 120,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "\"\".join(json.dumps(row, sort_keys=True) + \"\\n\" for row in rows),"
+        },
+        {
+          "cell": 0,
+          "line": 123,
           "literals": [
             "metrics_history.csv"
           ],
-          "operations": [],
-          "source": "with (run_dir / \"metrics_history.csv\").open("
-        },
-        {
-          "cell": 0,
-          "line": 127,
-          "literals": [
-            "training_curves.png"
+          "operations": [
+            "write"
           ],
-          "operations": [],
-          "source": "save_training_curves(rows, run_dir / \"training_curves.png\")"
+          "source": "write_csv(run_dir / \"metrics_history.csv\", rows, fields)"
         },
         {
           "cell": 0,
-          "line": 291,
+          "line": 287,
           "literals": [
             "pretrained"
           ],
@@ -2997,7 +3008,7 @@
         },
         {
           "cell": 0,
-          "line": 295,
+          "line": 291,
           "literals": [
             "PRETRAINING_WARNING.txt"
           ],
@@ -3008,7 +3019,7 @@
         },
         {
           "cell": 0,
-          "line": 301,
+          "line": 297,
           "literals": [],
           "operations": [
             "read"
@@ -3017,7 +3028,7 @@
         },
         {
           "cell": 0,
-          "line": 302,
+          "line": 298,
           "literals": [],
           "operations": [
             "read"
@@ -3026,7 +3037,7 @@
         },
         {
           "cell": 0,
-          "line": 304,
+          "line": 300,
           "literals": [
             "applied_overrides.json"
           ],
@@ -3037,7 +3048,7 @@
         },
         {
           "cell": 0,
-          "line": 305,
+          "line": 301,
           "literals": [],
           "operations": [
             "write"
@@ -3046,7 +3057,7 @@
         },
         {
           "cell": 0,
-          "line": 384,
+          "line": 380,
           "literals": [
             "last.pth"
           ],
@@ -3055,7 +3066,7 @@
         },
         {
           "cell": 0,
-          "line": 385,
+          "line": 381,
           "literals": [
             "last.pth"
           ],
@@ -3064,7 +3075,7 @@
         },
         {
           "cell": 0,
-          "line": 409,
+          "line": 414,
           "literals": [
             "scheduler_contract.json"
           ],
@@ -3073,7 +3084,7 @@
         },
         {
           "cell": 0,
-          "line": 411,
+          "line": 416,
           "literals": [],
           "operations": [
             "read"
@@ -3082,7 +3093,7 @@
         },
         {
           "cell": 0,
-          "line": 412,
+          "line": 417,
           "literals": [],
           "operations": [
             "read"
@@ -3091,7 +3102,7 @@
         },
         {
           "cell": 0,
-          "line": 420,
+          "line": 425,
           "literals": [],
           "operations": [
             "write"
@@ -3100,7 +3111,7 @@
         },
         {
           "cell": 0,
-          "line": 421,
+          "line": 426,
           "literals": [],
           "operations": [
             "write"
@@ -3109,7 +3120,7 @@
         },
         {
           "cell": 0,
-          "line": 586,
+          "line": 591,
           "literals": [],
           "operations": [
             "write"
@@ -3118,7 +3129,7 @@
         },
         {
           "cell": 0,
-          "line": 595,
+          "line": 604,
           "literals": [
             "last.pth"
           ],
@@ -3127,7 +3138,7 @@
         },
         {
           "cell": 0,
-          "line": 597,
+          "line": 606,
           "literals": [
             "best_map.pth"
           ],
@@ -3136,7 +3147,7 @@
         },
         {
           "cell": 0,
-          "line": 599,
+          "line": 608,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -3145,7 +3156,7 @@
         },
         {
           "cell": 0,
-          "line": 626,
+          "line": 635,
           "literals": [
             "best_map.pth"
           ],
@@ -3154,7 +3165,7 @@
         },
         {
           "cell": 0,
-          "line": 627,
+          "line": 636,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -3163,7 +3174,7 @@
         },
         {
           "cell": 0,
-          "line": 628,
+          "line": 637,
           "literals": [
             "last.pth"
           ],
@@ -3172,29 +3183,28 @@
         },
         {
           "cell": 0,
-          "line": 643,
+          "line": 652,
           "literals": [
             "final_metrics.json"
           ],
           "operations": [
             "write"
           ],
-          "source": "(run_dir / \"final_metrics.json\").write_text("
+          "source": "write_json(run_dir / \"final_metrics.json\", summary)"
         },
         {
           "cell": 0,
-          "line": 644,
-          "literals": [],
-          "operations": [
-            "write"
+          "line": 655,
+          "literals": [
+            "training_curves.png"
           ],
-          "source": "json.dumps(summary, indent=2), encoding=\"utf-8\""
+          "operations": [],
+          "source": "run_dir / \"training_curves.png\","
         }
       ],
       "imports": [
         "__future__",
         "argparse",
-        "csv",
         "json",
         "math",
         "mmengine.config",
@@ -3202,18 +3212,20 @@
         "mmengine.runner",
         "pathlib",
         "re",
+        "src.optional_outputs",
         "src.reproducibility",
         "src.runtime_manifest",
         "src.training.callbacks",
         "src.training.checkpointing",
         "src.training.lr_range",
+        "src.utils.serialization",
         "sys",
         "time",
         "torch",
         "typing"
       ],
       "path": "scripts/run_mmdetection.py",
-      "sha256": "fd712aab4f8416e276436c47ebbff4fc471a7702f3534965673fec105103bae6"
+      "sha256": "1d1b24f9536e18a437ab6d85d517ea88d88d2734e93c09c5853ca4292eda7781"
     },
     {
       "artifact_references": [
@@ -3293,7 +3305,16 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 97,
+          "line": 39,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_json, write_text_atomic"
+        },
+        {
+          "cell": 0,
+          "line": 98,
           "literals": [],
           "operations": [
             "read"
@@ -3302,7 +3323,7 @@
         },
         {
           "cell": 0,
-          "line": 101,
+          "line": 102,
           "literals": [],
           "operations": [
             "read"
@@ -3311,7 +3332,7 @@
         },
         {
           "cell": 0,
-          "line": 164,
+          "line": 165,
           "literals": [
             "applied_overrides.json"
           ],
@@ -3322,7 +3343,7 @@
         },
         {
           "cell": 0,
-          "line": 165,
+          "line": 166,
           "literals": [],
           "operations": [
             "write"
@@ -3331,7 +3352,7 @@
         },
         {
           "cell": 0,
-          "line": 247,
+          "line": 248,
           "literals": [
             "parameter_groups.json"
           ],
@@ -3342,7 +3363,7 @@
         },
         {
           "cell": 0,
-          "line": 248,
+          "line": 249,
           "literals": [],
           "operations": [
             "write"
@@ -3351,7 +3372,7 @@
         },
         {
           "cell": 0,
-          "line": 375,
+          "line": 376,
           "literals": [],
           "operations": [
             "write"
@@ -3360,7 +3381,7 @@
         },
         {
           "cell": 0,
-          "line": 386,
+          "line": 387,
           "literals": [
             "last.pth"
           ],
@@ -3369,7 +3390,7 @@
         },
         {
           "cell": 0,
-          "line": 387,
+          "line": 388,
           "literals": [],
           "operations": [
             "read"
@@ -3378,7 +3399,7 @@
         },
         {
           "cell": 0,
-          "line": 388,
+          "line": 389,
           "literals": [
             "last.pth"
           ],
@@ -3387,7 +3408,7 @@
         },
         {
           "cell": 0,
-          "line": 522,
+          "line": 523,
           "literals": [
             "last.pth"
           ],
@@ -3396,7 +3417,7 @@
         },
         {
           "cell": 0,
-          "line": 571,
+          "line": 572,
           "literals": [
             "predictions_epoch_{epoch:03d}.json"
           ],
@@ -3405,16 +3426,16 @@
         },
         {
           "cell": 0,
-          "line": 572,
+          "line": 573,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "prediction_path.write_text(json.dumps(predictions), encoding=\"utf-8\")"
+          "source": "write_text_atomic(prediction_path, json.dumps(predictions))"
         },
         {
           "cell": 0,
-          "line": 594,
+          "line": 595,
           "literals": [
             "last.pth"
           ],
@@ -3423,7 +3444,7 @@
         },
         {
           "cell": 0,
-          "line": 597,
+          "line": 598,
           "literals": [
             "last.pth"
           ],
@@ -3432,22 +3453,13 @@
         },
         {
           "cell": 0,
-          "line": 600,
+          "line": 601,
           "literals": [
             "best_aptiny.pth",
             "last.pth"
           ],
           "operations": [],
           "source": "materialize_checkpoint_alias(run_dir / \"last.pth\", run_dir / \"best_aptiny.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 652,
-          "literals": [
-            "training_curves.png"
-          ],
-          "operations": [],
-          "source": "save_training_curves(history.rows, run_dir / \"training_curves.png\")"
         },
         {
           "cell": 0,
@@ -3595,16 +3607,16 @@
           "operations": [
             "write"
           ],
-          "source": "(run_dir / \"final_metrics.json\").write_text("
+          "source": "write_json(run_dir / \"final_metrics.json\", summary)"
         },
         {
           "cell": 0,
-          "line": 725,
-          "literals": [],
-          "operations": [
-            "write"
+          "line": 727,
+          "literals": [
+            "training_curves.png"
           ],
-          "source": "json.dumps(summary, indent=2), encoding=\"utf-8\""
+          "operations": [],
+          "source": "run_dir / \"training_curves.png\","
         }
       ],
       "imports": [
@@ -3631,6 +3643,7 @@
         "src.training.ema",
         "src.training.lr_range",
         "src.training.recipes",
+        "src.utils.serialization",
         "time",
         "torch",
         "torch.utils.data",
@@ -3638,7 +3651,7 @@
         "typing"
       ],
       "path": "scripts/run_rtdetr_training.py",
-      "sha256": "ed1a2cb03ee7e70cea37cece85a3c5b61737f74f6d1072089408c9ab852cbce1"
+      "sha256": "44b0353356f317914165dd2807aeefccb82d3241b24fc4b16e3f7852f07fd7b1"
     },
     {
       "artifact_references": [
@@ -6505,7 +6518,16 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 114,
+          "line": 16,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_json, write_text_atomic"
+        },
+        {
+          "cell": 0,
+          "line": 117,
           "literals": [],
           "operations": [
             "write"
@@ -6514,7 +6536,7 @@
         },
         {
           "cell": 0,
-          "line": 130,
+          "line": 133,
           "literals": [
             ".png"
           ],
@@ -6523,7 +6545,7 @@
         },
         {
           "cell": 0,
-          "line": 398,
+          "line": 401,
           "literals": [
             "*.png"
           ],
@@ -6534,7 +6556,7 @@
         },
         {
           "cell": 0,
-          "line": 408,
+          "line": 411,
           "literals": [],
           "operations": [
             "write"
@@ -6543,7 +6565,7 @@
         },
         {
           "cell": 0,
-          "line": 461,
+          "line": 464,
           "literals": [
             "final_results.csv"
           ],
@@ -6554,27 +6576,18 @@
         },
         {
           "cell": 0,
-          "line": 462,
+          "line": 465,
           "literals": [
             "final_results.json"
           ],
           "operations": [
             "write"
           ],
-          "source": "(output / \"final_results.json\").write_text("
+          "source": "write_json(output / \"final_results.json\", rows)"
         },
         {
           "cell": 0,
-          "line": 463,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "json.dumps(rows, indent=2), encoding=\"utf-8\""
-        },
-        {
-          "cell": 0,
-          "line": 467,
+          "line": 468,
           "literals": [],
           "operations": [
             "write"
@@ -6583,7 +6596,7 @@
         },
         {
           "cell": 0,
-          "line": 468,
+          "line": 469,
           "literals": [
             "model_recommendation_matrix.csv"
           ],
@@ -6592,7 +6605,7 @@
         },
         {
           "cell": 0,
-          "line": 471,
+          "line": 472,
           "literals": [
             "statistical_summary.csv"
           ],
@@ -6603,38 +6616,34 @@
         },
         {
           "cell": 0,
-          "line": 503,
+          "line": 531,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "(output / \"final_report.md\").write_text(markdown, encoding=\"utf-8\")"
+          "source": "write_text_atomic(output / \"final_report.md\", markdown)"
         },
         {
           "cell": 0,
-          "line": 515,
+          "line": 543,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_text_atomic("
+        },
+        {
+          "cell": 0,
+          "line": 544,
           "literals": [
             "final_report.html"
           ],
-          "operations": [
-            "write"
-          ],
-          "source": "(output / \"final_report.html\").write_text("
+          "operations": [],
+          "source": "output / \"final_report.html\","
         },
         {
           "cell": 0,
-          "line": 549,
-          "literals": [
-            "experiment_summary.pdf.unavailable.txt"
-          ],
-          "operations": [
-            "write"
-          ],
-          "source": "(output / \"experiment_summary.pdf.unavailable.txt\").write_text("
-        },
-        {
-          "cell": 0,
-          "line": 555,
+          "line": 581,
           "literals": [
             "final_report.html"
           ],
@@ -6643,7 +6652,7 @@
         },
         {
           "cell": 0,
-          "line": 556,
+          "line": 582,
           "literals": [
             "final_results.csv"
           ],
@@ -6652,7 +6661,7 @@
         },
         {
           "cell": 0,
-          "line": 557,
+          "line": 583,
           "literals": [
             "final_results.json"
           ],
@@ -6661,7 +6670,7 @@
         },
         {
           "cell": 0,
-          "line": 558,
+          "line": 584,
           "literals": [
             "model_recommendation_matrix.csv"
           ],
@@ -6681,10 +6690,13 @@
         "pandas",
         "pathlib",
         "src.evaluation.efficiency_metrics",
+        "src.optional_outputs",
+        "src.subprocess_utils",
+        "src.utils.serialization",
         "typing"
       ],
       "path": "src/evaluation/report_generator.py",
-      "sha256": "ed2f7ed7025f55e381a1b85ef6480bb16d91cf769e2398673c0f095df3bfc3be"
+      "sha256": "cee64ef33c3b76427153bef31fa078a88f41e695be74bbfb8cadc2c289bf50ad"
     },
     {
       "artifact_references": [
@@ -6836,7 +6848,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 17,
+          "line": 18,
           "literals": [],
           "operations": [
             "read",
@@ -6846,7 +6858,7 @@
         },
         {
           "cell": 0,
-          "line": 26,
+          "line": 27,
           "literals": [],
           "operations": [
             "write"
@@ -6855,7 +6867,7 @@
         },
         {
           "cell": 0,
-          "line": 68,
+          "line": 69,
           "literals": [
             "best_config.yaml"
           ],
@@ -6864,7 +6876,7 @@
         },
         {
           "cell": 0,
-          "line": 75,
+          "line": 76,
           "literals": [
             "best_config.yaml"
           ],
@@ -6873,7 +6885,7 @@
         },
         {
           "cell": 0,
-          "line": 85,
+          "line": 86,
           "literals": [],
           "operations": [
             "read"
@@ -6882,7 +6894,7 @@
         },
         {
           "cell": 0,
-          "line": 153,
+          "line": 154,
           "literals": [
             "*/resume_contract.json"
           ],
@@ -6893,7 +6905,7 @@
         },
         {
           "cell": 0,
-          "line": 157,
+          "line": 158,
           "literals": [],
           "operations": [
             "read"
@@ -6902,7 +6914,7 @@
         },
         {
           "cell": 0,
-          "line": 160,
+          "line": 161,
           "literals": [
             "run_manifest.json"
           ],
@@ -6911,7 +6923,7 @@
         },
         {
           "cell": 0,
-          "line": 162,
+          "line": 163,
           "literals": [],
           "operations": [
             "read"
@@ -6920,7 +6932,7 @@
         },
         {
           "cell": 0,
-          "line": 165,
+          "line": 166,
           "literals": [
             "last.pth"
           ],
@@ -6929,7 +6941,7 @@
         },
         {
           "cell": 0,
-          "line": 190,
+          "line": 191,
           "literals": [
             "last.pth",
             "latest.pt"
@@ -6939,7 +6951,7 @@
         },
         {
           "cell": 0,
-          "line": 191,
+          "line": 192,
           "literals": [
             "best.pt",
             "best_map.pth"
@@ -6949,7 +6961,7 @@
         },
         {
           "cell": 0,
-          "line": 230,
+          "line": 237,
           "literals": [
             "run_manifest.json"
           ],
@@ -6960,7 +6972,7 @@
         },
         {
           "cell": 0,
-          "line": 233,
+          "line": 240,
           "literals": [
             "resume_contract.json"
           ],
@@ -6971,7 +6983,7 @@
         },
         {
           "cell": 0,
-          "line": 247,
+          "line": 254,
           "literals": [
             "instances_train.json"
           ],
@@ -6980,7 +6992,7 @@
         },
         {
           "cell": 0,
-          "line": 250,
+          "line": 257,
           "literals": [
             "instances_val.json"
           ],
@@ -6998,6 +7010,7 @@
         "src.hpo.workflow",
         "src.models.registry",
         "src.models.rtdetrv2.optimizer",
+        "src.optional_outputs",
         "src.paths",
         "src.training.checkpointing",
         "src.training.trainer",
@@ -7005,7 +7018,7 @@
         "typing"
       ],
       "path": "src/hpo/final_workflow.py",
-      "sha256": "870ab4e6d9f1b0da386ababc3ca849ff70f7aabc12725a2e1954ce94f782ebe1"
+      "sha256": "45cb481a0ca7a24da010f13820eaf2e09b4eedec48ed7cc7432e437bc7ba46f8"
     },
     {
       "artifact_references": [
@@ -7316,7 +7329,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 14,
+          "line": 15,
           "literals": [],
           "operations": [
             "read"
@@ -7325,7 +7338,7 @@
         },
         {
           "cell": 0,
-          "line": 22,
+          "line": 23,
           "literals": [],
           "operations": [
             "write"
@@ -7334,7 +7347,7 @@
         },
         {
           "cell": 0,
-          "line": 27,
+          "line": 28,
           "literals": [],
           "operations": [
             "read"
@@ -7343,7 +7356,7 @@
         },
         {
           "cell": 0,
-          "line": 28,
+          "line": 29,
           "literals": [
             "hpo_recipe_v2.yaml"
           ],
@@ -7352,7 +7365,7 @@
         },
         {
           "cell": 0,
-          "line": 113,
+          "line": 114,
           "literals": [
             "study_v2.db",
             "study_v2_smoke.db"
@@ -7362,7 +7375,7 @@
         },
         {
           "cell": 0,
-          "line": 137,
+          "line": 138,
           "literals": [
             "study_v2.db"
           ],
@@ -7371,7 +7384,7 @@
         },
         {
           "cell": 0,
-          "line": 138,
+          "line": 139,
           "literals": [
             "snapshots/study_v2_latest.db"
           ],
@@ -7380,12 +7393,12 @@
         },
         {
           "cell": 0,
-          "line": 147,
+          "line": 152,
           "literals": [
             "study_v2_latest.db"
           ],
           "operations": [],
-          "source": "self.study_path, self.root / \"snapshots\" / \"study_v2_latest.db\""
+          "source": "self.root / \"snapshots\" / \"study_v2_latest.db\","
         }
       ],
       "imports": [
@@ -7397,11 +7410,12 @@
         "sqlite3",
         "src.hpo.workflow",
         "src.models.rtdetrv2.optimizer",
+        "src.optional_outputs",
         "src.utils.serialization",
         "typing"
       ],
       "path": "src/hpo/rtdetr_v2.py",
-      "sha256": "578275d00ff70adbf05bc6861d5b6f669187fa5833faaecb1f0639683cf0eca3"
+      "sha256": "6a7983885c243852f45043bb831f95cb8f975c47b6dd8b7e97d38116fc21368b"
     },
     {
       "artifact_references": [
@@ -8205,6 +8219,67 @@
       ],
       "path": "src/notebook_utils.py",
       "sha256": "9ed6ef56c4dfd691670c3dd961d8cadc0b7270ed5bd5b24ef042e1f9116374a9"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 10,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 13,
+          "literals": [
+            "optional_output_warnings.json"
+          ],
+          "operations": [],
+          "source": "WARNING_FILE = \"optional_output_warnings.json\""
+        },
+        {
+          "cell": 0,
+          "line": 14,
+          "literals": [
+            "logs/optional_output_warnings.log"
+          ],
+          "operations": [],
+          "source": "WARNING_LOG = \"logs/optional_output_warnings.log\""
+        },
+        {
+          "cell": 0,
+          "line": 22,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "value = read_json(path)"
+        },
+        {
+          "cell": 0,
+          "line": 43,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(root / WARNING_FILE, warnings)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "datetime",
+        "pathlib",
+        "src.utils.serialization",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "path": "src/optional_outputs.py",
+      "sha256": "4d4f4bd9631ee1d402f4fd0f9e8140c6e83f598ffc1e8b0c6cdf0ce5aaf8f19b"
     },
     {
       "artifact_references": [
@@ -9627,7 +9702,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 11,
+          "line": 12,
           "literals": [],
           "operations": [
             "write"
@@ -9636,7 +9711,7 @@
         },
         {
           "cell": 0,
-          "line": 36,
+          "line": 38,
           "literals": [
             "runtime_environment.json"
           ],
@@ -9645,7 +9720,7 @@
         },
         {
           "cell": 0,
-          "line": 37,
+          "line": 39,
           "literals": [],
           "operations": [
             "write"
@@ -9654,7 +9729,7 @@
         },
         {
           "cell": 0,
-          "line": 38,
+          "line": 40,
           "literals": [
             "runtime_packages.txt"
           ],
@@ -9669,6 +9744,7 @@
         "importlib.metadata",
         "pathlib",
         "src.reproducibility",
+        "src.subprocess_utils",
         "src.utils.environment",
         "src.utils.serialization",
         "src.workflows.isolated_environment",
@@ -9676,13 +9752,22 @@
         "typing"
       ],
       "path": "src/runtime_manifest.py",
-      "sha256": "dceeefb00ca48beaad8f66b438b1b067935a943fc50b798bfd64535d8696ec4b"
+      "sha256": "e9460773a450ed1536ac4566db5fc0522c2c1ad990c1f3b6ed4428b1208ab732"
     },
     {
       "artifact_references": [
         {
           "cell": 0,
-          "line": 37,
+          "line": 12,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_csv"
+        },
+        {
+          "cell": 0,
+          "line": 41,
           "literals": [
             "metrics_history.csv"
           ],
@@ -9691,7 +9776,7 @@
         },
         {
           "cell": 0,
-          "line": 56,
+          "line": 60,
           "literals": [
             "epoch_metrics.jsonl"
           ],
@@ -9700,7 +9785,7 @@
         },
         {
           "cell": 0,
-          "line": 59,
+          "line": 63,
           "literals": [],
           "operations": [
             "write"
@@ -9709,12 +9794,14 @@
         },
         {
           "cell": 0,
-          "line": 61,
+          "line": 69,
           "literals": [
             "metrics_history.csv"
           ],
-          "operations": [],
-          "source": "with (self.run_dir / \"metrics_history.csv\").open("
+          "operations": [
+            "write"
+          ],
+          "source": "write_csv(self.run_dir / \"metrics_history.csv\", self.rows, fields)"
         }
       ],
       "imports": [
@@ -9722,13 +9809,16 @@
         "csv",
         "dataclasses",
         "json",
-        "matplotlib",
         "matplotlib.pyplot",
+        "os",
         "pathlib",
+        "src.optional_outputs",
+        "src.subprocess_utils",
+        "src.utils.serialization",
         "typing"
       ],
       "path": "src/training/callbacks.py",
-      "sha256": "2806951994325076489819482e575bc43471dc87e1e47a887b9c4e0002c127ca"
+      "sha256": "55d0be28c42f1b07d946ce5c38f0375e8b44da82ac8df1283168b99870ec64a3"
     },
     {
       "artifact_references": [
@@ -9913,7 +10003,7 @@
           "operations": [
             "write"
           ],
-          "source": "from src.utils.serialization import write_json"
+          "source": "from src.utils.serialization import write_csv, write_json"
         },
         {
           "cell": 0,
@@ -9921,12 +10011,14 @@
           "literals": [
             "history.csv"
           ],
-          "operations": [],
-          "source": "with (output / \"history.csv\").open(\"w\", newline=\"\", encoding=\"utf-8\") as handle:"
+          "operations": [
+            "write"
+          ],
+          "source": "write_csv(output / \"history.csv\", normalized, fields)"
         },
         {
           "cell": 0,
-          "line": 111,
+          "line": 108,
           "literals": [
             "summary.json"
           ],
@@ -9937,39 +10029,27 @@
         },
         {
           "cell": 0,
-          "line": 137,
+          "line": 132,
           "literals": [
             "loss_vs_lr.png"
           ],
           "operations": [],
           "source": "figure.savefig(output / \"loss_vs_lr.png\", dpi=180)"
-        },
-        {
-          "cell": 0,
-          "line": 140,
-          "literals": [
-            "loss_vs_lr.png.unavailable.txt"
-          ],
-          "operations": [
-            "write"
-          ],
-          "source": "(output / \"loss_vs_lr.png.unavailable.txt\").write_text("
         }
       ],
       "imports": [
         "__future__",
-        "csv",
-        "json",
         "math",
-        "matplotlib",
         "matplotlib.pyplot",
         "pathlib",
+        "src.optional_outputs",
+        "src.subprocess_utils",
         "src.training.lr_search",
         "src.utils.serialization",
         "typing"
       ],
       "path": "src/training/lr_range.py",
-      "sha256": "77767ce9378e15b6ab1fb7c2b56067c79c341323990abc278207ac9fa4335ed0"
+      "sha256": "dbdc117ebf50f5e8e830ae207fca66fe853e204530fda4e5987bfbc6652b8789"
     },
     {
       "artifact_references": [
@@ -11099,7 +11179,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 22,
+          "line": 28,
           "literals": [],
           "operations": [
             "read",
@@ -11109,7 +11189,7 @@
         },
         {
           "cell": 0,
-          "line": 76,
+          "line": 88,
           "literals": [
             "logs"
           ],
@@ -11118,7 +11198,7 @@
         },
         {
           "cell": 0,
-          "line": 79,
+          "line": 91,
           "literals": [],
           "operations": [
             "discover"
@@ -11127,7 +11207,7 @@
         },
         {
           "cell": 0,
-          "line": 97,
+          "line": 109,
           "literals": [
             "instances_train.json"
           ],
@@ -11136,7 +11216,7 @@
         },
         {
           "cell": 0,
-          "line": 100,
+          "line": 112,
           "literals": [
             "instances_val.json"
           ],
@@ -11145,7 +11225,7 @@
         },
         {
           "cell": 0,
-          "line": 149,
+          "line": 160,
           "literals": [],
           "operations": [
             "write"
@@ -11154,7 +11234,7 @@
         },
         {
           "cell": 0,
-          "line": 155,
+          "line": 166,
           "literals": [
             "training_config.yaml"
           ],
@@ -11165,7 +11245,7 @@
         },
         {
           "cell": 0,
-          "line": 156,
+          "line": 167,
           "literals": [
             "resolved_config.yaml"
           ],
@@ -11176,7 +11256,7 @@
         },
         {
           "cell": 0,
-          "line": 157,
+          "line": 168,
           "literals": [
             "model_config.yaml"
           ],
@@ -11187,7 +11267,7 @@
         },
         {
           "cell": 0,
-          "line": 158,
+          "line": 169,
           "literals": [],
           "operations": [
             "read"
@@ -11196,7 +11276,7 @@
         },
         {
           "cell": 0,
-          "line": 162,
+          "line": 173,
           "literals": [
             "dataset_{dataset_track}.yaml"
           ],
@@ -11205,7 +11285,7 @@
         },
         {
           "cell": 0,
-          "line": 164,
+          "line": 175,
           "literals": [
             "dataset_config.yaml"
           ],
@@ -11216,7 +11296,7 @@
         },
         {
           "cell": 0,
-          "line": 165,
+          "line": 176,
           "literals": [
             "environment.json"
           ],
@@ -11227,7 +11307,7 @@
         },
         {
           "cell": 0,
-          "line": 167,
+          "line": 178,
           "literals": [
             "git_provenance.json"
           ],
@@ -11238,7 +11318,7 @@
         },
         {
           "cell": 0,
-          "line": 172,
+          "line": 183,
           "literals": [
             "pip_freeze.txt"
           ],
@@ -11249,7 +11329,7 @@
         },
         {
           "cell": 0,
-          "line": 174,
+          "line": 185,
           "literals": [
             "pip_freeze.txt"
           ],
@@ -11260,7 +11340,7 @@
         },
         {
           "cell": 0,
-          "line": 177,
+          "line": 188,
           "literals": [],
           "operations": [
             "write"
@@ -11269,7 +11349,7 @@
         },
         {
           "cell": 0,
-          "line": 178,
+          "line": 189,
           "literals": [
             "label_mapping.json"
           ],
@@ -11278,7 +11358,7 @@
         },
         {
           "cell": 0,
-          "line": 195,
+          "line": 206,
           "literals": [
             "run_manifest.json"
           ],
@@ -11289,7 +11369,7 @@
         },
         {
           "cell": 0,
-          "line": 225,
+          "line": 236,
           "literals": [
             "runtime_environment.json"
           ],
@@ -11298,7 +11378,7 @@
         },
         {
           "cell": 0,
-          "line": 227,
+          "line": 238,
           "literals": [],
           "operations": [
             "read"
@@ -11307,7 +11387,7 @@
         },
         {
           "cell": 0,
-          "line": 246,
+          "line": 262,
           "literals": [
             "run_manifest.json"
           ],
@@ -11318,7 +11398,7 @@
         },
         {
           "cell": 0,
-          "line": 251,
+          "line": 267,
           "literals": [
             "run_manifest.json"
           ],
@@ -11329,7 +11409,7 @@
         },
         {
           "cell": 0,
-          "line": 253,
+          "line": 269,
           "literals": [
             "run_manifest.json"
           ],
@@ -11338,7 +11418,7 @@
         },
         {
           "cell": 0,
-          "line": 286,
+          "line": 302,
           "literals": [
             "best_map.pth"
           ],
@@ -11347,7 +11427,7 @@
         },
         {
           "cell": 0,
-          "line": 287,
+          "line": 303,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -11356,7 +11436,7 @@
         },
         {
           "cell": 0,
-          "line": 288,
+          "line": 304,
           "literals": [
             "last.pth"
           ],
@@ -11365,7 +11445,7 @@
         },
         {
           "cell": 0,
-          "line": 289,
+          "line": 305,
           "literals": [
             "training_config.yaml"
           ],
@@ -11374,7 +11454,7 @@
         },
         {
           "cell": 0,
-          "line": 332,
+          "line": 348,
           "literals": [
             "applied_overrides.json"
           ],
@@ -11383,7 +11463,7 @@
         },
         {
           "cell": 0,
-          "line": 335,
+          "line": 351,
           "literals": [
             "controlled benchmark did not produce applied_overrides.json"
           ],
@@ -11392,7 +11472,7 @@
         },
         {
           "cell": 0,
-          "line": 337,
+          "line": 353,
           "literals": [],
           "operations": [
             "read"
@@ -11401,7 +11481,25 @@
         },
         {
           "cell": 0,
-          "line": 413,
+          "line": 407,
+          "literals": [
+            "final_metrics.json"
+          ],
+          "operations": [],
+          "source": "final_metrics = run_dir / \"final_metrics.json\""
+        },
+        {
+          "cell": 0,
+          "line": 412,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "summary = read_json(final_metrics)"
+        },
+        {
+          "cell": 0,
+          "line": 459,
           "literals": [],
           "operations": [
             "write"
@@ -11410,7 +11508,7 @@
         },
         {
           "cell": 0,
-          "line": 414,
+          "line": 460,
           "literals": [
             "dataset_config.yaml"
           ],
@@ -11421,70 +11519,7 @@
         },
         {
           "cell": 0,
-          "line": 431,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "json.dumps(run_config.get(\"overrides\", {})),"
-        },
-        {
-          "cell": 0,
-          "line": 467,
-          "literals": [
-            "logs"
-          ],
-          "operations": [],
-          "source": "command, self.repo_root, run_dir / \"logs\" / \"backend.log\""
-        },
-        {
-          "cell": 0,
-          "line": 471,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "return json.loads("
-        },
-        {
-          "cell": 0,
           "line": 477,
-          "literals": [
-            "summary.json"
-          ],
-          "operations": [],
-          "source": "/ \"summary.json\""
-        },
-        {
-          "cell": 0,
-          "line": 478,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": ").read_text(encoding=\"utf-8\")"
-        },
-        {
-          "cell": 0,
-          "line": 480,
-          "literals": [
-            "final_metrics.json"
-          ],
-          "operations": [],
-          "source": "final_metrics = run_dir / \"final_metrics.json\""
-        },
-        {
-          "cell": 0,
-          "line": 482,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "json.loads(final_metrics.read_text(encoding=\"utf-8\"))"
-        },
-        {
-          "cell": 0,
-          "line": 530,
           "literals": [],
           "operations": [
             "write"
@@ -11493,7 +11528,7 @@
         },
         {
           "cell": 0,
-          "line": 549,
+          "line": 513,
           "literals": [
             "logs"
           ],
@@ -11502,7 +11537,7 @@
         },
         {
           "cell": 0,
-          "line": 553,
+          "line": 517,
           "literals": [],
           "operations": [
             "read"
@@ -11511,7 +11546,7 @@
         },
         {
           "cell": 0,
-          "line": 559,
+          "line": 523,
           "literals": [
             "summary.json"
           ],
@@ -11520,7 +11555,7 @@
         },
         {
           "cell": 0,
-          "line": 560,
+          "line": 524,
           "literals": [],
           "operations": [
             "read"
@@ -11529,7 +11564,25 @@
         },
         {
           "cell": 0,
-          "line": 562,
+          "line": 571,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(run_config.get(\"overrides\", {})),"
+        },
+        {
+          "cell": 0,
+          "line": 590,
+          "literals": [
+            "logs"
+          ],
+          "operations": [],
+          "source": "command, self.repo_root, run_dir / \"logs\" / \"backend.log\""
+        },
+        {
+          "cell": 0,
+          "line": 594,
           "literals": [],
           "operations": [
             "read"
@@ -11538,14 +11591,21 @@
         },
         {
           "cell": 0,
-          "line": 563,
+          "line": 600,
           "literals": [
-            "final_metrics.json"
+            "summary.json"
           ],
+          "operations": [],
+          "source": "/ \"summary.json\""
+        },
+        {
+          "cell": 0,
+          "line": 601,
+          "literals": [],
           "operations": [
             "read"
           ],
-          "source": "(run_dir / \"final_metrics.json\").read_text(encoding=\"utf-8\")"
+          "source": ").read_text(encoding=\"utf-8\")"
         }
       ],
       "imports": [
@@ -11554,11 +11614,13 @@
         "datetime",
         "hashlib",
         "json",
+        "math",
         "os",
         "pathlib",
         "src.drive_sync",
         "src.git_utils",
         "src.models.registry",
+        "src.optional_outputs",
         "src.paths",
         "src.reproducibility",
         "src.subprocess_utils",
@@ -11570,7 +11632,7 @@
         "typing"
       ],
       "path": "src/training/trainer.py",
-      "sha256": "58e57bc28dbac8c8f951ca720cfb2bb79ee34622093f976f0256e3ac92bfb386"
+      "sha256": "a9d0359979f1092932a8de62f4111bcb2bcf66116e7588b195d7d0f18aac50b8"
     },
     {
       "artifact_references": [
@@ -11601,13 +11663,22 @@
           "line": 15,
           "literals": [],
           "operations": [
+            "write"
+          ],
+          "source": "def write_text_atomic(path: str | Path, text: str) -> None:"
+        },
+        {
+          "cell": 0,
+          "line": 32,
+          "literals": [],
+          "operations": [
             "read"
           ],
           "source": "def read_json(path: str | Path) -> Any:"
         },
         {
           "cell": 0,
-          "line": 16,
+          "line": 33,
           "literals": [],
           "operations": [
             "read"
@@ -11616,7 +11687,7 @@
         },
         {
           "cell": 0,
-          "line": 19,
+          "line": 36,
           "literals": [],
           "operations": [
             "write"
@@ -11625,7 +11696,7 @@
         },
         {
           "cell": 0,
-          "line": 22,
+          "line": 39,
           "literals": [],
           "operations": [
             "write"
@@ -11634,7 +11705,7 @@
         },
         {
           "cell": 0,
-          "line": 24,
+          "line": 41,
           "literals": [],
           "operations": [
             "write"
@@ -11643,7 +11714,7 @@
         },
         {
           "cell": 0,
-          "line": 40,
+          "line": 57,
           "literals": [],
           "operations": [
             "read"
@@ -11652,7 +11723,7 @@
         },
         {
           "cell": 0,
-          "line": 41,
+          "line": 58,
           "literals": [],
           "operations": [
             "read"
@@ -11661,7 +11732,7 @@
         },
         {
           "cell": 0,
-          "line": 45,
+          "line": 62,
           "literals": [],
           "operations": [
             "write"
@@ -11670,16 +11741,7 @@
         },
         {
           "cell": 0,
-          "line": 48,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "target.write_text(yaml.safe_dump(value, sort_keys=False), encoding=\"utf-8\")"
-        },
-        {
-          "cell": 0,
-          "line": 51,
+          "line": 80,
           "literals": [],
           "operations": [
             "write"
@@ -11699,7 +11761,7 @@
         "yaml"
       ],
       "path": "src/utils/serialization.py",
-      "sha256": "5b33bd9b4de975427017e19778f996e54ccddaf02378954a0c57a2ca263e594f"
+      "sha256": "7be2bc8bf248253649b836e8f071cd4eb0b3f64968f3742934c3622372788b6b"
     },
     {
       "artifact_references": [
@@ -11753,16 +11815,17 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 12,
+          "line": 13,
           "literals": [],
           "operations": [
-            "read"
+            "read",
+            "write"
           ],
-          "source": "from src.utils.serialization import read_json, read_yaml"
+          "source": "from src.utils.serialization import read_json, read_yaml, write_json, write_text_atomic"
         },
         {
           "cell": 0,
-          "line": 31,
+          "line": 32,
           "literals": [],
           "operations": [
             "discover"
@@ -11771,7 +11834,7 @@
         },
         {
           "cell": 0,
-          "line": 53,
+          "line": 54,
           "literals": [
             "training_config.yaml"
           ],
@@ -11782,7 +11845,7 @@
         },
         {
           "cell": 0,
-          "line": 57,
+          "line": 58,
           "literals": [
             "{run['run_id']}__res640__metrics.json"
           ],
@@ -11791,7 +11854,7 @@
         },
         {
           "cell": 0,
-          "line": 59,
+          "line": 60,
           "literals": [
             "{run['run_id']}__profile.json"
           ],
@@ -11800,7 +11863,7 @@
         },
         {
           "cell": 0,
-          "line": 62,
+          "line": 63,
           "literals": [],
           "operations": [
             "read"
@@ -11809,7 +11872,7 @@
         },
         {
           "cell": 0,
-          "line": 69,
+          "line": 70,
           "literals": [],
           "operations": [
             "read"
@@ -11818,7 +11881,7 @@
         },
         {
           "cell": 0,
-          "line": 113,
+          "line": 114,
           "literals": [
             "comparison.csv"
           ],
@@ -11829,36 +11892,27 @@
         },
         {
           "cell": 0,
-          "line": 122,
+          "line": 128,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "(output / \"comparison.md\").write_text(\"\\n\".join(markdown), encoding=\"utf-8\")"
+          "source": "write_text_atomic(output / \"comparison.md\", \"\\n\".join(markdown))"
         },
         {
           "cell": 0,
-          "line": 123,
+          "line": 129,
           "literals": [
             "comparison.json"
           ],
           "operations": [
             "write"
           ],
-          "source": "(output / \"comparison.json\").write_text("
+          "source": "write_json(output / \"comparison.json\", {\"models\": rows, \"rejected\": rejected})"
         },
         {
           "cell": 0,
-          "line": 124,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "json.dumps({\"models\": rows, \"rejected\": rejected}, indent=2) + \"\\n\","
-        },
-        {
-          "cell": 0,
-          "line": 132,
+          "line": 137,
           "literals": [
             "accuracy_latency.png"
           ],
@@ -11867,7 +11921,7 @@
         },
         {
           "cell": 0,
-          "line": 133,
+          "line": 138,
           "literals": [
             "accuracy_memory.png"
           ],
@@ -11877,19 +11931,20 @@
       ],
       "imports": [
         "__future__",
-        "json",
         "matplotlib.pyplot",
         "pandas",
         "pathlib",
         "src.config.benchmark_tracks",
+        "src.optional_outputs",
         "src.paths",
+        "src.subprocess_utils",
         "src.training.checkpointing",
         "src.utils.serialization",
         "src.workflows.contract",
         "typing"
       ],
       "path": "src/workflows/comparison.py",
-      "sha256": "1dd466d096a17c917b1e82584221a96a4decb46e403658ea543abcbe607b7ede"
+      "sha256": "b226bbd15064e28ead1bd0ce6799515c3ed411e055b17336bd145b15dcc701a5"
     },
     {
       "artifact_references": [
@@ -12493,7 +12548,7 @@
         },
         {
           "cell": 0,
-          "line": 418,
+          "line": 419,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12502,7 +12557,7 @@
         },
         {
           "cell": 0,
-          "line": 426,
+          "line": 427,
           "literals": [],
           "operations": [
             "write"
@@ -12511,7 +12566,7 @@
         },
         {
           "cell": 0,
-          "line": 464,
+          "line": 465,
           "literals": [
             "search_state.json"
           ],
@@ -12520,7 +12575,7 @@
         },
         {
           "cell": 0,
-          "line": 467,
+          "line": 468,
           "literals": [],
           "operations": [
             "read"
@@ -12529,7 +12584,7 @@
         },
         {
           "cell": 0,
-          "line": 478,
+          "line": 479,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12538,7 +12593,7 @@
         },
         {
           "cell": 0,
-          "line": 480,
+          "line": 481,
           "literals": [],
           "operations": [
             "read"
@@ -12547,7 +12602,7 @@
         },
         {
           "cell": 0,
-          "line": 483,
+          "line": 484,
           "literals": [],
           "operations": [
             "write"
@@ -12556,7 +12611,7 @@
         },
         {
           "cell": 0,
-          "line": 527,
+          "line": 528,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12565,7 +12620,7 @@
         },
         {
           "cell": 0,
-          "line": 529,
+          "line": 530,
           "literals": [],
           "operations": [
             "read"
@@ -12574,7 +12629,7 @@
         },
         {
           "cell": 0,
-          "line": 532,
+          "line": 533,
           "literals": [],
           "operations": [
             "write"
@@ -12583,7 +12638,7 @@
         },
         {
           "cell": 0,
-          "line": 562,
+          "line": 563,
           "literals": [
             "instances_val.json"
           ],
@@ -12592,7 +12647,7 @@
         },
         {
           "cell": 0,
-          "line": 586,
+          "line": 587,
           "literals": [],
           "operations": [
             "read"
@@ -12601,7 +12656,7 @@
         },
         {
           "cell": 0,
-          "line": 588,
+          "line": 589,
           "literals": [
             "{state['final_run_id']}__res*__metrics.json"
           ],
@@ -12636,13 +12691,13 @@
         "typing"
       ],
       "path": "src/workflows/model_day.py",
-      "sha256": "b0a851d501af139a605a7b609606de2b36d2196922a873ff68ecab6c428b668d"
+      "sha256": "24dc865ec5cdc54619587fdb74ad86e26951cda510800a2ad8677b506f90cd99"
     },
     {
       "artifact_references": [
         {
           "cell": 0,
-          "line": 19,
+          "line": 20,
           "literals": [],
           "operations": [
             "write"
@@ -12651,7 +12706,7 @@
         },
         {
           "cell": 0,
-          "line": 23,
+          "line": 24,
           "literals": [
             "results/manifests/latest_result_manifest.json"
           ],
@@ -12660,7 +12715,7 @@
         },
         {
           "cell": 0,
-          "line": 30,
+          "line": 31,
           "literals": [
             "*/bundle_manifest.json"
           ],
@@ -12671,7 +12726,7 @@
         },
         {
           "cell": 0,
-          "line": 32,
+          "line": 33,
           "literals": [],
           "operations": [
             "read"
@@ -12680,7 +12735,7 @@
         },
         {
           "cell": 0,
-          "line": 45,
+          "line": 46,
           "literals": [
             "*/bundle_manifest.json"
           ],
@@ -12691,7 +12746,7 @@
         },
         {
           "cell": 0,
-          "line": 47,
+          "line": 48,
           "literals": [],
           "operations": [
             "read"
@@ -12700,7 +12755,7 @@
         },
         {
           "cell": 0,
-          "line": 93,
+          "line": 94,
           "literals": [],
           "operations": [
             "write"
@@ -12709,7 +12764,7 @@
         },
         {
           "cell": 0,
-          "line": 98,
+          "line": 99,
           "literals": [],
           "operations": [
             "write"
@@ -12718,7 +12773,7 @@
         },
         {
           "cell": 0,
-          "line": 286,
+          "line": 287,
           "literals": [],
           "operations": [
             "write"
@@ -12727,7 +12782,7 @@
         },
         {
           "cell": 0,
-          "line": 292,
+          "line": 293,
           "literals": [],
           "operations": [
             "write"
@@ -12736,7 +12791,7 @@
         },
         {
           "cell": 0,
-          "line": 298,
+          "line": 299,
           "literals": [],
           "operations": [
             "write"
@@ -12745,7 +12800,7 @@
         },
         {
           "cell": 0,
-          "line": 299,
+          "line": 300,
           "literals": [],
           "operations": [
             "write"
@@ -12754,7 +12809,7 @@
         },
         {
           "cell": 0,
-          "line": 301,
+          "line": 302,
           "literals": [],
           "operations": [
             "write"
@@ -12763,7 +12818,7 @@
         },
         {
           "cell": 0,
-          "line": 304,
+          "line": 305,
           "literals": [],
           "operations": [
             "write"
@@ -12772,7 +12827,7 @@
         },
         {
           "cell": 0,
-          "line": 313,
+          "line": 314,
           "literals": [],
           "operations": [
             "read"
@@ -12781,7 +12836,7 @@
         },
         {
           "cell": 0,
-          "line": 314,
+          "line": 315,
           "literals": [
             "bundle_manifest.json"
           ],
@@ -12792,7 +12847,7 @@
         },
         {
           "cell": 0,
-          "line": 361,
+          "line": 362,
           "literals": [],
           "operations": [
             "write"
@@ -12801,7 +12856,7 @@
         },
         {
           "cell": 0,
-          "line": 390,
+          "line": 391,
           "literals": [],
           "operations": [
             "write"
@@ -12825,11 +12880,12 @@
         "src.workflows.contract",
         "stat",
         "subprocess",
+        "sys",
         "tempfile",
         "typing"
       ],
       "path": "src/workflows/publishing.py",
-      "sha256": "753ed8400122087c2588f769573966717ed6e804fe3a2979e36ea046d6acf099"
+      "sha256": "d304a8d7037c4912fb1d99f636d3dac55c40e08b047624c75761d5efe659d5fe"
     },
     {
       "artifact_references": [

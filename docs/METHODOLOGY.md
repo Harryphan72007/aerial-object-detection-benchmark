@@ -30,3 +30,13 @@ precision/recall/F1 and PR curves, calibration, error decomposition, training
 and convergence facts, parameters, checkpoint size, valid FLOPs/MACs, memory,
 latency percentiles, FPS, throughput, and resolution scaling when measured.
 Nothing is fabricated when a model, run, or measurement is missing.
+
+## Reproducibility policy
+
+GPU training is **best-effort deterministic**, not guaranteed bitwise deterministic.
+Runs record their seeds, environment, source revision, and relevant child-process
+environment. Model subprocesses set `CUBLAS_WORKSPACE_CONFIG=:4096:8` before importing
+PyTorch and request deterministic algorithms with `warn_only=True`. CUDA operators
+without deterministic implementations, including the RT-DETR grid-sampling backward
+path in the observed stack, may still vary between runs. These warnings are retained;
+strict deterministic mode is not claimed because it can terminate supported models.

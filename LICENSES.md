@@ -8,7 +8,7 @@ separate; re-check both before redistribution or commercial deployment.
 | ResNet-50 Faster R-CNN | MMDetection `44ebd17b145c2372c4b700bfb9cb20dbd28ab64a` | Apache-2.0 | MMDetection model-zoo initialization recorded by each run |
 | Swin-T Faster R-CNN | Same MMDetection revision; Swin-derived backbone | Apache-2.0 / MIT | Exact resolved artifact recorded by each run |
 | VMamba-T Faster R-CNN | VMamba `2ed52ead062a51a64521ed3871d52914bf532876`; same MMDetection revision | MIT / Apache-2.0 | Required local `vmamba_tiny_e292.pth`; scratch training disabled |
-| RT-DETRv2 R101 | RT-DETR `a21d516aca15da57e65f35c47659c7535ad2b6b3` | Apache-2.0 | `PekingU/rtdetr_v2_r101vd` revision `a558a4798734af61997652ec97d9b82961c92450`, Apache-2.0 |
+| RT-DETRv2 R101 | RT-DETR `a21d516aca15da57e65f35c47659c7535ad2b6b3` | Apache-2.0 | `PekingU/rtdetr_v2_r101vd` revision `2c5dbbd2d4d8c8814827a3b42737ba1afce3cf2a`, Apache-2.0 |
 
 The environment provisioner is uv 0.8.15 (MIT OR Apache-2.0). Runtime manifests
 record the selected implementation, revision, artifact, and package/GPU facts.

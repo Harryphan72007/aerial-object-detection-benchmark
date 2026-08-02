@@ -10,6 +10,7 @@ from typing import Any
 from src.hpo.workflow import HPO_PROTOCOL_ID, _cleanup_accelerator_memory
 from src.hpo.rtdetr_v2 import RTDETR_HPO_PROTOCOL_ID
 from src.models.registry import load_model_config
+from src.optional_outputs import run_optional_output
 from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
 from src.training.checkpointing import make_run_id, materialize_checkpoint_alias
@@ -192,7 +193,13 @@ class FinalExperimentWorkflow:
         )
         for source, destination in aliases:
             if source.is_file():
-                materialize_checkpoint_alias(source, destination)
+                run_optional_output(
+                    f"materialize_legacy_checkpoint_alias:{destination.name}",
+                    run_dir,
+                    lambda source=source, destination=destination: (
+                        materialize_checkpoint_alias(source, destination)
+                    ),
+                )
 
     def run(
         self,

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import math
 import os
 import subprocess
 import time
@@ -14,9 +15,14 @@ from typing import Any
 from src.drive_sync import validate_dataset, validate_drive_writable
 from src.git_utils import write_git_provenance
 from src.models.registry import load_model_config
+from src.optional_outputs import load_optional_warnings
 from src.paths import ProjectPaths
 from src.reproducibility import framework_versions, seed_everything
-from src.subprocess_utils import model_python_executable, python_module_command
+from src.subprocess_utils import (
+    build_model_subprocess_environment,
+    model_python_executable,
+    python_module_command,
+)
 from src.training.checkpointing import RunRegistry, initialize_run
 from src.utils.environment import collect_environment
 from src.utils.serialization import read_json, read_yaml, write_json, write_yaml
@@ -62,6 +68,12 @@ class TrainingOrchestrator:
         validate_drive_writable(self.paths.root)
         validate_dataset(self.paths, dataset_track)
         seed_everything(seed)
+        world_size = int(os.environ.get("WORLD_SIZE", "1"))
+        if world_size != 1:
+            raise ValueError(
+                "The repository backend launcher is single-process; unset WORLD_SIZE, "
+                "LOCAL_RANK, and RANK instead of inheriting distributed state."
+            )
         model_config = load_model_config(model_id, self.repo_root)
         scheduler_horizon = scheduler_horizon or epochs
         if scheduler_horizon < epochs:
@@ -116,7 +128,6 @@ class TrainingOrchestrator:
                     f"required converted dataset path missing: {path}"
                 )
 
-        world_size = int(os.environ.get("WORLD_SIZE", "1"))
         run_config = {
             "model_id": model_id,
             "dataset_track": dataset_track,
@@ -239,6 +250,11 @@ class TrainingOrchestrator:
                     }
                 )
             manifest.update(summary)
+            warnings = load_optional_warnings(run_dir)
+            manifest["warnings"] = warnings
+            manifest["completion_status"] = (
+                "completed_with_warnings" if warnings else "completed"
+            )
             manifest["status"] = "completed"
         except Exception as error:
             manifest["status"] = "failed"
@@ -364,6 +380,9 @@ class TrainingOrchestrator:
             process = subprocess.Popen(
                 command,
                 cwd=cwd,
+                env=build_model_subprocess_environment(
+                    matplotlib_config_dir=log_path.parent / "matplotlib"
+                ),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -381,6 +400,33 @@ class TrainingOrchestrator:
                 f"backend process exited with code {return_code}\n"
                 + "\n".join(tail)
             )
+
+    @staticmethod
+    def _load_backend_summary(run_dir: Path) -> dict[str, Any]:
+        """Load and validate the scientific completion contract from a backend."""
+        final_metrics = run_dir / "final_metrics.json"
+        if not final_metrics.is_file():
+            raise FileNotFoundError(
+                f"backend exited without required final metrics: {final_metrics}"
+            )
+        summary = read_json(final_metrics)
+        if not isinstance(summary, dict):
+            raise ValueError("backend final metrics must be a JSON object")
+        for field in (
+            "checkpoint_best_map",
+            "checkpoint_best_aptiny",
+            "checkpoint_last",
+        ):
+            value = summary.get(field)
+            if not value or not Path(str(value)).is_file():
+                raise FileNotFoundError(
+                    f"backend completion is missing required {field}: {value}"
+                )
+        for field in ("best_validation_map", "best_validation_aptiny"):
+            value = summary.get(field)
+            if value is None or not math.isfinite(float(value)):
+                raise ValueError(f"backend completion has invalid {field}: {value}")
+        return summary
 
     def _run_mmdetection(
         self,
@@ -477,12 +523,7 @@ class TrainingOrchestrator:
                     / "summary.json"
                 ).read_text(encoding="utf-8")
             )
-        final_metrics = run_dir / "final_metrics.json"
-        return (
-            json.loads(final_metrics.read_text(encoding="utf-8"))
-            if final_metrics.exists()
-            else {}
-        )
+        return self._load_backend_summary(run_dir)
 
     def _run_rtdetr(
         self,
@@ -559,6 +600,4 @@ class TrainingOrchestrator:
                     / "summary.json"
                 ).read_text(encoding="utf-8")
             )
-        return json.loads(
-            (run_dir / "final_metrics.json").read_text(encoding="utf-8")
-        )
+        return self._load_backend_summary(run_dir)

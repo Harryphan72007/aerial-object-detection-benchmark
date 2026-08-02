@@ -1,15 +1,16 @@
 """Strict comparison of completed controlled final runs."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
 from src.paths import ProjectPaths
+from src.optional_outputs import run_optional_output
+from src.subprocess_utils import configure_headless_matplotlib
 from src.training.checkpointing import RunRegistry
-from src.utils.serialization import read_json, read_yaml
+from src.utils.serialization import read_json, read_yaml, write_json, write_text_atomic
 from src.workflows.contract import PRIMARY_MODELS, validate_final_config
 from src.config.benchmark_tracks import require_comparison_track
 
@@ -111,20 +112,24 @@ def compare_completed_models(
     output.mkdir(parents=True, exist_ok=True)
     frame = pd.DataFrame(rows)
     frame.to_csv(output / "comparison.csv", index=False)
+    rendered_table, _ = run_optional_output(
+        "render_comparison_markdown_table",
+        output,
+        lambda: frame.to_markdown(index=False),
+    )
     markdown = [
         f"# {benchmark_track.title()} 2-class model comparison",
         "",
-        frame.to_markdown(index=False),
+        rendered_table if rendered_table is not None else frame.to_string(index=False),
         "",
         "Only seed-42, 640-pixel, 25-epoch, effective-batch-8 final runs are included.",
         "",
     ]
-    (output / "comparison.md").write_text("\n".join(markdown), encoding="utf-8")
-    (output / "comparison.json").write_text(
-        json.dumps({"models": rows, "rejected": rejected}, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    try:
+    write_text_atomic(output / "comparison.md", "\n".join(markdown))
+    write_json(output / "comparison.json", {"models": rows, "rejected": rejected})
+
+    def save_plots() -> None:
+        configure_headless_matplotlib()
         import matplotlib.pyplot as plt
 
         plot_rows = pd.DataFrame(complete_rows)
@@ -145,6 +150,6 @@ def compare_completed_models(
             figure.tight_layout()
             figure.savefig(output / filename, dpi=160)
             plt.close(figure)
-    except (ImportError, TypeError, ValueError):
-        pass
+
+    run_optional_output("save_comparison_plots", output, save_plots)
     return {"models": rows, "rejected": rejected, "output": str(output)}

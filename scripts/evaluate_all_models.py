@@ -9,7 +9,7 @@ from pathlib import Path
 
 from src.hpo.final_workflow import IMAGE_SIZE
 from src.paths import configured_drive_root
-from src.subprocess_utils import python_module_command
+from src.subprocess_utils import build_model_subprocess_environment, python_module_command
 from src.workflows.environment import ensure_model_environment
 from src.workflows.hpo_comparison import (
     aggregate_hpo_results,
@@ -66,7 +66,12 @@ def main() -> None:
                 command.extend(["--max-images", str(args.max_images)])
             if args.skip_profile:
                 command.append("--skip-profile")
-            subprocess.run(command, cwd=REPOSITORY_ROOT, check=True)
+            subprocess.run(
+                command,
+                cwd=REPOSITORY_ROOT,
+                check=True,
+                env=build_model_subprocess_environment(),
+            )
     print(
         json.dumps(
             aggregate_hpo_results(drive_root, args.dataset_track),

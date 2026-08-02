@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import re
 import sys
@@ -11,9 +10,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-from src.training.callbacks import save_training_curves
+from src.optional_outputs import run_optional_output
+from src.training.callbacks import safe_save_training_curves
 from src.training.checkpointing import materialize_checkpoint_alias
 from src.runtime_manifest import write_runtime_environment_manifest
+from src.utils.serialization import write_csv, write_json, write_text_atomic
 
 
 def update_resize(pipeline: Any, image_size: int) -> Any:
@@ -114,17 +115,12 @@ def _read_scalar_rows(run_dir: Path) -> list[dict[str, Any]]:
 def _write_history(run_dir: Path, rows: list[dict[str, Any]]) -> None:
     if not rows:
         return
-    with (run_dir / "epoch_metrics.jsonl").open("w", encoding="utf-8") as handle:
-        for row in rows:
-            handle.write(json.dumps(row, sort_keys=True) + "\n")
+    write_text_atomic(
+        run_dir / "epoch_metrics.jsonl",
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
+    )
     fields = sorted({key for row in rows for key in row})
-    with (run_dir / "metrics_history.csv").open(
-        "w", newline="", encoding="utf-8"
-    ) as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(rows)
-    save_training_curves(rows, run_dir / "training_curves.png")
+    write_csv(run_dir / "metrics_history.csv", rows, fields)
 
 
 
@@ -401,10 +397,19 @@ def main() -> None:
         }
     )
     cfg.default_hooks.logger.interval = 20
-    cfg.visualizer.vis_backends = [
-        {"type": "LocalVisBackend"},
-        {"type": "TensorboardVisBackend", "save_dir": str(run_dir / "tensorboard")},
-    ]
+    cfg.visualizer.vis_backends = [{"type": "LocalVisBackend"}]
+    tensorboard, _ = run_optional_output(
+        "configure_tensorboard",
+        run_dir,
+        lambda: __import__("tensorboard"),
+    )
+    if tensorboard is not None:
+        cfg.visualizer.vis_backends.append(
+            {
+                "type": "TensorboardVisBackend",
+                "save_dir": str(run_dir / "tensorboard"),
+            }
+        )
     cfg.dump(str(run_dir / "runtime_config.py"))
     scheduler_contract_path = run_dir / "scheduler_contract.json"
     if args.resume and scheduler_contract_path.exists():
@@ -589,6 +594,10 @@ def main() -> None:
     elapsed = time.perf_counter() - started
 
     last_checkpoint = _last_epoch_checkpoint(run_dir)
+    if last_checkpoint is None:
+        raise FileNotFoundError(
+            f"MMDetection completed without a required epoch checkpoint in {run_dir}"
+        )
     best_map = _best_checkpoint(run_dir, "bbox_map") or last_checkpoint
     best_tiny = _best_checkpoint(run_dir, "aptiny") or best_map
     if last_checkpoint:
@@ -640,8 +649,11 @@ def main() -> None:
         ),
         "hyperparameter_overrides": override_report,
     }
-    (run_dir / "final_metrics.json").write_text(
-        json.dumps(summary, indent=2), encoding="utf-8"
+    write_json(run_dir / "final_metrics.json", summary)
+    safe_save_training_curves(
+        rows,
+        run_dir / "training_curves.png",
+        warning_root=run_dir,
     )
 
 

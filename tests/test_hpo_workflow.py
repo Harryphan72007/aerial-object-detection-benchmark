@@ -16,6 +16,7 @@ from src.hpo.search_spaces import broad_search_space, refined_search_space
 from src.hpo.workflow import HPO_PROTOCOL_ID, TwoStageRandomHPO, _failure_kind
 from src.result_export import HPO_REQUIRED_BUNDLE_FILES, validate_bundle
 from src.training.trainer import TrainingOrchestrator
+from src.training.checkpointing import resolve_manifest_checkpoint
 from src.utils.serialization import read_json, write_json, write_yaml
 from src.workflows.hpo_comparison import aggregate_hpo_results
 from src.workflows.publishing import (
@@ -159,15 +160,23 @@ def test_smoke_and_full_hpo_storage_are_isolated(tmp_path, monkeypatch):
     assert smoke.study_path != full.study_path
 
 
-def test_final_checkpoint_compatibility_aliases_preserve_canonical_files(tmp_path):
-    (tmp_path / "last.pth").write_bytes(b"latest")
-    (tmp_path / "best_map.pth").write_bytes(b"best")
-    FinalExperimentWorkflow._materialize_expected_aliases(tmp_path)
+def test_hpo_rejects_scratch_storage_inside_drive(tmp_path, monkeypatch):
+    monkeypatch.setenv(
+        "VISDRONE_HPO_SCRATCH_ROOT", str(tmp_path / "drive" / "scratch")
+    )
+    with pytest.raises(ValueError, match="must not be inside Google Drive"):
+        TwoStageRandomHPO(ROOT, tmp_path / "drive", MODEL_ID, "2class")
 
-    assert (tmp_path / "latest.pt").read_bytes() == b"latest"
-    assert (tmp_path / "best.pt").read_bytes() == b"best"
-    assert (tmp_path / "last.pth").read_bytes() == b"latest"
+
+def test_legacy_checkpoint_resolver_does_not_materialize_aliases(tmp_path):
+    (tmp_path / "best_map.pth").write_bytes(b"best")
+    selected = resolve_manifest_checkpoint(
+        {"run_dir": str(tmp_path)}, allow_legacy_aliases=True
+    )
+    assert selected.name == "best_map.pth"
     assert (tmp_path / "best_map.pth").read_bytes() == b"best"
+    assert not (tmp_path / "best.pth").exists()
+    assert not (tmp_path / "best.pt").exists()
 
 
 def test_final_workflow_automatically_runs_two_recipes_and_three_seeds(tmp_path):

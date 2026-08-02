@@ -193,7 +193,7 @@ def main() -> None:
             set([int(run["input_resolution"]), *args.resolutions])
         )
         checkpoint = registry.load_checkpoint_from_registry(
-            run["run_id"], "best_map"
+            run["run_id"], "best"
         )
         for resolution in resolutions:
             model_config = dict(base_model_config)

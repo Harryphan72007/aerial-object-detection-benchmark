@@ -40,12 +40,11 @@ def test_raw_ema_selection_remain_independent() -> None:
     assert restored.state_dict() == selector.state_dict()
 
 
-def test_best_raw_and_legacy_alias_resolve_without_replacing_last(tmp_path: Path) -> None:
+def test_canonical_best_resolves_without_replacing_last(tmp_path: Path) -> None:
     last = tmp_path / "last.pth"
     last.write_bytes(b"best-at-early-peak")
     materialize_best_checkpoint(last, tmp_path, weight_variant="raw")
     last.write_bytes(b"resumable-last")
-    assert (tmp_path / "best_raw.pth").read_bytes() == b"best-at-early-peak"
-    assert (tmp_path / "best.pt").read_bytes() == b"best-at-early-peak"
-    assert resolve_best_checkpoint(tmp_path).name == "best.pt"
+    assert (tmp_path / "best.pth").read_bytes() == b"best-at-early-peak"
+    assert resolve_best_checkpoint(tmp_path).name == "best.pth"
     assert last.read_bytes() == b"resumable-last"

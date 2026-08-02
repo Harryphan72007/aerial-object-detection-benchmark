@@ -82,6 +82,10 @@ portable promise about framework-internal tensor keys across model families.
 Legacy checkpoint files therefore remain evaluation or legacy-trainer inputs;
 they must never be rewritten in place.
 
+This section freezes the v1 reader contract only. New v2 runs write
+`checkpoint_best` pointing to `best.pth` and do not emit these aliases. The
+compatibility resolver reads v1 directories without rewriting them.
+
 The required run-manifest keys are frozen by
 `schemas/legacy/run_manifest_v1.schema.json` and the existing
 `src.training.checkpointing.MANIFEST_REQUIRED` set:

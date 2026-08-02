@@ -6,6 +6,8 @@ import hashlib
 import json
 import math
 import os
+import shutil
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Callable
@@ -115,6 +117,23 @@ class TwoStageRandomHPO:
         )
         self.root = full_root / "smoke_test" if self.smoke_test else full_root
         self.root.mkdir(parents=True, exist_ok=True)
+        configured_scratch = os.environ.get("VISDRONE_HPO_SCRATCH_ROOT")
+        default_scratch = (
+            Path("/content/visdrone_hpo_trials")
+            if Path("/content").is_dir()
+            else Path(tempfile.gettempdir()) / "visdrone_hpo_trials"
+        )
+        self.trial_scratch_root = (
+            Path(configured_scratch).expanduser().resolve()
+            if configured_scratch
+            else default_scratch.resolve()
+        ) / self.protocol_id / model_id / dataset_track
+        if self.smoke_test:
+            self.trial_scratch_root /= "smoke_test"
+        drive_boundary = self.paths.root.resolve()
+        scratch_boundary = self.trial_scratch_root.resolve()
+        if scratch_boundary == drive_boundary or drive_boundary in scratch_boundary.parents:
+            raise ValueError("HPO scratch storage must not be inside Google Drive")
         self.manifest_dir = (
             self.paths.dataset_manifests / "hpo" / dataset_track
         )
@@ -298,6 +317,47 @@ class TwoStageRandomHPO:
         attempt_limit = max(missing + 2, missing * MAX_ATTEMPT_MULTIPLIER)
         attempts = 0
 
+        def trial_paths(trial_number: int) -> tuple[Path, Path]:
+            persistent = self.root / "trials" / phase / f"trial_{trial_number:03d}"
+            scratch_root = getattr(self, "trial_scratch_root", None)
+            if scratch_root is None:
+                namespace = hashlib.sha256(
+                    str(self.root).encode("utf-8")
+                ).hexdigest()[:16]
+                scratch_root = (
+                    Path(tempfile.gettempdir())
+                    / "visdrone_hpo_trials"
+                    / namespace
+                )
+            scratch = Path(scratch_root) / phase / f"trial_{trial_number:03d}"
+            return persistent, scratch
+
+        def persist_trial_outputs(
+            persistent: Path,
+            scratch: Path,
+            record: dict[str, Any],
+        ) -> None:
+            persistent.mkdir(parents=True, exist_ok=True)
+            write_json(persistent / "trial_record.json", record)
+            for filename in (
+                "applied_overrides.json",
+                "runtime_environment.json",
+                "optional_output_warnings.json",
+            ):
+                source = scratch / filename
+                if source.is_file():
+                    write_json(persistent / filename, read_json(source))
+            metrics_source = scratch / "final_metrics.json"
+            if metrics_source.is_file():
+                metrics = read_json(metrics_source)
+                if isinstance(metrics, dict):
+                    metrics = {
+                        key: value
+                        for key, value in metrics.items()
+                        if not key.startswith("checkpoint_")
+                    }
+                write_json(persistent / "final_metrics.json", metrics)
+
         def objective(trial: Any) -> tuple[float, float]:
             trial.set_user_attr("phase", phase)
             trial.set_user_attr("resume", False)
@@ -310,9 +370,14 @@ class TwoStageRandomHPO:
             trial.set_user_attr("learning_rate", learning_rate)
             trial.set_user_attr("diverged", False)
             trial.set_user_attr("out_of_memory", False)
-            run_dir = self.root / "trials" / phase / f"trial_{trial.number:03d}"
-            run_dir.mkdir(parents=True, exist_ok=True)
+            persistent_dir, run_dir = trial_paths(trial.number)
+            if run_dir.exists():
+                shutil.rmtree(run_dir)
+            run_dir.mkdir(parents=True, exist_ok=False)
             started = time.perf_counter()
+            record_status = "FAILED"
+            record_error: dict[str, Any] | None = None
+            values: tuple[float, float] | None = None
             try:
                 values = self.trial_runner(
                     phase, trial.number, parameters, run_dir
@@ -337,8 +402,19 @@ class TwoStageRandomHPO:
                     trial.set_user_attr("divergence_learning_rate", learning_rate)
                 else:
                     trial.set_user_attr("trial_status", "FAILED")
+                    record_error = {
+                        "exception_type": type(error).__name__,
+                        "message": str(error),
+                        "failure_kind": failure_kind or "unexpected",
+                    }
                     raise
                 trial.set_user_attr("trial_status", "PRUNED")
+                record_status = "PRUNED"
+                record_error = {
+                    "exception_type": type(error).__name__,
+                    "message": str(error),
+                    "failure_kind": failure_kind,
+                }
                 import optuna
 
                 raise optuna.TrialPruned(str(error)) from error
@@ -346,18 +422,54 @@ class TwoStageRandomHPO:
                 trial.set_user_attr("trial_status", "FAILED")
                 trial.set_user_attr("failure_type", type(error).__name__)
                 trial.set_user_attr("failure_reason", str(error))
+                record_error = {
+                    "exception_type": type(error).__name__,
+                    "message": str(error),
+                    "failure_kind": "unexpected",
+                }
                 raise
             finally:
-                trial.set_user_attr(
-                    "training_time_sec", time.perf_counter() - started
-                )
+                elapsed = time.perf_counter() - started
+                trial.set_user_attr("training_time_sec", elapsed)
+                if values is not None:
+                    record_status = "COMPLETE"
+                try:
+                    persist_trial_outputs(
+                        persistent_dir,
+                        run_dir,
+                        {
+                            "schema_version": 1,
+                            "trial_number": trial.number,
+                            "phase": phase,
+                            "status": record_status,
+                            "resume": False,
+                            "parameters": parameters,
+                            "objective_values": (
+                                {
+                                    "mAP50-95": float(values[0]),
+                                    "APtiny": float(values[1]),
+                                }
+                                if values is not None
+                                else None
+                            ),
+                            "training_time_sec": elapsed,
+                            "runtime_source": str(run_dir),
+                            "checkpoint_policy": "local_scratch_deleted",
+                            "error": record_error,
+                        },
+                    )
+                finally:
+                    shutil.rmtree(run_dir)
                 _cleanup_accelerator_memory()
+            assert values is not None
             trial.set_user_attr("trial_status", "COMPLETE")
-            trial.set_user_attr("run_dir", str(run_dir))
+            trial.set_user_attr("run_dir", str(persistent_dir))
             trial.set_user_attr("validation_map", float(values[0]))
             trial.set_user_attr("validation_aptiny", float(values[1]))
-            trial.set_user_attr("metrics_path", str(run_dir / "final_metrics.json"))
-            trial.set_user_attr("checkpoint_path", str(run_dir / "best_map.pth"))
+            trial.set_user_attr(
+                "metrics_path", str(persistent_dir / "final_metrics.json")
+            )
+            trial.set_user_attr("checkpoint_policy", "local_scratch_deleted")
             return values
 
         while completed_count() < PHASE_TRIALS and attempts < attempt_limit:

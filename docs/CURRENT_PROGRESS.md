@@ -22,8 +22,8 @@
 - RT-DETRv2 numerical divergence and CUDA OOM are recorded and pruned. Other
   exceptions remain fatal so implementation bugs are not hidden.
 - Final tuned runs reload the selected LR, start from the original pretrained
-  model, select `best_map.pth` by validation mAP@[0.50:0.95], and expose
-  compatibility aliases `best.pt` and `latest.pt`.
+  model, and select the single canonical `best.pth` by validation
+  mAP@[0.50:0.95]. New runs do not write duplicate compatibility aliases.
 
 The older seven-notebook request referenced custom timm Swin and single-file
 VMamba constructors. The maintained repository now centralizes these behaviors

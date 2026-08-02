@@ -16,6 +16,7 @@ from src.data.local_cache import DataAccessPaths, resolve_data_access
 from src.models.registry import create_adapter, load_model_config
 from src.paths import ProjectPaths
 from src.subprocess_utils import build_model_subprocess_environment, python_module_command
+from src.training.checkpointing import model_checkpoint_files
 from src.training.lr_search import resolve_batch_policy
 from src.training.lr_workflow import LRControlledBenchmark
 from src.utils.serialization import read_json, read_yaml, write_json
@@ -303,8 +304,11 @@ def _adapter_smoke(
                     "checkpoint_reload": True,
                 },
                 "run_manifest": manifest,
+                "checkpoint_retained": False,
             }
             write_json(gate_path, gate)
+            for model_file in model_checkpoint_files(run_dir):
+                model_file.unlink()
             return gate
         except Exception as error:
             failures.append(

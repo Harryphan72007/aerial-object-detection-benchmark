@@ -15,7 +15,7 @@ from src.result_export import (
     sanitize_value,
     validate_bundle,
 )
-from src.training.checkpointing import RunRegistry
+from src.training.checkpointing import RunRegistry, resolve_manifest_checkpoint
 from src.utils.serialization import (
     read_json,
     read_yaml,
@@ -65,9 +65,9 @@ def create_hpo_result_bundle(
         paths.coco(dataset_track) / "annotations" / "instances_val.json"
     ).resolve()
     for run in runs:
-        checkpoint = Path(str(run["checkpoint_best_map"]))
-        if not checkpoint.is_file():
-            raise FileNotFoundError(checkpoint)
+        checkpoint = resolve_manifest_checkpoint(
+            run, allow_legacy_aliases=True
+        )
         checkpoint_hashes.append(sha256_file(checkpoint))
         config = read_yaml(Path(str(run["run_dir"])) / "training_config.yaml")
         if (

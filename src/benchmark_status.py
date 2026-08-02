@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from src.paths import ProjectPaths
+from src.training.checkpointing import resolve_manifest_checkpoint
 from src.utils.serialization import read_json, read_yaml
 
 PRIMARY_MODELS = (
@@ -15,6 +16,21 @@ PRIMARY_MODELS = (
     "rtdetrv2_l",
 )
 VALID_STATUSES = {"NOT_STARTED", "IN_PROGRESS", "COMPLETE", "FAILED", "BLOCKED"}
+
+
+def _selected_checkpoint(manifest: dict[str, Any]) -> str | None:
+    if not manifest:
+        return None
+    try:
+        return str(
+            resolve_manifest_checkpoint(
+                manifest,
+                allow_resume=manifest.get("status") != "completed",
+                allow_legacy_aliases=True,
+            )
+        )
+    except FileNotFoundError:
+        return None
 
 
 def _safe_json(path: Path) -> dict[str, Any]:
@@ -263,18 +279,7 @@ def discover_model_status(
         "final_training_status": final_status,
         "final_run_id": run_id,
         "final_run_dir": final_run.get("run_dir"),
-        "best_checkpoint": (
-            final_run.get("checkpoint_best_map")
-            or final_run.get("checkpoint_last")
-            or (
-                str(Path(str(final_run.get("run_dir"))) / "best_map.pth")
-                if final_run.get("run_dir")
-                and (Path(str(final_run.get("run_dir"))) / "best_map.pth").is_file()
-                else str(Path(str(final_run.get("run_dir"))) / "last.pth")
-                if final_run.get("run_dir")
-                else None
-            )
-        ),
+        "best_checkpoint": _selected_checkpoint(final_run),
         "evaluation_status": evaluation_status,
         "evaluation_files": [str(path) for path in evaluation_files],
         "report_status": report_status,

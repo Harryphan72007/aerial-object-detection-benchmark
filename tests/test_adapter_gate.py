@@ -68,6 +68,15 @@ def test_ready_gate_is_invalidated_and_failed_gate_retried_after_source_change()
     assert "git_commit" in ready_reasons[0]
 
 
+def test_failed_environment_gate_is_retryable_with_same_fingerprint() -> None:
+    decision, reasons = adapter_gate_decision(
+        {"status": "FAILED_ENVIRONMENT", "fingerprint": _fingerprint()},
+        _fingerprint(),
+    )
+    assert decision == "retry"
+    assert "transactional runtime state" in reasons[0]
+
+
 @pytest.mark.parametrize(
     ("decision", "prefix"),
     [

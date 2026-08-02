@@ -186,17 +186,32 @@ def test_model_day_downstream_stage_is_launched_as_module(
     launched: dict[str, object] = {}
 
     def capture(
-        command: list[str], *, check: bool, cwd: Path, env: dict[str, str]
+        command: list[str],
+        *,
+        cwd: Path,
+        env: dict[str, str],
+        environment_name: str,
+        stage: str,
+        python_executable: str,
     ) -> None:
-        launched.update(command=command, check=check, cwd=cwd, env=env)
+        launched.update(
+            command=command,
+            cwd=cwd,
+            env=env,
+            environment_name=environment_name,
+            stage=stage,
+            python_executable=python_executable,
+        )
 
-    monkeypatch.setattr(model_day.subprocess, "run", capture)
+    monkeypatch.setattr(model_day, "run_checked", capture)
     model_day._run_module(tmp_path, module, "--help")
 
     assert launched["command"] == [sys.executable, "-m", module, "--help"]
-    assert launched["check"] is True
     assert launched["cwd"] == tmp_path
     assert launched["env"]["MPLBACKEND"] == "Agg"
+    assert launched["environment_name"] == "model runtime"
+    assert launched["stage"] == module
+    assert launched["python_executable"] == sys.executable
 
 
 @pytest.mark.parametrize(

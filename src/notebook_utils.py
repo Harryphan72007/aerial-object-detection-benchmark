@@ -105,34 +105,51 @@ def require_gpu(runtime_name: str) -> None:
 def require_model_environment(family: str) -> None:
     """Fail before model construction when a binary/package stack is incompatible."""
     errors: list[str] = []
-    if family == "openmmlab":
+    if family in {"openmmlab", "vmamba"}:
         if sys.version_info[:2] != (3, 10):
             errors.append(
                 f"Python 3.10 required, active version is {sys.version_info.major}."
                 f"{sys.version_info.minor}"
             )
         expected = {
-            "torch": "2.1.",
+            "torch": "2.1.0+cu118",
+            "torchvision": "0.16.0+cu118",
+            "numpy": "1.26.4",
             "mmcv": "2.1.0",
-            "mmengine": "0.10.",
+            "mmengine": "0.10.7",
             "mmdet": "3.3.0",
         }
     elif family == "rtdetr":
-        expected = {"transformers": "4.52.4", "accelerate": "1.7.0"}
+        expected = {
+            "torch": "2.7.1+cu128",
+            "torchvision": "0.22.1+cu128",
+            "transformers": "4.52.4",
+            "accelerate": "1.7.0",
+        }
     else:
         raise ValueError(f"unknown model environment family: {family}")
-    for package, prefix in expected.items():
+    for package, required in expected.items():
         try:
             version = importlib.metadata.version(package)
         except importlib.metadata.PackageNotFoundError:
             errors.append(f"{package} is not installed")
             continue
-        if not version.startswith(prefix):
-            errors.append(f"{package} {prefix} required, active version is {version}")
+        if version != required:
+            errors.append(f"{package} {required} required, active version is {version}")
+    if family in {"openmmlab", "vmamba"} and not errors:
+        try:
+            from mmcv.ops import nms  # noqa: F401
+        except Exception as error:
+            errors.append(f"MMCV compiled operation import failed: {error}")
+    if family == "vmamba" and not errors:
+        try:
+            __import__("selective_scan_cuda")
+        except Exception as error:
+            errors.append(f"selective_scan_cuda import failed: {error}")
     if errors:
         requirements = (
             "requirements-openmmlab-py310-cu118.txt"
-            if family == "openmmlab"
+            if family in {"openmmlab", "vmamba"}
             else "requirements-rtdetr-colab.txt"
         )
         raise RuntimeError(

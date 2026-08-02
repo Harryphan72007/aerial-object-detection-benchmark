@@ -17,7 +17,7 @@ The preserved `lr_controlled_v1` path is:
 
 For `two_stage_random_hpo_v1`, choose notebook 10, 11, 12, or 13 for the model.
 Set `DATASET_TRACK` to `2class` or `10class`. Inspect with `START_HPO=False`,
-then set it to `True`.
+then set it to `True`. Preview mode does not provision the model-family runtime.
 
 Optuna uses `RandomSampler(seed=42)`: five broad trials, followed by five trials
 from refined ranges. Both search subsets come only from official train. The
@@ -26,7 +26,8 @@ official validation split is excluded. The persistent study directory contains
 and a parameter-application report.
 
 Next open the matching notebook 20–23. It discovers `best_config.yaml`
-automatically. Set `START_FINETUNING=True`. The final workflow restarts from the
+automatically. Preview with `START_FINETUNING=False` does not install model
+dependencies; set it to `True` to provision and run. The final workflow restarts from the
 original pretrained model and runs baseline and tuned recipes at seeds 17, 42,
 and 3407 using complete official train.
 

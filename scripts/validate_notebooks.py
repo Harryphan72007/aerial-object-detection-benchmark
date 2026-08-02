@@ -45,6 +45,33 @@ CANONICAL_NOTEBOOKS = {
     "30_evaluate_all_models.ipynb",
     "31_publish_results.ipynb",
 }
+MODEL_ENVIRONMENT_NOTEBOOKS = {
+    "01_run_model_day.ipynb",
+    "10_hpo_resnet50.ipynb",
+    "11_hpo_swin_t.ipynb",
+    "12_hpo_vmamba_t.ipynb",
+    "13_hpo_rtdetrv2.ipynb",
+    "20_finetune_resnet50.ipynb",
+    "21_finetune_swin_t.ipynb",
+    "22_finetune_vmamba_t.ipynb",
+    "23_finetune_rtdetrv2.ipynb",
+    "30_evaluate_all_models.ipynb",
+    "31_publish_results.ipynb",
+}
+DIRECT_ENVIRONMENT_NOTEBOOKS = {
+    "10_hpo_resnet50.ipynb",
+    "11_hpo_swin_t.ipynb",
+    "12_hpo_vmamba_t.ipynb",
+    "13_hpo_rtdetrv2.ipynb",
+    "20_finetune_resnet50.ipynb",
+    "21_finetune_swin_t.ipynb",
+    "22_finetune_vmamba_t.ipynb",
+    "23_finetune_rtdetrv2.ipynb",
+}
+INLINE_ENVIRONMENT_SETUP = re.compile(
+    r"(?im)(?:^\s*[!%]\s*(?:pip|uv|conda)|"
+    r"\b(?:pip|uv)\s+install\b|\bpython\s+-m\s+venv\b)"
+)
 
 
 def validate_notebook(path: Path) -> list[str]:
@@ -65,6 +92,7 @@ def validate_notebook(path: Path) -> list[str]:
             + ", ".join(sorted(notebook_metadata))
         )
     package_import_found = False
+    notebook_source: list[str] = []
     for index, cell in enumerate(notebook.cells):
         cell_metadata = TRANSIENT_CELL_METADATA.intersection(cell.metadata)
         if cell_metadata:
@@ -74,6 +102,7 @@ def validate_notebook(path: Path) -> list[str]:
             )
         if cell.cell_type != "code":
             continue
+        notebook_source.append(cell.source)
         if cell.outputs:
             errors.append(f"{path}: cell {index} has outputs")
         if cell.execution_count is not None:
@@ -113,6 +142,19 @@ def validate_notebook(path: Path) -> list[str]:
                 errors.append(f"{path}: cell {index} contains a private path")
     if path.name in CANONICAL_NOTEBOOKS and not package_import_found:
         errors.append(f"{path}: canonical notebook does not delegate to the src package")
+    if path.name in MODEL_ENVIRONMENT_NOTEBOOKS:
+        combined = "\n".join(notebook_source)
+        if INLINE_ENVIRONMENT_SETUP.search(combined):
+            errors.append(
+                f"{path}: model notebook contains inline environment setup; use the shared API"
+            )
+        if (
+            path.name in DIRECT_ENVIRONMENT_NOTEBOOKS
+            and "ensure_model_environment" not in combined
+        ):
+            errors.append(
+                f"{path}: model notebook does not call ensure_model_environment"
+            )
     return errors
 
 

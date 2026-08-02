@@ -803,21 +803,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -836,7 +836,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/10_hpo_resnet50.ipynb",
-      "sha256": "7362252b0fd08a326122f600f34de02b9ceb99ae53380e613b66d1a7a5458695"
+      "sha256": "e8165c8208cdbd2657c8743a33f9f5f67769e4060988d31f4b818bcd78b6093d"
     },
     {
       "artifact_references": [
@@ -876,21 +876,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -909,7 +909,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/11_hpo_swin_t.ipynb",
-      "sha256": "079ee0369d6746612a8c18d6d2efa2fdbbfa257b6cfea4413fffa23dc9023e85"
+      "sha256": "5349cf1516eb61d08c70bbaf2093dcdeb3fd9410b91625e598b41e7475ee3259"
     },
     {
       "artifact_references": [
@@ -949,21 +949,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -982,7 +982,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/12_hpo_vmamba_t.ipynb",
-      "sha256": "78bf46460b46d3cb783e12cf4a124b100546fd91dc4eb5a543bd9ff08e50a133"
+      "sha256": "fbc10f9c5304a940d774e744d03b213b4567c3cceadb62156c5378f4e6ed28d9"
     },
     {
       "artifact_references": [
@@ -1022,21 +1022,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = RTDetrOptunaV2(REPO_PATH, DRIVE_ROOT, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1055,7 +1055,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "3c24f9fe2cd2b8d7ce88c60a4e208743da274a28e708d2ddc84cee5573de93c4"
+      "sha256": "fb0ac7bd294ccf822598eb1f8effe9055fe858195912204a52d61186d670c55e"
     },
     {
       "artifact_references": [
@@ -1084,21 +1084,21 @@
         },
         {
           "cell": 3,
-          "line": 7,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 8,
+          "line": 12,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 13,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1117,7 +1117,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/20_finetune_resnet50.ipynb",
-      "sha256": "487f241bf81f105a469c1cf403b963b6e34841f37a1a53e98369f7642e2d1563"
+      "sha256": "a264c0e15f6ba4588236889916d7e6e3e684ff55278bbb0d6e073a9088d0c253"
     },
     {
       "artifact_references": [
@@ -1146,21 +1146,21 @@
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 10,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 10,
+          "line": 14,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 11,
+          "line": 15,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1180,7 +1180,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "9aaf50f46cbde692972c28319c71e44eb7046843bab8f19d7220af9f1d2b1cd6"
+      "sha256": "30bf4b390555eab62b431e8f123c19e42667a63505d8ef177889c8231e857bf5"
     },
     {
       "artifact_references": [
@@ -1209,21 +1209,21 @@
         },
         {
           "cell": 3,
-          "line": 9,
+          "line": 10,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 10,
+          "line": 14,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 11,
+          "line": 15,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1243,7 +1243,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "1f59d7f490a2e45d9ccfd27143a3ac7afbaa0d042bb57bbe9388453a48c9a465"
+      "sha256": "dd7b43ca41c544417d1791a8d8f7de7b259e8114a95a6c6d520a9bf9e1b23f48"
     },
     {
       "artifact_references": [
@@ -1272,21 +1272,21 @@
         },
         {
           "cell": 3,
-          "line": 10,
+          "line": 11,
           "literals": [],
           "operations": [],
-          "source": "environment = ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
+          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
         },
         {
           "cell": 3,
-          "line": 11,
+          "line": 15,
           "literals": [],
           "operations": [],
           "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_FINETUNING)"
         },
         {
           "cell": 3,
-          "line": 12,
+          "line": 16,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1306,7 +1306,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "c92ea2a677ebfb3af4df204715e8f903806fd9f34d50c1f63840c971d327a740"
+      "sha256": "f357354b981b54e1adfb5a040cb3236bc93c0001444e7b76c33fff472d8aae01"
     },
     {
       "artifact_references": [
@@ -1328,14 +1328,14 @@
         },
         {
           "cell": 2,
-          "line": 8,
+          "line": 9,
           "literals": [],
           "operations": [],
           "source": "from src.evaluation.versioned import evaluate_prediction_artifact"
         },
         {
           "cell": 2,
-          "line": 11,
+          "line": 12,
           "literals": [
             "Legacy evaluator accepts controlled artifacts only"
           ],
@@ -1344,7 +1344,7 @@
         },
         {
           "cell": 2,
-          "line": 13,
+          "line": 14,
           "literals": [
             "dataset_track"
           ],
@@ -1353,7 +1353,7 @@
         },
         {
           "cell": 2,
-          "line": 15,
+          "line": 16,
           "literals": [
             "--dataset-track"
           ],
@@ -1362,7 +1362,7 @@
         },
         {
           "cell": 2,
-          "line": 19,
+          "line": 20,
           "literals": [
             "comparison.json",
             "report",
@@ -1373,7 +1373,7 @@
         },
         {
           "cell": 2,
-          "line": 20,
+          "line": 21,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1385,12 +1385,12 @@
         "pathlib",
         "src.config.benchmark_tracks",
         "src.evaluation.versioned",
-        "subprocess",
+        "src.subprocess_utils",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "16bd15e2231080a337fe5e90c8e8f18122042613763ffe9cd5d09263fdb0c0ec"
+      "sha256": "c26e89464f4354d2d126e6ce4eea05b3d69ea26ad21352c71bc5dea41e1d01b0"
     },
     {
       "artifact_references": [
@@ -1833,7 +1833,7 @@
       "sha256": "b0f201d8d5d4b86e493835c1caea12c81f3ece6cdad40f4721ed21156ef88c73"
     }
   ],
-  "python_source_count": 98,
+  "python_source_count": 99,
   "python_sources": [
     {
       "artifact_references": [
@@ -2477,7 +2477,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 29,
+          "line": 32,
           "literals": [
             "project_config.yaml"
           ],
@@ -2486,7 +2486,7 @@
         },
         {
           "cell": 0,
-          "line": 44,
+          "line": 47,
           "literals": [
             "evaluation"
           ],
@@ -2495,7 +2495,7 @@
         },
         {
           "cell": 0,
-          "line": 45,
+          "line": 48,
           "literals": [
             "{run['run_id']}__res{IMAGE_SIZE}__metrics.json"
           ],
@@ -2504,7 +2504,16 @@
         },
         {
           "cell": 0,
-          "line": 76,
+          "line": 77,
+          "literals": [
+            "evaluation"
+          ],
+          "operations": [],
+          "source": "stage=\"evaluation\","
+        },
+        {
+          "cell": 0,
+          "line": 81,
           "literals": [],
           "operations": [
             "write"
@@ -2521,11 +2530,10 @@
         "src.paths",
         "src.subprocess_utils",
         "src.workflows.environment",
-        "src.workflows.hpo_comparison",
-        "subprocess"
+        "src.workflows.hpo_comparison"
       ],
       "path": "scripts/evaluate_all_models.py",
-      "sha256": "d8f70c10d58d7e4613032fde37cbc8254667900296c7e9792c4513aa9cb87522"
+      "sha256": "de18e05667d7da41761e4af4805822dbd72a17326059f38586edda6321cd35d0"
     },
     {
       "artifact_references": [
@@ -3840,7 +3848,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 121,
+          "line": 163,
           "literals": [],
           "operations": [
             "discover"
@@ -3857,7 +3865,7 @@
         "re"
       ],
       "path": "scripts/validate_notebooks.py",
-      "sha256": "8fb760712430f79bef7c3329cdc954fbae313060e4c0475e3711f726455c9942"
+      "sha256": "0095cb9de7f9067c06407fc04ee6a6519d705d87cb3ccc7a2e3a901b4a0319f7"
     },
     {
       "artifact_references": [
@@ -4654,7 +4662,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 10,
+          "line": 19,
           "literals": [],
           "operations": [
             "write"
@@ -4663,24 +4671,45 @@
         },
         {
           "cell": 0,
-          "line": 28,
+          "line": 353,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "write_json(Path(args.json_output), environment)"
+          "source": "write_json(args.json_output, report)"
+        },
+        {
+          "cell": 0,
+          "line": 362,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(args.json_output, report)"
         }
       ],
       "imports": [
         "__future__",
         "argparse",
+        "datetime",
+        "importlib",
+        "importlib.metadata",
+        "os",
         "pathlib",
-        "src.notebook_utils",
+        "platform",
+        "src.models.vmamba_frcnn.factory",
+        "src.models.vmamba_frcnn.importer",
         "src.utils.environment",
-        "src.utils.serialization"
+        "src.utils.serialization",
+        "src.workflows.isolated_environment",
+        "subprocess",
+        "sys",
+        "traceback",
+        "transformers",
+        "typing"
       ],
       "path": "scripts/verify_model_environments.py",
-      "sha256": "e57973950e67e1c4262a5624ec1e4c6c1a428c602f4cf678e83718cb5c057601"
+      "sha256": "3becdaa5eb2a31798e4a17dbe2f4582f723821c9a5c91e20a1a5fca19e1520be"
     },
     {
       "artifact_references": [
@@ -8272,7 +8301,7 @@
         },
         {
           "cell": 0,
-          "line": 134,
+          "line": 151,
           "literals": [
             "requirements-openmmlab-py310-cu118.txt"
           ],
@@ -8281,7 +8310,7 @@
         },
         {
           "cell": 0,
-          "line": 136,
+          "line": 153,
           "literals": [
             "requirements-rtdetr-colab.txt"
           ],
@@ -8295,6 +8324,7 @@
         "importlib.metadata",
         "importlib.util",
         "json",
+        "mmcv.ops",
         "os",
         "pathlib",
         "shutil",
@@ -8304,7 +8334,7 @@
         "torch"
       ],
       "path": "src/notebook_utils.py",
-      "sha256": "9ed6ef56c4dfd691670c3dd961d8cadc0b7270ed5bd5b24ef042e1f9116374a9"
+      "sha256": "394a22480750e0174b32d6bbbbb5240ab4bfb15520eb57fa6ef820fe873a10a3"
     },
     {
       "artifact_references": [
@@ -9839,6 +9869,42 @@
       ],
       "path": "src/runtime_manifest.py",
       "sha256": "e9460773a450ed1536ac4566db5fc0522c2c1ad990c1f3b6ed4428b1208ab732"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 12,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.utils.serialization import write_text_atomic"
+        },
+        {
+          "cell": 0,
+          "line": 193,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_text_atomic(log_path, rendered)"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "matplotlib",
+        "os",
+        "pathlib",
+        "re",
+        "src.utils.serialization",
+        "subprocess",
+        "sys",
+        "typing",
+        "urllib.parse"
+      ],
+      "path": "src/subprocess_utils.py",
+      "sha256": "f5f61b018d8cc78a5a8199d04b27b5a335a9b6522f37b74c9a7357b66f84033c"
     },
     {
       "artifact_references": [
@@ -12009,7 +12075,7 @@
         "typing"
       ],
       "path": "src/workflows/adapter_gate.py",
-      "sha256": "6c254647e4f0a04b171e6f689c4dc845085b0b9847799834ec3c42085dc46a4e"
+      "sha256": "088a2df2cc07fd587584181de7813529c7951aa68d757690de0f70ddd1894c96"
     },
     {
       "artifact_references": [
@@ -12215,17 +12281,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 133,
-          "literals": [
-            "pretrained",
-            "vmamba_tiny_e292.pth"
-          ],
-          "operations": [],
-          "source": "pretrained = root / \"pretrained\" / \"vmamba_tiny_e292.pth\""
-        },
-        {
-          "cell": 0,
-          "line": 164,
+          "line": 110,
           "literals": [
             "requirements-rtdetr-colab.txt"
           ],
@@ -12234,7 +12290,7 @@
         },
         {
           "cell": 0,
-          "line": 228,
+          "line": 174,
           "literals": [
             "https://download.openmmlab.com/mmcv/dist/cu118/torch2.1/index.html"
           ],
@@ -12243,7 +12299,7 @@
         },
         {
           "cell": 0,
-          "line": 240,
+          "line": 186,
           "literals": [
             "requirements-openmmlab-py310-cu118.txt"
           ],
@@ -12252,7 +12308,7 @@
         },
         {
           "cell": 0,
-          "line": 285,
+          "line": 231,
           "literals": [
             "pretrained",
             "vmamba_tiny_e292.pth"
@@ -12268,16 +12324,16 @@
         "os",
         "pathlib",
         "src.notebook_utils",
+        "src.subprocess_utils",
         "src.workflows.contract",
         "src.workflows.isolated_environment",
-        "subprocess",
         "sys",
         "torch",
         "transformers",
         "typing"
       ],
       "path": "src/workflows/environment.py",
-      "sha256": "6f9a2c00f30cb371b1ebc765979d4aa517099108c9e87057e788f1150972fb2e"
+      "sha256": "70a8d604357e51431bd324aff5e9c91d45d4e3b5f99b2eaeb046b7188140752a"
     },
     {
       "artifact_references": [
@@ -12359,7 +12415,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 13,
+          "line": 21,
           "literals": [],
           "operations": [
             "read",
@@ -12369,7 +12425,7 @@
         },
         {
           "cell": 0,
-          "line": 17,
+          "line": 25,
           "literals": [
             "configs/runtime_environments.yaml"
           ],
@@ -12378,7 +12434,7 @@
         },
         {
           "cell": 0,
-          "line": 29,
+          "line": 44,
           "literals": [],
           "operations": [
             "read"
@@ -12387,7 +12443,7 @@
         },
         {
           "cell": 0,
-          "line": 37,
+          "line": 52,
           "literals": [
             "pretrained"
           ],
@@ -12396,7 +12452,18 @@
         },
         {
           "cell": 0,
-          "line": 59,
+          "line": 53,
+          "literals": [
+            "configs/faster_rcnn_vmamba_t/model.yaml"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "model_config = read_yaml(repo_root / \"configs/faster_rcnn_vmamba_t/model.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 74,
           "literals": [],
           "operations": [
             "write"
@@ -12405,7 +12472,7 @@
         },
         {
           "cell": 0,
-          "line": 63,
+          "line": 78,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
@@ -12414,43 +12481,98 @@
         },
         {
           "cell": 0,
-          "line": 175,
+          "line": 89,
           "literals": [
-            "benchmark_runtime.json"
+            "configs/faster_rcnn_vmamba_t/model.yaml"
           ],
           "operations": [],
-          "source": "marker = environment / \"benchmark_runtime.json\""
+          "source": "\"configs/faster_rcnn_vmamba_t/model.yaml\","
         },
         {
           "cell": 0,
-          "line": 176,
+          "line": 268,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "\"pretrained\": drive / \"pretrained\" / str(spec[\"pretrained\"][\"filename\"]),"
+        },
+        {
+          "cell": 0,
+          "line": 301,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "pretrained = paths[\"pretrained\"]"
+        },
+        {
+          "cell": 0,
+          "line": 330,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "environment[\"VMAMBA_T_PRETRAINED\"] = str(paths[\"pretrained\"])"
+        },
+        {
+          "cell": 0,
+          "line": 369,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "str(paths[\"pretrained\"]),"
+        },
+        {
+          "cell": 0,
+          "line": 386,
+          "literals": [
+            "environment_probe.json",
+            "quick_environment_probe.json"
+          ],
+          "operations": [],
+          "source": "probe = environment / (\"quick_environment_probe.json\" if quick else \"environment_probe.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 396,
+          "literals": [
+            "logs"
+          ],
+          "operations": [],
+          "source": "log_path=environment / \"logs\" / f\"{stage}.log\","
+        },
+        {
+          "cell": 0,
+          "line": 398,
           "literals": [],
           "operations": [
             "read"
           ],
-          "source": "existing = read_json(marker) if marker.is_file() else {}"
+          "source": "payload = read_json(probe)"
         },
         {
           "cell": 0,
-          "line": 194,
+          "line": 441,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "write_json("
+          "source": "write_json(marker, record)"
         },
         {
           "cell": 0,
-          "line": 204,
+          "line": 479,
           "literals": [
-            "environment_probe.json"
+            "pretrained"
           ],
           "operations": [],
-          "source": "probe_path = environment / \"environment_probe.json\""
+          "source": "os.environ[\"VMAMBA_T_PRETRAINED\"] = str(paths[\"pretrained\"])"
         },
         {
           "cell": 0,
-          "line": 218,
+          "line": 485,
           "literals": [],
           "operations": [
             "read"
@@ -12459,16 +12581,106 @@
         },
         {
           "cell": 0,
-          "line": 243,
+          "line": 494,
+          "literals": [
+            "pretrained"
+          ],
+          "operations": [],
+          "source": "if \"pretrained\" in message:"
+        },
+        {
+          "cell": 0,
+          "line": 517,
+          "literals": [
+            "benchmark_runtime.json"
+          ],
+          "operations": [],
+          "source": "marker = environment / \"benchmark_runtime.json\""
+        },
+        {
+          "cell": 0,
+          "line": 518,
+          "literals": [
+            "environment_probe.json"
+          ],
+          "operations": [],
+          "source": "probe_path = environment / \"environment_probe.json\""
+        },
+        {
+          "cell": 0,
+          "line": 519,
           "literals": [
             "{runtime_hash}.json"
           ],
           "operations": [],
-          "source": "/ f\"{runtime_hash}.json\""
+          "source": "manifest_path = drive / \"environment_manifests\" / model_id / f\"{runtime_hash}.json\""
         },
         {
           "cell": 0,
-          "line": 245,
+          "line": 522,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "existing = read_json(marker) if marker.is_file() else {}"
+        },
+        {
+          "cell": 0,
+          "line": 546,
+          "literals": [
+            "quick_environment_probe.json"
+          ],
+          "operations": [],
+          "source": "probe_path=environment / \"quick_environment_probe.json\","
+        },
+        {
+          "cell": 0,
+          "line": 549,
+          "literals": [
+            "quick_environment_probe.json"
+          ],
+          "operations": [],
+          "source": "error, environment / \"quick_environment_probe.json\""
+        },
+        {
+          "cell": 0,
+          "line": 564,
+          "literals": [
+            "logs"
+          ],
+          "operations": [],
+          "source": "\"log_directory\": str(environment / \"logs\"),"
+        },
+        {
+          "cell": 0,
+          "line": 569,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(marker, manifest)"
+        },
+        {
+          "cell": 0,
+          "line": 570,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(manifest_path, manifest)"
+        },
+        {
+          "cell": 0,
+          "line": 644,
+          "literals": [
+            "logs"
+          ],
+          "operations": [],
+          "source": "\"log_directory\": str(environment / \"logs\"),"
+        },
+        {
+          "cell": 0,
+          "line": 661,
           "literals": [],
           "operations": [
             "write"
@@ -12478,24 +12690,27 @@
       ],
       "imports": [
         "__future__",
+        "datetime",
         "hashlib",
         "importlib.metadata",
         "json",
         "os",
         "pathlib",
+        "shutil",
+        "src.reproducibility",
+        "src.subprocess_utils",
         "src.utils.serialization",
-        "subprocess",
         "sys",
         "typing"
       ],
       "path": "src/workflows/isolated_environment.py",
-      "sha256": "7142acb80ac2271fb0d51ed42d97bb8d44f6471e062709760c768e29502023a3"
+      "sha256": "f686b049d5b8e591f5a860f67e0a1d894c338e0cd8a6004e05d299f1c43df1a9"
     },
     {
       "artifact_references": [
         {
           "cell": 0,
-          "line": 22,
+          "line": 25,
           "literals": [],
           "operations": [
             "read",
@@ -12505,7 +12720,7 @@
         },
         {
           "cell": 0,
-          "line": 37,
+          "line": 40,
           "literals": [
             "EVALUATION"
           ],
@@ -12514,7 +12729,7 @@
         },
         {
           "cell": 0,
-          "line": 38,
+          "line": 41,
           "literals": [
             "PROFILING"
           ],
@@ -12523,7 +12738,7 @@
         },
         {
           "cell": 0,
-          "line": 70,
+          "line": 73,
           "literals": [
             "instances_train.json"
           ],
@@ -12532,7 +12747,7 @@
         },
         {
           "cell": 0,
-          "line": 71,
+          "line": 74,
           "literals": [
             "instances_val.json"
           ],
@@ -12541,7 +12756,7 @@
         },
         {
           "cell": 0,
-          "line": 82,
+          "line": 85,
           "literals": [],
           "operations": [
             "read"
@@ -12550,7 +12765,7 @@
         },
         {
           "cell": 0,
-          "line": 92,
+          "line": 95,
           "literals": [],
           "operations": [
             "read"
@@ -12559,7 +12774,7 @@
         },
         {
           "cell": 0,
-          "line": 131,
+          "line": 134,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12568,7 +12783,7 @@
         },
         {
           "cell": 0,
-          "line": 132,
+          "line": 135,
           "literals": [],
           "operations": [
             "read"
@@ -12577,7 +12792,7 @@
         },
         {
           "cell": 0,
-          "line": 139,
+          "line": 142,
           "literals": [
             "{run_id}__profile.json"
           ],
@@ -12586,7 +12801,7 @@
         },
         {
           "cell": 0,
-          "line": 146,
+          "line": 149,
           "literals": [
             "final_results.json"
           ],
@@ -12595,7 +12810,7 @@
         },
         {
           "cell": 0,
-          "line": 176,
+          "line": 179,
           "literals": [
             "instances_train.json"
           ],
@@ -12604,7 +12819,7 @@
         },
         {
           "cell": 0,
-          "line": 178,
+          "line": 181,
           "literals": [
             "instances_val.json"
           ],
@@ -12613,7 +12828,7 @@
         },
         {
           "cell": 0,
-          "line": 184,
+          "line": 187,
           "literals": [
             "search_state.json"
           ],
@@ -12622,7 +12837,7 @@
         },
         {
           "cell": 0,
-          "line": 208,
+          "line": 211,
           "literals": [],
           "operations": [
             "read"
@@ -12631,7 +12846,7 @@
         },
         {
           "cell": 0,
-          "line": 217,
+          "line": 220,
           "literals": [],
           "operations": [
             "write"
@@ -12640,7 +12855,7 @@
         },
         {
           "cell": 0,
-          "line": 231,
+          "line": 234,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12649,7 +12864,7 @@
         },
         {
           "cell": 0,
-          "line": 232,
+          "line": 235,
           "literals": [],
           "operations": [
             "read"
@@ -12658,7 +12873,7 @@
         },
         {
           "cell": 0,
-          "line": 244,
+          "line": 247,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -12667,7 +12882,7 @@
         },
         {
           "cell": 0,
-          "line": 245,
+          "line": 248,
           "literals": [
             "train.json"
           ],
@@ -12676,7 +12891,7 @@
         },
         {
           "cell": 0,
-          "line": 248,
+          "line": 251,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -12685,7 +12900,7 @@
         },
         {
           "cell": 0,
-          "line": 249,
+          "line": 252,
           "literals": [
             "val.json"
           ],
@@ -12694,7 +12909,7 @@
         },
         {
           "cell": 0,
-          "line": 280,
+          "line": 283,
           "literals": [
             "last.pth"
           ],
@@ -12703,7 +12918,7 @@
         },
         {
           "cell": 0,
-          "line": 282,
+          "line": 285,
           "literals": [
             "Adapter smoke did not save last.pth"
           ],
@@ -12712,7 +12927,7 @@
         },
         {
           "cell": 0,
-          "line": 290,
+          "line": 293,
           "literals": [],
           "operations": [
             "read"
@@ -12721,7 +12936,7 @@
         },
         {
           "cell": 0,
-          "line": 309,
+          "line": 312,
           "literals": [],
           "operations": [
             "write"
@@ -12730,7 +12945,7 @@
         },
         {
           "cell": 0,
-          "line": 328,
+          "line": 331,
           "literals": [],
           "operations": [
             "write"
@@ -12739,7 +12954,7 @@
         },
         {
           "cell": 0,
-          "line": 336,
+          "line": 339,
           "literals": [],
           "operations": [
             "write"
@@ -12748,7 +12963,7 @@
         },
         {
           "cell": 0,
-          "line": 423,
+          "line": 428,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12757,7 +12972,7 @@
         },
         {
           "cell": 0,
-          "line": 431,
+          "line": 436,
           "literals": [],
           "operations": [
             "write"
@@ -12766,7 +12981,7 @@
         },
         {
           "cell": 0,
-          "line": 469,
+          "line": 474,
           "literals": [
             "search_state.json"
           ],
@@ -12775,7 +12990,7 @@
         },
         {
           "cell": 0,
-          "line": 472,
+          "line": 477,
           "literals": [],
           "operations": [
             "read"
@@ -12784,7 +12999,7 @@
         },
         {
           "cell": 0,
-          "line": 483,
+          "line": 488,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12793,7 +13008,7 @@
         },
         {
           "cell": 0,
-          "line": 485,
+          "line": 490,
           "literals": [],
           "operations": [
             "read"
@@ -12802,34 +13017,34 @@
         },
         {
           "cell": 0,
-          "line": 488,
+          "line": 493,
           "literals": [],
           "operations": [
             "write"
           ],
           "source": "write_json(gate_path, gate)"
-        },
-        {
-          "cell": 0,
-          "line": 532,
-          "literals": [
-            "adapter_smoke.json"
-          ],
-          "operations": [],
-          "source": "/ \"adapter_smoke.json\""
-        },
-        {
-          "cell": 0,
-          "line": 534,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "gate = read_json(gate_path)"
         },
         {
           "cell": 0,
           "line": 537,
+          "literals": [
+            "adapter_smoke.json"
+          ],
+          "operations": [],
+          "source": "/ \"adapter_smoke.json\""
+        },
+        {
+          "cell": 0,
+          "line": 539,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "gate = read_json(gate_path)"
+        },
+        {
+          "cell": 0,
+          "line": 542,
           "literals": [],
           "operations": [
             "write"
@@ -12838,7 +13053,7 @@
         },
         {
           "cell": 0,
-          "line": 567,
+          "line": 572,
           "literals": [
             "instances_val.json"
           ],
@@ -12847,7 +13062,7 @@
         },
         {
           "cell": 0,
-          "line": 591,
+          "line": 596,
           "literals": [],
           "operations": [
             "read"
@@ -12856,7 +13071,7 @@
         },
         {
           "cell": 0,
-          "line": 593,
+          "line": 598,
           "literals": [
             "{state['final_run_id']}__res*__metrics.json"
           ],
@@ -12888,11 +13103,10 @@
         "src.workflows.adapter_gate",
         "src.workflows.contract",
         "src.workflows.environment",
-        "subprocess",
         "typing"
       ],
       "path": "src/workflows/model_day.py",
-      "sha256": "3f4d775e11c5e03859ad59cf813efd06195c0d02ab8473ac8101da32e02c7490"
+      "sha256": "5a5734645608adcafb439a4a0c965bdb5a517758627a2c192e14cffc52e534df"
     },
     {
       "artifact_references": [

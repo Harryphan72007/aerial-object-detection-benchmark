@@ -112,3 +112,8 @@ For final training, open the matching notebook 20-23 and set
 Only an interrupted run with the same model, track, seed, image size, effective
 batch size, LR/configuration hash, and scheduler contract may resume from
 `last.pth`.
+
+Model environments now use a `READY`-only transactional reuse contract with exact
+RT-DETR/OpenMMLab/VMamba probes. A failed child verifier records its stage,
+stdout/stderr, Python, command and probe path; preview mode does not install the
+family runtime. See `docs/reference/environment_provisioning_audit.md`.

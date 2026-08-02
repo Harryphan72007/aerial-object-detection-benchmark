@@ -64,7 +64,7 @@ def _config() -> dict[str, object]:
         "model_id": RTDETR_FACTORY_MODEL_ID,
         "framework": "transformers",
         "pretrained_model_name_or_path": "PekingU/rtdetr_v2_r101vd",
-        "pretrained_revision": "a558a4798734af61997652ec97d9b82961c92450",
+        "pretrained_revision": "2c5dbbd2d4d8c8814827a3b42737ba1afce3cf2a",
         "input_resolution": 640,
     }
 

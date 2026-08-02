@@ -9,6 +9,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Mapping
 
+from src.optional_outputs import run_optional_output
 from src.hpo.workflow import TwoStageRandomHPO, _failure_kind
 from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.utils.serialization import read_yaml
@@ -143,8 +144,13 @@ class RTDetrOptunaV2(TwoStageRandomHPO):
 
     def _after_trial(self, study: Any) -> None:
         if self.study_path.is_file():
-            snapshot_sqlite_database(
-                self.study_path, self.root / "snapshots" / "study_v2_latest.db"
+            run_optional_output(
+                "snapshot_optuna_database",
+                self.root,
+                lambda: snapshot_sqlite_database(
+                    self.study_path,
+                    self.root / "snapshots" / "study_v2_latest.db",
+                ),
             )
 
     def _classify_failure(self, error: BaseException) -> str | None:

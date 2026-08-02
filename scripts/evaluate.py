@@ -104,7 +104,7 @@ def _subset_annotation(
         for annotation in data["annotations"]
         if int(annotation["image_id"]) in image_ids
     ]
-    write_json(destination, subset, atomic=False)
+    write_json(destination, subset)
     return destination
 
 
@@ -234,7 +234,7 @@ def main() -> None:
                 paths.predictions
                 / f"{run['run_id']}__{args.split}__res{resolution}.json"
             )
-            write_json(prediction_path, coco_predictions, atomic=False)
+            write_json(prediction_path, coco_predictions)
             metrics = evaluate_coco(evaluation_annotation, prediction_path)
             metrics.update(
                 detailed_metrics(evaluation_annotation, prediction_path)

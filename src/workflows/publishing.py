@@ -7,6 +7,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -440,4 +441,24 @@ def publish_results(
         )
         return result
     finally:
-        _safe_cleanup(temporary_root)
+        primary_error_active = sys.exc_info()[0] is not None
+        try:
+            _safe_cleanup(temporary_root)
+        except Exception as cleanup_error:
+            if primary_error_active:
+                print(
+                    "WARNING: publication cleanup also failed while another error "
+                    f"was active: {cleanup_error!r}",
+                    file=sys.stderr,
+                )
+            elif result.get("published"):
+                result.setdefault("warnings", []).append(
+                    {
+                        "operation": "cleanup_publication_temporary_directory",
+                        "exception_type": type(cleanup_error).__name__,
+                        "message": str(cleanup_error),
+                        "scientific_artifacts_valid": True,
+                    }
+                )
+            else:
+                raise

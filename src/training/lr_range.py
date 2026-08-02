@@ -1,14 +1,14 @@
 """Framework-neutral learning-rate range-test schedules and artifacts."""
 from __future__ import annotations
 
-import csv
-import json
 import math
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from src.training.lr_search import exponential_moving_average
-from src.utils.serialization import write_json
+from src.optional_outputs import run_optional_output
+from src.subprocess_utils import configure_headless_matplotlib
+from src.utils.serialization import write_csv, write_json
 
 
 def exponential_lr_schedule(
@@ -94,10 +94,7 @@ def save_lr_range_artifacts(
         "smoothed_loss",
         "gradient_norm",
     ]
-    with (output / "history.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(normalized)
+    write_csv(output / "history.csv", normalized, fields)
     safe_interval = suggest_safe_lr_interval(normalized, baseline_learning_rate)
     summary = {
         "baseline_learning_rate": baseline_learning_rate,
@@ -109,10 +106,8 @@ def save_lr_range_artifacts(
         "model_state_promotable": False,
     }
     write_json(output / "summary.json", summary)
-    try:
-        import matplotlib
-
-        matplotlib.use("Agg")
+    def save_plot() -> None:
+        configure_headless_matplotlib()
         import matplotlib.pyplot as plt
 
         figure, axis = plt.subplots(figsize=(8, 5))
@@ -136,8 +131,6 @@ def save_lr_range_artifacts(
         figure.tight_layout()
         figure.savefig(output / "loss_vs_lr.png", dpi=180)
         plt.close(figure)
-    except ImportError:
-        (output / "loss_vs_lr.png.unavailable.txt").write_text(
-            "matplotlib is not installed\n", encoding="utf-8"
-        )
+
+    run_optional_output("save_lr_range_plot", output, save_plot)
     return summary

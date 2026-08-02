@@ -16,7 +16,7 @@ import numpy as np
 from src.training.callbacks import (
     BestMetricState,
     EpochHistoryWriter,
-    save_training_curves,
+    safe_save_training_curves,
 )
 from src.runtime_manifest import write_runtime_environment_manifest
 from src.training.checkpointing import atomic_torch_save, materialize_checkpoint_alias
@@ -36,6 +36,7 @@ from src.training.checkpoint_selection import (
     materialize_best_checkpoint,
 )
 from src.training.early_stopping import EarlyStopping
+from src.utils.serialization import write_json, write_text_atomic
 
 
 def parse_args() -> argparse.Namespace:
@@ -569,7 +570,7 @@ def main() -> None:
                         )
             validation_seconds = time.perf_counter() - validation_start
             prediction_path = run_dir / f"predictions_epoch_{epoch:03d}.json"
-            prediction_path.write_text(json.dumps(predictions), encoding="utf-8")
+            write_text_atomic(prediction_path, json.dumps(predictions))
             metrics = evaluate_coco(args.val_ann, prediction_path)
             flags = best.update(epoch, metrics)
             selection_flags = checkpoint_selector.update(
@@ -649,7 +650,6 @@ def main() -> None:
             },
         }
         history.append(row)
-        save_training_curves(history.rows, run_dir / "training_curves.png")
         print(json.dumps(row))
         if early_stopping.stopped:
             break
@@ -721,8 +721,11 @@ def main() -> None:
         },
         "early_stopping": early_stopping.state_dict(),
     }
-    (run_dir / "final_metrics.json").write_text(
-        json.dumps(summary, indent=2), encoding="utf-8"
+    write_json(run_dir / "final_metrics.json", summary)
+    safe_save_training_curves(
+        history.rows,
+        run_dir / "training_curves.png",
+        warning_root=run_dir,
     )
 
 

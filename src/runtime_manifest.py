@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from src.reproducibility import git_commit
+from src.subprocess_utils import subprocess_environment_record
 from src.utils.environment import collect_environment
 from src.utils.serialization import write_json
 from src.workflows.isolated_environment import resolved_runtime_spec
@@ -30,6 +31,7 @@ def write_runtime_environment_manifest(
         "source_commit": git_commit(repo),
         "python_executable": sys.executable,
         "environment": collect_environment(),
+        "subprocess_environment": subprocess_environment_record(),
         "packages": packages,
         "runtime_contract": resolved_runtime_spec(repo, model_id),
     }

@@ -18,7 +18,7 @@ rtdetr:
       license: Apache-2.0
     - name: PekingU/rtdetr_v2_r101vd
       url: https://huggingface.co/PekingU/rtdetr_v2_r101vd
-      revision: a558a4798734af61997652ec97d9b82961c92450
+      revision: 2c5dbbd2d4d8c8814827a3b42737ba1afce3cf2a
       license: Apache-2.0
 
 openmmlab:

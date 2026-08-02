@@ -7,6 +7,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from src.optional_outputs import run_optional_output
+from src.subprocess_utils import configure_headless_matplotlib
+from src.utils.serialization import write_csv
+
 
 @dataclass
 class BestMetricState:
@@ -57,15 +61,12 @@ class EpochHistoryWriter:
             "a", encoding="utf-8"
         ) as handle:
             handle.write(json.dumps(row, sort_keys=True) + "\n")
+            handle.flush()
+            import os
+
+            os.fsync(handle.fileno())
         fields = sorted({key for existing in self.rows for key in existing})
-        with (self.run_dir / "metrics_history.csv").open(
-            "w", newline="", encoding="utf-8"
-        ) as handle:
-            writer = csv.DictWriter(
-                handle, fieldnames=fields, extrasaction="ignore"
-            )
-            writer.writeheader()
-            writer.writerows(self.rows)
+        write_csv(self.run_dir / "metrics_history.csv", self.rows, fields)
 
 
 def save_training_curves(
@@ -74,13 +75,8 @@ def save_training_curves(
     """Save available loss, mAP, APtiny, learning-rate, and VRAM curves."""
     if not rows:
         return
-    try:
-        import matplotlib
-
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-    except ImportError:
-        return
+    configure_headless_matplotlib()
+    import matplotlib.pyplot as plt
 
     x_key = "epoch" if any("epoch" in row for row in rows) else "step"
     x_values = [row.get(x_key, index + 1) for index, row in enumerate(rows)]
@@ -118,3 +114,20 @@ def save_training_curves(
     figure.tight_layout()
     figure.savefig(output_path, dpi=180, bbox_inches="tight")
     plt.close(figure)
+
+
+def safe_save_training_curves(
+    rows: list[dict[str, Any]],
+    output_path: str | Path,
+    *,
+    warning_root: str | Path | None = None,
+) -> dict[str, Any] | None:
+    """Save presentation-only curves without invalidating scientific outputs."""
+    destination = Path(output_path)
+    root = Path(warning_root) if warning_root is not None else destination.parent
+    _, warning = run_optional_output(
+        "save_training_curves",
+        root,
+        lambda: save_training_curves(rows, destination),
+    )
+    return warning

@@ -48,7 +48,7 @@ The authoritative source is `configs/runtime_environments.yaml`.
 
 | Family | Python | PyTorch / CUDA | Framework packages | External source |
 |---|---|---|---|---|
-| RT-DETRv2 | 3.11.13 | 2.7.1+cu128 | Transformers 4.52.4, Accelerate 1.7.0 | RT-DETR `a21d516aca15da57e65f35c47659c7535ad2b6b3`; PekingU weights `a558a4798734af61997652ec97d9b82961c92450` |
+| RT-DETRv2 | 3.11.13 | 2.7.1+cu128 | Transformers 4.52.4, Accelerate 1.7.0 | RT-DETR `a21d516aca15da57e65f35c47659c7535ad2b6b3`; PekingU weights `2c5dbbd2d4d8c8814827a3b42737ba1afce3cf2a` |
 | ResNet-50 / Swin-T | 3.10.16 | 2.1.0+cu118 | MMDetection 3.3.0, MMEngine 0.10.7, MMCV 2.1.0 | MMDetection `44ebd17b145c2372c4b700bfb9cb20dbd28ab64a` |
 | VMamba-T | 3.10.16 | 2.1.0+cu118 | OpenMMLab stack plus selective scan | VMamba `2ed52ead062a51a64521ed3871d52914bf532876` |
 

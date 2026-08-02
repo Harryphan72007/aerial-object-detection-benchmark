@@ -11,6 +11,9 @@ import numpy as np
 import pandas as pd
 
 from src.evaluation.efficiency_metrics import pareto_frontier
+from src.optional_outputs import run_optional_output
+from src.subprocess_utils import configure_headless_matplotlib
+from src.utils.serialization import write_json, write_text_atomic
 
 
 def _finite_rows(rows: list[dict[str, Any]], key: str) -> list[dict[str, Any]]:
@@ -459,9 +462,7 @@ def generate_report(
     output.mkdir(parents=True, exist_ok=True)
     dataframe = _scalar_frame(rows)
     dataframe.to_csv(output / "final_results.csv", index=False)
-    (output / "final_results.json").write_text(
-        json.dumps(rows, indent=2), encoding="utf-8"
-    )
+    write_json(output / "final_results.json", rows)
     recommendations = recommendation_matrix(rows)
     recommendations_frame = pd.DataFrame(recommendations)
     recommendations_frame.to_csv(
@@ -469,7 +470,24 @@ def generate_report(
     )
     statistical = _statistical_summary(rows)
     statistical.to_csv(output / "statistical_summary.csv", index=False)
-    figure_paths = generate_figures(rows, output / "figures")
+    def render_figures() -> list[Path]:
+        configure_headless_matplotlib()
+        return generate_figures(rows, output / "figures")
+
+    generated_figures, _ = run_optional_output(
+        "generate_report_figures",
+        output,
+        render_figures,
+    )
+    figure_paths = generated_figures or []
+
+    def markdown_table(frame: pd.DataFrame, operation: str, empty: str) -> str:
+        if frame.empty:
+            return empty
+        rendered, _ = run_optional_output(
+            operation, output, lambda: frame.to_markdown(index=False)
+        )
+        return rendered if rendered is not None else frame.to_string(index=False)
 
     section_text = {
         "Abstract": "Generated from registered measured runs. Missing experiments remain explicitly missing; no values are invented.",
@@ -479,18 +497,28 @@ def generate_report(
         "License review": "See LICENSES.md. Dataset usage remains research-only unless the dataset owner grants broader rights.",
         "Experimental protocol": "Compare only matching class mappings, splits, seeds, recipes, resolutions, hardware, and precision modes.",
         "Learning-rate search": "Deterministic LR-search candidates are stored separately and must be distinguished from complete-train final runs.",
-        "Training results": dataframe.to_markdown(index=False) if not dataframe.empty else "No completed evaluation rows.",
+        "Training results": markdown_table(
+            dataframe, "render_training_markdown_table", "No completed evaluation rows."
+        ),
         "Detection results": "COCO, tiny-object, per-class, localization, confidence, and error outputs are stored in final_results.json.",
         "Efficiency results": "Latency values require synchronized warm-up and timing on shared hardware. Export failures remain valid measured outcomes.",
         "Resolution scaling": "640, 1024, 1280, and native resolution rows are identified by evaluation_resolution.",
         "Ablation studies": "P2, resolution, tiling, query count, max detections, pretraining, frozen stages, augmentation, multi-scale, precision, and recipe must be isolated as controlled run metadata.",
-        "Statistical analysis": statistical.to_markdown(index=False) if not statistical.empty else "At least three compatible seeds are needed for stable summaries.",
+        "Statistical analysis": markdown_table(
+            statistical,
+            "render_statistical_markdown_table",
+            "At least three compatible seeds are needed for stable summaries.",
+        ),
         "Architecture visualization": "Feature stages, FPN levels, proposals/RoIs, selective-scan stages, queries, references, and decoder refinement are generated in notebook 08.",
         "Error analysis": "Classification, localization, duplicate/background, and miss counts are retained alongside confidence and localization diagnostics.",
         "Published benchmark comparison": "Only ten-class, protocol-compatible literature rows belong here. Missing literature values are left null or not reported.",
         "Limitations": "GPU-specific frameworks, custom CUDA kernels, TensorRT, energy estimates, and unpublished test labels may limit complete execution on a given runtime.",
         "Deployment considerations": "Use measured export status, latency, VRAM, throughput, supported operators, resolution, and postprocessing costs.",
-        "Final model recommendations": recommendations_frame.to_markdown(index=False) if recommendations else "Insufficient measured results.",
+        "Final model recommendations": markdown_table(
+            recommendations_frame,
+            "render_recommendations_markdown_table",
+            "Insufficient measured results.",
+        ),
         "Reproduction instructions": "Follow README notebook order, preserve manifests/configs/environment files, and rerun evaluation/report generation without retraining.",
     }
     lines = ["# VisDrone Architecture Benchmark Final Report", ""]
@@ -500,7 +528,7 @@ def generate_report(
     for path in figure_paths:
         lines.append(f"- `{path.relative_to(output)}`")
     markdown = "\n".join(lines) + "\n"
-    (output / "final_report.md").write_text(markdown, encoding="utf-8")
+    write_text_atomic(output / "final_report.md", markdown)
 
     html_sections = ["<h1>VisDrone Architecture Benchmark Final Report</h1>"]
     for heading, body in section_text.items():
@@ -512,14 +540,14 @@ def generate_report(
         html_sections.append(
             f'<figure><img src="{html.escape(str(relative))}" style="max-width:100%"><figcaption>{html.escape(path.stem)}</figcaption></figure>'
         )
-    (output / "final_report.html").write_text(
+    write_text_atomic(
+        output / "final_report.html",
         "<html><head><meta charset='utf-8'><title>VisDrone Benchmark</title></head><body>"
         + "".join(html_sections)
         + "</body></html>",
-        encoding="utf-8",
     )
 
-    try:
+    def generate_pdf() -> None:
         import matplotlib.image as mpimg
         import matplotlib.pyplot as plt
         from matplotlib.backends.backend_pdf import PdfPages
@@ -545,10 +573,8 @@ def generate_report(
                 figure.tight_layout()
                 pdf.savefig(figure)
                 plt.close(figure)
-    except Exception as error:
-        (output / "experiment_summary.pdf.unavailable.txt").write_text(
-            f"PDF generation failed: {error!r}", encoding="utf-8"
-        )
+
+    run_optional_output("generate_report_pdf", output, generate_pdf)
 
     return {
         "markdown": str(output / "final_report.md"),

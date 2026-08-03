@@ -135,6 +135,15 @@ def require_model_environment(family: str) -> None:
             "mmengine": "0.10.7",
             "mmdet": "3.3.0",
         }
+        if family == "vmamba":
+            expected.update(
+                {
+                    "mmsegmentation": "1.2.2",
+                    "fvcore": "0.1.5.post20221221",
+                    "setuptools": "69.5.1",
+                    "wheel": "0.43.0",
+                }
+            )
     elif family == "rtdetr":
         expected = {
             "torch": "2.7.1+cu128",
@@ -159,9 +168,13 @@ def require_model_environment(family: str) -> None:
             errors.append(f"MMCV compiled operation import failed: {error}")
     if family == "vmamba" and not errors:
         try:
-            __import__("selective_scan_cuda")
+            extension = __import__("selective_scan_cuda_oflex")
+            if not callable(getattr(extension, "fwd", None)) or not callable(
+                getattr(extension, "bwd", None)
+            ):
+                raise RuntimeError("fwd/bwd kernel functions are unavailable")
         except Exception as error:
-            errors.append(f"selective_scan_cuda import failed: {error}")
+            errors.append(f"selective_scan_cuda_oflex import failed: {error}")
     if errors:
         requirements = (
             "requirements-openmmlab-py310-cu118.txt"

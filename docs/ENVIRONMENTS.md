@@ -26,6 +26,12 @@ VMamba additionally requires the selective-scan extension and
 `$DRIVE_ROOT/pretrained/vmamba_tiny_e292.pth`. Missing requirements produce an
 exact blocker; no substitute model is used and scratch training is disabled.
 
+On a GPU runtime, the required integration gate is notebook 01 with
+`RUN_MODE="environment"`, `START_EXPENSIVE_STAGE=True`, and `SMOKE_TEST=True` for
+each of `faster_rcnn_resnet50`, `faster_rcnn_swin_t`, and
+`faster_rcnn_vmamba_t`. It must construct the real model, run a small training
+batch and validation, then atomically save and reload the checkpoint before HPO.
+
 The isolated design normally needs no kernel restart. If Colab itself requests
 one after shared HPO dependency installation, restart once and rerun all cells;
 persistent artifact state is unchanged.

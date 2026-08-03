@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from src.models.registry import load_model_config
+from src.evaluation.policy import detection_policy
 from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
 from src.reproducibility import git_commit
@@ -27,6 +28,8 @@ from src.workflows.adapter_gate import adapter_fingerprint
 from src.hpo.search_spaces import broad_search_space, refined_search_space
 
 HPO_PROTOCOL_ID = "two_stage_random_hpo_v1"
+OBJECTIVE_CONTRACT_VERSION = "mmdet_map_aptiny_same_epoch_v2"
+SOURCE_FINGERPRINT_VERSION = 1
 SEARCH_SEED = 42
 PHASE_TRIALS = 5
 LR_SEARCH_EPOCHS = 3
@@ -47,6 +50,59 @@ def _json_hash(value: Any) -> str:
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
+
+
+def source_tree_fingerprint(repo_root: str | Path) -> str:
+    """Hash the runnable non-RT-DETR implementation, including dirty files."""
+    root = Path(repo_root).resolve()
+    candidates: list[Path] = []
+    for directory in ("src", "scripts", "configs"):
+        candidates.extend(
+            path
+            for path in (root / directory).rglob("*")
+            if path.is_file()
+            and "__pycache__" not in path.parts
+            and "rtdetr" not in path.as_posix().lower()
+            and "yolox" not in path.as_posix().lower()
+        )
+    candidates.extend(
+        path
+        for path in root.glob("requirements*.txt")
+        if "rtdetr" not in path.name.lower() and "yolox" not in path.name.lower()
+    )
+    digest = hashlib.sha256()
+    digest.update(f"source-fingerprint-v{SOURCE_FINGERPRINT_VERSION}\n".encode())
+    for path in sorted(set(candidates), key=lambda item: item.relative_to(root).as_posix()):
+        relative = path.relative_to(root).as_posix()
+        digest.update(relative.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def validated_objective_pair(
+    manifest: dict[str, Any], model_id: str
+) -> tuple[float, float]:
+    """Read one trustworthy validation objective pair from a training manifest."""
+
+    required = ("best_validation_map", "best_validation_aptiny")
+    if model_id == "rtdetrv2_l":
+        return tuple(float(manifest.get(key, 0.0)) for key in required)  # type: ignore[return-value]
+    missing = [key for key in required if key not in manifest]
+    if missing:
+        raise RuntimeError(
+            "training did not produce the required HPO objectives: " f"{missing}"
+        )
+    values = tuple(float(manifest[key]) for key in required)
+    if not all(math.isfinite(value) for value in values):
+        raise RuntimeError(f"training produced non-finite HPO objectives: {values}")
+    if values == (0.0, 0.0):
+        raise RuntimeError(
+            "refusing the legacy all-zero HPO objective pair; archive the old "
+            "study and rerun with the repaired validation contract"
+        )
+    return values  # type: ignore[return-value]
 
 
 def _sample(trial: Any, space: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -183,7 +239,7 @@ class TwoStageRandomHPO:
         split_summary: dict[str, Any],
         search_space: dict[str, dict[str, Any]],
     ) -> dict[str, Any]:
-        return {
+        metadata = {
             "model_id": self.model_id,
             "dataset_track": self.dataset_track,
             "protocol_id": self.protocol_id,
@@ -200,6 +256,17 @@ class TwoStageRandomHPO:
                 "directions": ["maximize", "maximize"],
             },
         }
+        if self.model_id != "rtdetrv2_l":
+            metadata.update(
+                {
+                    "objective_contract_version": OBJECTIVE_CONTRACT_VERSION,
+                    "source_tree_fingerprint": source_tree_fingerprint(
+                        self.repo_root
+                    ),
+                    "evaluation_policy": detection_policy(),
+                }
+            )
+        return metadata
 
     def _run_training_trial(
         self,
@@ -249,10 +316,7 @@ class TwoStageRandomHPO:
             protocol_id=self.protocol_id,
             baseline_or_tuned="search_trial",
         )
-        return (
-            float(manifest.get("best_validation_map", 0.0)),
-            float(manifest.get("best_validation_aptiny", 0.0)),
-        )
+        return validated_objective_pair(manifest, self.model_id)
 
     def _study(self, metadata: dict[str, Any]):
         import optuna
@@ -279,6 +343,14 @@ class TwoStageRandomHPO:
                 "dataset_hashes",
                 "objective",
             )
+            if self.model_id != "rtdetrv2_l":
+                immutable_keys += (
+                    "objective_contract_version",
+                    "source_tree_fingerprint",
+                    "environment_fingerprint",
+                    "search_space_hash",
+                    "evaluation_policy",
+                )
             changed = {
                 key: (existing.get(key), metadata.get(key))
                 for key in immutable_keys
@@ -287,7 +359,8 @@ class TwoStageRandomHPO:
             if changed:
                 raise RuntimeError(
                     "Persisted HPO study is incompatible with the current "
-                    f"scientific contract: {changed}"
+                    f"scientific contract: {changed}. Archive the old study "
+                    "directory and start a new study; do not reuse its trials."
                 )
             history = list(study.user_attrs.get("metadata_history", []))
             if existing not in history:
@@ -364,6 +437,10 @@ class TwoStageRandomHPO:
         def objective(trial: Any) -> tuple[float, float]:
             trial.set_user_attr("phase", phase)
             trial.set_user_attr("resume", False)
+            if self.model_id != "rtdetrv2_l":
+                trial.set_user_attr(
+                    "objective_contract_version", OBJECTIVE_CONTRACT_VERSION
+                )
             parameters = _sample(trial, space)
             learning_rate = float(
                 parameters.get(

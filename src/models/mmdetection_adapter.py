@@ -1,5 +1,6 @@
 """MMDetection 3.x inference adapter using public APIs."""
 from __future__ import annotations
+import os
 import time
 from pathlib import Path
 from typing import Any, Sequence
@@ -16,8 +17,19 @@ class MMDetectionAdapter(DetectionModelAdapter):
         except ImportError as exc:
             raise RuntimeError("Install MMDetection 3.3.0 and a matching MMCV wheel before loading this model.") from exc
         registration_import=config.get("registration_import")
-        if registration_import:
-            __import__(registration_import)
+        if self.model_id == "faster_rcnn_vmamba_t" or registration_import == "model":
+            from src.models.vmamba_frcnn.importer import register_vmamba_detection
+
+            vmamba_root = os.environ.get("VMAMBA_ROOT") or config.get("external_root")
+            if not vmamba_root:
+                raise RuntimeError(
+                    "VMAMBA_ROOT must point to the pinned VMamba checkout before evaluation"
+                )
+            register_vmamba_detection(Path(str(vmamba_root)))
+        elif registration_import:
+            raise RuntimeError(
+                f"unsupported MMDetection registration import: {registration_import!r}"
+            )
         cfg_path=config.get("resolved_framework_config") or config.get("framework_config")
         if not cfg_path: raise ValueError("resolved_framework_config is required")
         self.config=config; self.model=init_detector(str(cfg_path),str(checkpoint_path),device=self.device)

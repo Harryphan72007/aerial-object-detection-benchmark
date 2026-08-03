@@ -199,7 +199,17 @@ def _openmmlab_probe(
 def _vmamba_probe(
     spec: dict[str, Any],
     args: argparse.Namespace,
+    versions: dict[str, str],
 ) -> dict[str, Any]:
+    for package, expected in (
+        ("mmsegmentation", "1.2.2"),
+        ("fvcore", "0.1.5.post20221221"),
+        ("setuptools", "69.5.1"),
+        ("wheel", "0.43.0"),
+    ):
+        _require_exact(package, expected, versions)
+    for module in ("mmseg", "fvcore", "setuptools", "wheel"):
+        _require_import(module, f"{module}_import")
     vmamba_root = Path(args.vmamba_root or os.environ.get("VMAMBA_ROOT", ""))
     expected = str(_source(spec, "VMamba")["revision"])
     revision = _git_revision(vmamba_root, expected, "vmamba_revision")
@@ -218,7 +228,16 @@ def _vmamba_probe(
             "vmamba_registration",
             f"VMamba top-level registration import failed: {error}",
         ) from error
-    _require_import("selective_scan_cuda", "selective_scan_cuda_import")
+    extension = _require_import(
+        "selective_scan_cuda_oflex", "selective_scan_cuda_oflex_import"
+    )
+    if not callable(getattr(extension, "fwd", None)) or not callable(
+        getattr(extension, "bwd", None)
+    ):
+        raise ProbeFailure(
+            "selective_scan_cuda_oflex_api",
+            "selective_scan_cuda_oflex must expose callable fwd and bwd kernels",
+        )
     pretrained = Path(
         args.pretrained_checkpoint or os.environ.get("VMAMBA_T_PRETRAINED", "")
     )
@@ -238,7 +257,22 @@ def _vmamba_probe(
                 num_classes=2,
                 device="cuda:0",
             )
-            construction.update({"status": "PASS", "report": result.report})
+            model = result.model
+            model.eval()
+            torch = _require_import("torch", "vmamba_forward_torch_import")
+            with torch.no_grad():
+                features = model.extract_feat(
+                    torch.zeros((1, 3, 64, 64), device="cuda:0")
+                )
+            if not features:
+                raise RuntimeError("VMamba extract_feat returned no feature maps")
+            construction.update(
+                {
+                    "status": "PASS",
+                    "report": result.report,
+                    "forward_feature_shapes": [list(value.shape) for value in features],
+                }
+            )
             del result
         except Exception as error:
             raise ProbeFailure(
@@ -250,7 +284,7 @@ def _vmamba_probe(
         "vmamba_revision": revision,
         "detector_config": str(config.resolve()),
         "registration_module": str(registration.__file__),
-        "selective_scan": "selective_scan_cuda",
+        "selective_scan": "selective_scan_cuda_oflex",
         "pretrained_checkpoint": str(pretrained.resolve()),
         "pretrained_size": pretrained.stat().st_size,
         "construction": construction,
@@ -304,7 +338,7 @@ def verify(args: argparse.Namespace) -> dict[str, Any]:
     if args.environment in {"openmmlab", "vmamba"}:
         checks["openmmlab"] = _openmmlab_probe(spec, args, versions)
     if args.environment == "vmamba":
-        checks["vmamba"] = _vmamba_probe(spec, args)
+        checks["vmamba"] = _vmamba_probe(spec, args, versions)
     elif args.environment == "rtdetr":
         checks["rtdetr"] = _rtdetr_probe(spec, args, versions)
     return {

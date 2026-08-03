@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import copy
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -13,7 +14,14 @@ from src.hpo.final_workflow import (
     configuration_hash,
 )
 from src.hpo.search_spaces import broad_search_space, refined_search_space
-from src.hpo.workflow import HPO_PROTOCOL_ID, TwoStageRandomHPO, _failure_kind
+from src.hpo.workflow import (
+    HPO_PROTOCOL_ID,
+    OBJECTIVE_CONTRACT_VERSION,
+    TwoStageRandomHPO,
+    _failure_kind,
+    source_tree_fingerprint,
+    validated_objective_pair,
+)
 from src.result_export import HPO_REQUIRED_BUNDLE_FILES, validate_bundle
 from src.training.trainer import TrainingOrchestrator
 from src.training.checkpointing import resolve_manifest_checkpoint
@@ -215,6 +223,98 @@ def test_resume_contract_rejects_configuration_drift(tmp_path):
     assert resume is None
     assert run_id != "old"
     assert (run_dir / "last.pth").read_bytes() == b"preserve"
+
+
+def test_source_tree_fingerprint_captures_uncommitted_implementation_changes(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "src" / "implementation.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("VALUE = 1\n", encoding="utf-8")
+    before = source_tree_fingerprint(tmp_path)
+    source.write_text("VALUE = 2\n", encoding="utf-8")
+    assert source_tree_fingerprint(tmp_path) != before
+
+
+def test_non_rtdetr_hpo_refuses_legacy_or_missing_objective_pairs() -> None:
+    with pytest.raises(RuntimeError, match="all-zero"):
+        validated_objective_pair(
+            {"best_validation_map": 0.0, "best_validation_aptiny": 0.0},
+            "faster_rcnn_resnet50",
+        )
+    with pytest.raises(RuntimeError, match="required HPO objectives"):
+        validated_objective_pair(
+            {"best_validation_map": 0.2}, "faster_rcnn_resnet50"
+        )
+    assert validated_objective_pair(
+        {"best_validation_map": 0.2, "best_validation_aptiny": 0.1},
+        "faster_rcnn_resnet50",
+    ) == (0.2, 0.1)
+
+
+def test_non_rtdetr_study_rejects_stale_source_contract_without_deleting_db(
+    tmp_path: Path,
+) -> None:
+    pytest.importorskip("optuna")
+    workflow = TwoStageRandomHPO(
+        ROOT, tmp_path, "faster_rcnn_resnet50", "2class"
+    )
+    space = broad_search_space("faster_rcnn_resnet50")
+    metadata = workflow._metadata({"hashes": {"train": "fixture"}}, space)
+    workflow._study(metadata)
+    changed = copy.deepcopy(metadata)
+    changed["source_tree_fingerprint"] = "0" * 64
+
+    with pytest.raises(RuntimeError, match="Archive the old study"):
+        workflow._study(changed)
+
+    assert workflow.study_path.is_file()
+
+
+def test_non_rtdetr_final_contract_binds_source_environment_and_dataset(
+    tmp_path: Path,
+) -> None:
+    model_id = "faster_rcnn_resnet50"
+    workflow = FinalExperimentWorkflow(
+        ROOT, tmp_path, model_id, "2class", orchestrator=FakeOrchestrator()
+    )
+    write_yaml(
+        workflow.best_config_path,
+        {
+            "model_id": model_id,
+            "dataset_track": "2class",
+            "protocol_id": HPO_PROTOCOL_ID,
+            "search_seed": 42,
+            "objective_contract_version": OBJECTIVE_CONTRACT_VERSION,
+            "parameters": {"learning_rate": 0.0001},
+        },
+    )
+    annotation_root = workflow.paths.coco("2class") / "annotations"
+    annotation_root.mkdir(parents=True, exist_ok=True)
+    (annotation_root / "instances_train.json").write_text("{}", encoding="utf-8")
+    (annotation_root / "instances_val.json").write_text("{}", encoding="utf-8")
+    parameters = workflow._load_tuned_parameters()
+
+    contract = workflow._contract(42, "tuned", parameters, 1, 8)
+
+    assert contract["objective_contract_version"] == OBJECTIVE_CONTRACT_VERSION
+    assert len(contract["source_tree_fingerprint"]) == 64
+    assert len(contract["dataset_hashes"]["train"]) == 64
+    assert contract["evaluation_policy"]["max_detections_per_image"] == 500
+    assert contract["environment_fingerprint"]
+
+    old_run = workflow.paths.final_checkpoints / model_id / "old-contract"
+    write_json(old_run / "resume_contract.json", contract)
+    (old_run / "last.pth").write_bytes(b"resume")
+    (annotation_root / "instances_val.json").write_text(
+        '{"changed": true}', encoding="utf-8"
+    )
+    changed_contract = workflow._contract(42, "tuned", parameters, 1, 8)
+    _, selected_run, resume = workflow._resumable(changed_contract)
+    assert changed_contract["dataset_hashes"] != contract["dataset_hashes"]
+    assert selected_run != old_run
+    assert resume is None
+    assert (old_run / "last.pth").read_bytes() == b"resume"
 
 
 def test_controlled_override_report_must_match_every_requested_value(tmp_path):

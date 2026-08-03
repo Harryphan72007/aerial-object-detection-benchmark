@@ -12,3 +12,7 @@ timm==0.9.16
 einops==0.8.1
 ninja==1.11.1.4
 psutil==7.0.0
+mmsegmentation==1.2.2
+fvcore==0.1.5.post20221221
+setuptools==69.5.1
+wheel==0.43.0

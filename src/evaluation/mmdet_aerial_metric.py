@@ -12,12 +12,25 @@ except ImportError:  # Lightweight tests do not install MMDetection.
     METRICS = None
 
 from src.evaluation.coco_evaluator import evaluate_coco
+from src.evaluation.policy import MAX_DETECTIONS_PER_IMAGE
 
 
 def _value(sample: Any, key: str, default: Any = None) -> Any:
     if isinstance(sample, dict):
         return sample.get(key, default)
     return getattr(sample, key, default)
+
+
+def flatten_image_results(results: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Flatten one-result-per-image metric records for COCO evaluation."""
+
+    detections: list[dict[str, Any]] = []
+    for result in results:
+        rows = result.get("detections", [])
+        if not isinstance(rows, list):
+            raise TypeError("AerialCocoMetric detections must be a list")
+        detections.extend(rows)
+    return detections
 
 
 if METRICS is not None:
@@ -51,11 +64,12 @@ if METRICS is not None:
                 )
                 predictions = _value(sample, "pred_instances")
                 if predictions is None:
-                    continue
-                predictions = predictions.to("cpu")
-                boxes = predictions.bboxes.numpy()
-                scores = predictions.scores.numpy()
-                labels = predictions.labels.numpy()
+                    boxes, scores, labels = (), (), ()
+                else:
+                    predictions = predictions.to("cpu")
+                    boxes = predictions.bboxes.numpy()
+                    scores = predictions.scores.numpy()
+                    labels = predictions.labels.numpy()
                 rows: list[dict[str, Any]] = []
                 for box, score, label in zip(boxes, scores, labels):
                     x1, y1, x2, y2 = map(float, box)
@@ -67,13 +81,15 @@ if METRICS is not None:
                             "score": float(score),
                         }
                     )
-                self.results.extend(rows)
+                self.results.append({"image_id": image_id, "detections": rows})
 
         def compute_metrics(
             self, results: list[dict[str, Any]]
         ) -> dict[str, float]:
             metrics = evaluate_coco(
-                self.ann_file, results, max_detections=[1, 10, 100, 300, 500]
+                self.ann_file,
+                flatten_image_results(results),
+                max_detections=[1, 10, 100, 300, MAX_DETECTIONS_PER_IMAGE],
             )
             return {
                 "APtiny": float(metrics["APtiny"]),

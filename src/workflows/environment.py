@@ -252,7 +252,7 @@ def ensure_model_environment(
             VMAMBA_REVISION,
         )
         os.environ["VMAMBA_ROOT"] = str(vmamba_root)
-        if importlib.util.find_spec("selective_scan_cuda") is None and install_missing:
+        if importlib.util.find_spec("selective_scan_cuda_oflex") is None and install_missing:
             _run(
                 [
                     sys.executable,
@@ -263,8 +263,8 @@ def ensure_model_environment(
                     "--no-build-isolation",
                 ]
             )
-        if importlib.util.find_spec("selective_scan_cuda") is None:
-            raise RuntimeError("VMamba selective_scan_cuda could not be imported")
+        if importlib.util.find_spec("selective_scan_cuda_oflex") is None:
+            raise RuntimeError("VMamba selective_scan_cuda_oflex could not be imported")
         pretrained = root / "pretrained" / "vmamba_tiny_e292.pth"
         if not pretrained.is_file() or pretrained.stat().st_size == 0:
             raise FileNotFoundError(

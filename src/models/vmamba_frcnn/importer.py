@@ -72,8 +72,9 @@ def detect_selective_scan_backend(
     """Report the first available backend, preferring the approved CUDA extension."""
 
     candidates = (
-        ("selective_scan_cuda", True, "optimized_cuda"),
-        ("selective_scan_cuda_core", True, "optimized_cuda_core"),
+        ("selective_scan_cuda_oflex", True, "optimized_cuda_oflex"),
+        ("selective_scan_cuda_core", False, "legacy_cuda_core"),
+        ("selective_scan_cuda", False, "mamba_ssm_cuda"),
         ("mamba_ssm.ops.selective_scan_interface", False, "python_or_package_fallback"),
     )
     for module, approved, kind in candidates:

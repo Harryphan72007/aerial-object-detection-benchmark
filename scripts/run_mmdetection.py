@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 from pathlib import Path
 from typing import Any
 
 from src.optional_outputs import run_optional_output
+from src.evaluation.policy import (
+    DETECTION_SCORE_THRESHOLD,
+    MAX_DETECTIONS_PER_IMAGE,
+    detection_policy,
+)
 from src.training.callbacks import safe_save_training_curves
 from src.training.checkpointing import (
     atomic_torch_save,
@@ -74,19 +80,188 @@ def set_num_classes(node: Any, number_of_classes: int) -> None:
             set_num_classes(value, number_of_classes)
 
 
-def _read_scalar_rows(run_dir: Path) -> list[dict[str, Any]]:
-    scalar_file = run_dir / "vis_data" / "scalars.json"
-    if not scalar_file.exists():
-        return []
+MASK_ONLY_TRANSFORMS = {"CopyPaste", "LoadPanopticAnnotations"}
+
+
+def strip_mask_pipeline(node: Any) -> int:
+    """Disable mask-only settings throughout nested MMDetection pipelines."""
+
+    changed = 0
+    if isinstance(node, list):
+        retained = []
+        for value in node:
+            if isinstance(value, dict) and value.get("type") in MASK_ONLY_TRANSFORMS:
+                changed += 1
+                continue
+            changed += strip_mask_pipeline(value)
+            retained.append(value)
+        node[:] = retained
+    elif isinstance(node, dict):
+        if node.get("type") == "LoadAnnotations" and node.get("with_mask") is not False:
+            node["with_mask"] = False
+            node.pop("poly2mask", None)
+            changed += 1
+        for value in node.values():
+            changed += strip_mask_pipeline(value)
+    return changed
+
+
+def _remove_mask_model_keys(node: Any) -> int:
+    changed = 0
+    if isinstance(node, dict):
+        for key in ("mask_roi_extractor", "mask_head"):
+            if key in node:
+                node.pop(key)
+                changed += 1
+        for value in node.values():
+            changed += _remove_mask_model_keys(value)
+    elif isinstance(node, list):
+        for value in node:
+            changed += _remove_mask_model_keys(value)
+    return changed
+
+
+def configure_bbox_only_evaluator(node: Any) -> int:
+    """Force inherited COCO evaluators to consume detector bbox outputs only."""
+
+    changed = 0
+    if isinstance(node, dict):
+        if node.get("type") == "CocoMetric" and node.get("metric") != "bbox":
+            node["metric"] = "bbox"
+            changed += 1
+        for value in node.values():
+            changed += configure_bbox_only_evaluator(value)
+    elif isinstance(node, list):
+        for value in node:
+            changed += configure_bbox_only_evaluator(value)
+    return changed
+
+
+def configure_faster_rcnn_from_mask(cfg: Any) -> dict[str, int]:
+    """Convert a Mask R-CNN config into a bbox-only Faster R-CNN config."""
+
+    cfg.model.type = "FasterRCNN"
+    removed_heads = _remove_mask_model_keys(cfg.model)
+    pipeline_changes = sum(
+        strip_mask_pipeline(getattr(cfg, name))
+        for name in ("train_dataloader", "val_dataloader", "test_dataloader")
+        if hasattr(cfg, name)
+    )
+    evaluator_changes = sum(
+        configure_bbox_only_evaluator(getattr(cfg, name))
+        for name in ("val_evaluator", "test_evaluator")
+        if hasattr(cfg, name)
+    )
+    return {
+        "removed_mask_heads": removed_heads,
+        "pipeline_changes": pipeline_changes,
+        "evaluator_changes": evaluator_changes,
+    }
+
+
+def configure_evaluator_annotation(node: Any, annotation_file: str) -> int:
+    changed = 0
+    if isinstance(node, dict):
+        if node.get("type") == "CocoMetric" or "ann_file" in node:
+            node["ann_file"] = annotation_file
+            changed += 1
+        for value in node.values():
+            changed += configure_evaluator_annotation(value, annotation_file)
+    elif isinstance(node, list):
+        for value in node:
+            changed += configure_evaluator_annotation(value, annotation_file)
+    return changed
+
+
+def append_aerial_evaluator(node: Any, annotation_file: str) -> list[Any]:
+    """Append the custom evaluator without creating unsupported nested lists."""
+
+    evaluators = list(node) if isinstance(node, (list, tuple)) else [node]
+    evaluators.append({"type": "AerialCocoMetric", "ann_file": annotation_file})
+    return evaluators
+
+
+def apply_detection_policy(model: Any) -> dict[str, Any]:
+    """Apply the immutable benchmark prediction policy to an RCNN config."""
+
+    try:
+        test_cfg = model["test_cfg"]
+        rcnn = test_cfg["rcnn"]
+    except (KeyError, TypeError) as error:
+        raise ValueError(
+            "MMDetection RCNN config does not expose model.test_cfg.rcnn"
+        ) from error
+    rcnn["max_per_img"] = MAX_DETECTIONS_PER_IMAGE
+    rcnn["score_thr"] = DETECTION_SCORE_THRESHOLD
+    return {
+        **detection_policy(),
+        "applied_nodes": {"max_per_img": 1, "score_thr": 1},
+    }
+
+
+def _read_scalar_rows(
+    run_dir: Path, log_dir: str | Path | None = None
+) -> list[dict[str, Any]]:
+    candidates = {run_dir / "vis_data" / "scalars.json"}
+    candidates.update(run_dir.glob("*/vis_data/scalars.json"))
+    if log_dir is not None:
+        candidates.add(Path(log_dir) / "vis_data" / "scalars.json")
     rows: list[dict[str, Any]] = []
-    for line in scalar_file.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        try:
-            rows.append(json.loads(line))
-        except json.JSONDecodeError:
-            continue
+    for scalar_file in sorted(path for path in candidates if path.is_file()):
+        for line in scalar_file.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict):
+                rows.append(value)
     return rows
+
+
+def validation_metric_pair(metrics: dict[str, Any]) -> tuple[float | None, float | None]:
+    map_value = metrics.get("coco/bbox_mAP", metrics.get("bbox_mAP"))
+    tiny_value = metrics.get("aerial_coco/APtiny", metrics.get("APtiny"))
+    return (
+        None if map_value is None else float(map_value),
+        None if tiny_value is None else float(tiny_value),
+    )
+
+
+def best_metrics_from_rows(rows: list[dict[str, Any]]) -> tuple[float, float, int]:
+    """Select mAP and APtiny from one common best-mAP history row."""
+
+    selected: tuple[float, float, int] | None = None
+    for row in rows:
+        map_value, tiny_value = validation_metric_pair(row)
+        if map_value is None or tiny_value is None:
+            continue
+        epoch = int(row.get("epoch", row.get("step", 0)))
+        candidate = (map_value, tiny_value, epoch)
+        if selected is None or candidate[:2] > selected[:2]:
+            selected = candidate
+    if selected is None:
+        raise RuntimeError(
+            "metric history contains no same-epoch validation mAP/APtiny pair"
+        )
+    return selected
+
+
+def restore_selection_state(
+    checkpoint_state: dict[str, Any], selection_state: dict[str, Any]
+) -> None:
+    """Restore the authoritative checkpoint-selection pair for a resumed run."""
+
+    metadata = checkpoint_state.get("best_checkpoint_metadata", {})
+    selection_state["best_metric"] = float(
+        metadata.get("metric_value", float("-inf"))
+    )
+    selection_state["best_aptiny"] = float(metadata.get("aptiny", float("-inf")))
+    selection_state["best_epoch"] = int(metadata.get("epoch", 0))
+    selection_state["best_model_state_dict"] = checkpoint_state.get(
+        "best_model_state_dict"
+    )
 
 
 def _write_history(run_dir: Path, rows: list[dict[str, Any]]) -> None:
@@ -165,7 +340,10 @@ def apply_overrides(cfg: Any, overrides: dict[str, Any]) -> dict[str, Any]:
     if "backbone_lr_multiplier" in overrides:
         paramwise = dict(cfg.optim_wrapper.get("paramwise_cfg", {})); custom = dict(paramwise.get("custom_keys", {})); custom["backbone"] = {"lr_mult": float(overrides["backbone_lr_multiplier"])}; paramwise["custom_keys"] = custom; cfg.optim_wrapper["paramwise_cfg"] = paramwise; applied["backbone_lr_multiplier"] = overrides["backbone_lr_multiplier"]
     if "max_detections" in overrides:
-        count = _set_recursive(cfg.model, "max_per_img", int(overrides["max_detections"])); (applied if count else unsupported)["max_detections"] = overrides["max_detections"]
+        try:
+            cfg.model.test_cfg.rcnn.max_per_img = int(overrides["max_detections"]); applied["max_detections"] = overrides["max_detections"]
+        except Exception:
+            unsupported["max_detections"] = overrides["max_detections"]
     if "anchor_sizes" in overrides:
         count = _set_recursive(cfg.model, "base_sizes", list(overrides["anchor_sizes"])); (applied if count else unsupported)["anchor_sizes"] = overrides["anchor_sizes"]
     if "anchor_ratios" in overrides:
@@ -175,7 +353,10 @@ def apply_overrides(cfg: Any, overrides: dict[str, Any]) -> dict[str, Any]:
     if "rpn_proposals" in overrides:
         count = _set_recursive(cfg.model, "nms_pre", int(overrides["rpn_proposals"])); (applied if count else unsupported)["rpn_proposals"] = overrides["rpn_proposals"]
     if "roi_score_threshold" in overrides:
-        count = _set_recursive(cfg.model, "score_thr", float(overrides["roi_score_threshold"])); (applied if count else unsupported)["roi_score_threshold"] = overrides["roi_score_threshold"]
+        try:
+            cfg.model.test_cfg.rcnn.score_thr = float(overrides["roi_score_threshold"]); applied["roi_score_threshold"] = overrides["roi_score_threshold"]
+        except Exception:
+            unsupported["roi_score_threshold"] = overrides["roi_score_threshold"]
     if "roi_nms_threshold" in overrides:
         # This is deliberately applied only to RCNN test NMS, not every NMS node.
         try:
@@ -276,15 +457,23 @@ def main() -> None:
         )
     classes = json.loads(args.classes)
     overrides = json.loads(args.overrides)
+    if "max_detections" in overrides and int(overrides["max_detections"]) != MAX_DETECTIONS_PER_IMAGE:
+        raise ValueError(
+            f"max_detections is fixed at {MAX_DETECTIONS_PER_IMAGE} by the benchmark policy"
+        )
+    if "roi_score_threshold" in overrides and not math.isclose(
+        float(overrides["roi_score_threshold"]), DETECTION_SCORE_THRESHOLD
+    ):
+        raise ValueError(
+            f"roi_score_threshold is fixed at {DETECTION_SCORE_THRESHOLD} by the benchmark policy"
+        )
     override_report = apply_overrides(cfg, overrides)
+    if args.strip_mask_branch:
+        override_report["mask_conversion"] = configure_faster_rcnn_from_mask(cfg)
+    override_report["evaluation_policy"] = apply_detection_policy(cfg.model)
     (run_dir / "applied_overrides.json").write_text(
         json.dumps(override_report, indent=2), encoding="utf-8"
     )
-    if args.strip_mask_branch:
-        cfg.model.type = "FasterRCNN"
-        if "roi_head" in cfg.model:
-            cfg.model.roi_head.pop("mask_roi_extractor", None)
-            cfg.model.roi_head.pop("mask_head", None)
     set_num_classes(cfg.model, len(classes))
     configure_dataset(
         cfg.train_dataloader.dataset,
@@ -318,20 +507,16 @@ def main() -> None:
     cfg.test_dataloader.num_workers = min(
         int(cfg.test_dataloader.get("num_workers", 2)), 2
     )
-    cfg.val_evaluator.ann_file = args.val_ann
-    cfg.test_evaluator.ann_file = args.val_ann
+    if not configure_evaluator_annotation(cfg.val_evaluator, args.val_ann):
+        raise ValueError("validation config contains no COCO evaluator")
+    if not configure_evaluator_annotation(cfg.test_evaluator, args.val_ann):
+        raise ValueError("test config contains no COCO evaluator")
     cfg.custom_imports = {
         "imports": ["src.evaluation.mmdet_aerial_metric"],
         "allow_failed_imports": False,
     }
-    cfg.val_evaluator = [
-        cfg.val_evaluator,
-        {"type": "AerialCocoMetric", "ann_file": args.val_ann},
-    ]
-    cfg.test_evaluator = [
-        cfg.test_evaluator,
-        {"type": "AerialCocoMetric", "ann_file": args.val_ann},
-    ]
+    cfg.val_evaluator = append_aerial_evaluator(cfg.val_evaluator, args.val_ann)
+    cfg.test_evaluator = append_aerial_evaluator(cfg.test_evaluator, args.val_ann)
     if hasattr(cfg, "train_cfg") and cfg.train_cfg:
         original_max_epochs = int(cfg.train_cfg.max_epochs)
         cfg.param_scheduler = configure_scheduler_horizon(
@@ -380,6 +565,7 @@ def main() -> None:
     )
     cfg.default_hooks.logger.interval = 20
     cfg.visualizer.vis_backends = [{"type": "LocalVisBackend"}]
+    cfg.visualizer.save_dir = str(run_dir)
     tensorboard, _ = run_optional_output(
         "configure_tensorboard",
         run_dir,
@@ -464,7 +650,6 @@ def main() -> None:
     runner = Runner.from_cfg(cfg)
     runner.register_hook(FullResumeStateHook(), priority="VERY_HIGH")
     if args.lr_range_test_steps:
-        import math
         import torch
         from src.training.lr_range import (
             exponential_lr_schedule,
@@ -574,6 +759,7 @@ def main() -> None:
         return
     selection_state: dict[str, Any] = {
         "best_metric": float("-inf"),
+        "best_aptiny": float("-inf"),
         "best_epoch": 0,
         "best_model_state_dict": None,
     }
@@ -600,6 +786,7 @@ def main() -> None:
                 state["best_checkpoint_metadata"] = {
                     "metric": "validation_mAP",
                     "metric_value": selection_state["best_metric"],
+                    "aptiny": selection_state["best_aptiny"],
                     "epoch": selection_state["best_epoch"],
                 }
             state["configuration_hash"] = configuration_hash
@@ -614,21 +801,22 @@ def main() -> None:
             if not args.resume or not checkpoint.is_file():
                 return
             state = torch.load(checkpoint, map_location="cpu", weights_only=False)
-            metadata = state.get("best_checkpoint_metadata", {})
-            selection_state["best_metric"] = float(
-                metadata.get("metric_value", float("-inf"))
-            )
-            selection_state["best_epoch"] = int(metadata.get("epoch", 0))
-            selection_state["best_model_state_dict"] = state.get(
-                "best_model_state_dict"
-            )
+            restore_selection_state(state, selection_state)
 
         def after_val_epoch(
             self, runner: Any, metrics: dict[str, Any] | None = None
         ) -> None:
             values = metrics or {}
-            metric = values.get("coco/bbox_mAP", values.get("bbox_mAP"))
-            if metric is None or float(metric) <= selection_state["best_metric"]:
+            metric, aptiny = validation_metric_pair(values)
+            if metric is None:
+                raise RuntimeError("validation completed without coco/bbox_mAP")
+            if aptiny is None:
+                raise RuntimeError("validation completed without aerial_coco/APtiny")
+            if not math.isfinite(metric) or not math.isfinite(aptiny):
+                raise RuntimeError(
+                    f"validation produced non-finite metrics: mAP={metric}, APtiny={aptiny}"
+                )
+            if metric <= selection_state["best_metric"]:
                 return
             checkpoint = run_dir / "last.pth"
             if not checkpoint.is_file():
@@ -642,11 +830,13 @@ def main() -> None:
             state["best_model_state_dict"] = selection_state[
                 "best_model_state_dict"
             ]
-            selection_state["best_metric"] = float(metric)
-            selection_state["best_epoch"] = int(runner.epoch)
+            selection_state["best_metric"] = metric
+            selection_state["best_aptiny"] = aptiny
+            selection_state["best_epoch"] = int(runner.epoch + 1)
             state["best_checkpoint_metadata"] = {
                 "metric": "validation_mAP",
                 "metric_value": selection_state["best_metric"],
+                "aptiny": selection_state["best_aptiny"],
                 "epoch": selection_state["best_epoch"],
             }
             state["configuration_hash"] = configuration_hash
@@ -673,19 +863,24 @@ def main() -> None:
         for name, module in model.named_children()
     }
 
-    rows = _read_scalar_rows(run_dir)
+    rows = _read_scalar_rows(run_dir, getattr(runner, "log_dir", None))
     _write_history(run_dir, rows)
-    best_map_value = 0.0
-    best_tiny_value = 0.0
-    best_epoch = 0
-    for row in rows:
-        value = row.get("coco/bbox_mAP", row.get("bbox_mAP"))
-        if value is not None and float(value) > best_map_value:
-            best_map_value = float(value)
-            best_epoch = int(row.get("epoch", row.get("step", 0)))
-        tiny = row.get("aerial_coco/APtiny", row.get("APtiny"))
-        if tiny is not None:
-            best_tiny_value = max(best_tiny_value, float(tiny))
+    validation_required = args.validation_interval > 0
+    if validation_required:
+        best_map_value = float(selection_state["best_metric"])
+        best_tiny_value = float(selection_state["best_aptiny"])
+        best_epoch = int(selection_state["best_epoch"])
+        if (
+            selection_state["best_model_state_dict"] is None
+            or not math.isfinite(best_map_value)
+            or not math.isfinite(best_tiny_value)
+            or best_epoch <= 0
+        ):
+            raise RuntimeError(
+                "validation was enabled but no valid mAP/APtiny checkpoint was selected"
+            )
+    else:
+        best_map_value, best_tiny_value, best_epoch = best_metrics_from_rows(rows)
 
     checkpoint_identity = {
         "run_id": run_dir.name,

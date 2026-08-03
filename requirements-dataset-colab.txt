@@ -10,3 +10,5 @@ psutil==7.0.0
 filelock==3.18.0
 pycocotools==2.0.10
 tqdm==4.67.1
+setuptools==69.5.1
+wheel==0.43.0

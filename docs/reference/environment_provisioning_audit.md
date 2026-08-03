@@ -151,7 +151,7 @@ validates, atomically saves, reloads, and records its fingerprint. Specifically:
 
 - ResNet: confirm `mmcv.ops.nms`, construct the detector, and complete the gate.
 - Swin: confirm the pinned config/image size and complete one forward/backward gate.
-- VMamba: confirm pinned revision, `selective_scan_cuda`, checkpoint size,
+- VMamba: confirm pinned revision, `selective_scan_cuda_oflex`, checkpoint size,
   VMamba-T Faster R-CNN construction, and one forward/backward gate.
 - RT-DETR: resolve the pinned Hugging Face revision, construct the two-class model,
   and complete one forward/backward gate.

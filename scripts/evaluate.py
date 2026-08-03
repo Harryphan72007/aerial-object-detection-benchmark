@@ -12,6 +12,10 @@ from src.evaluation.calibration import detection_calibration
 from src.evaluation.coco_evaluator import evaluate_coco
 from src.evaluation.detection_metrics import confidence_curves, detailed_metrics
 from src.evaluation.error_analysis import decompose_errors, evaluate_visdrone_slices
+from src.evaluation.policy import (
+    DETECTION_SCORE_THRESHOLD,
+    MAX_DETECTIONS_PER_IMAGE,
+)
 from src.models.registry import create_adapter
 from src.paths import ProjectPaths
 from src.drive_sync import validate_drive_writable
@@ -77,8 +81,8 @@ def _mmdet_config_for_resolution(
         if key in cfg:
             _update_resize(cfg[key], resolution)
     try:
-        cfg.model.test_cfg.rcnn.score_thr = 0.001
-        cfg.model.test_cfg.rcnn.max_per_img = 500
+        cfg.model.test_cfg.rcnn.score_thr = DETECTION_SCORE_THRESHOLD
+        cfg.model.test_cfg.rcnn.max_per_img = MAX_DETECTIONS_PER_IMAGE
     except (AttributeError, KeyError, TypeError) as error:
         raise RuntimeError(
             "MMDetection final evaluation requires RCNN score_thr and "
@@ -197,8 +201,8 @@ def main() -> None:
         )
         for resolution in resolutions:
             model_config = dict(base_model_config)
-            model_config["confidence_threshold"] = 0.001
-            model_config["max_detections"] = 500
+            model_config["confidence_threshold"] = DETECTION_SCORE_THRESHOLD
+            model_config["max_detections"] = MAX_DETECTIONS_PER_IMAGE
             model_config["input_resolution"] = resolution
             if run["framework"] in {"mmdetection", "vmamba_mmdetection"}:
                 model_config["resolved_framework_config"] = str(

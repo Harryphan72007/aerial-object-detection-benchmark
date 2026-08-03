@@ -5,6 +5,6 @@ source_revision: 44ebd17b145c2372c4b700bfb9cb20dbd28ab64a
 source_license: Apache-2.0
 framework_config: configs/faster_rcnn/faster-rcnn_r50_fpn_1x_coco.py
 external_root_env: MMDET_ROOT
-pretrained: mmdet://faster-rcnn_r50_fpn_1x_coco
+pretrained: ImageNet ResNet-50 backbone initialization referenced by the MMDetection base config
 approx_gpu_vram_gb_1024_bs2: 12
 supports_amp: true

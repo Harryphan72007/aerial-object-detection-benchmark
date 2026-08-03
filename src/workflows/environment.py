@@ -8,10 +8,19 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from src.notebook_utils import in_colab
+from src.notebook_environment import (
+    default_model_runtime_root,
+    detect_notebook_platform,
+)
+from src.notebook_utils import in_colab, in_hosted_notebook
 from src.subprocess_utils import run_checked
 from src.workflows.contract import require_primary_model
-from src.workflows.isolated_environment import provision_isolated_environment
+from src.workflows.isolated_environment import (
+    _clone_pinned as _clone_framework_pinned,
+    _framework_checkout_path,
+    _runtime_framework_root,
+    provision_isolated_environment,
+)
 
 MMDET_REVISION = "44ebd17b145c2372c4b700bfb9cb20dbd28ab64a"
 VMAMBA_REVISION = "2ed52ead062a51a64521ed3871d52914bf532876"
@@ -39,12 +48,13 @@ def _run(command: list[str], *, cwd: Path | None = None) -> None:
 
 
 def _clone_pinned(url: str, destination: Path, revision: str) -> None:
-    if not destination.exists():
-        _run(["git", "clone", url, str(destination)])
-    if not (destination / ".git").is_dir():
-        raise RuntimeError(f"Refusing to use non-Git upstream directory: {destination}")
-    _run(["git", "-C", str(destination), "fetch", "--tags", "origin", revision])
-    _run(["git", "-C", str(destination), "checkout", "--detach", revision])
+    name = "MMDetection" if destination.parent.name == "mmdetection" else "VMamba"
+    _clone_framework_pinned(
+        {"name": name, "url": url, "revision": revision},
+        destination,
+        family="openmmlab" if name == "MMDetection" else "vmamba",
+        python=Path(sys.executable),
+    )
 
 
 def _require_gpu() -> dict[str, Any]:
@@ -54,7 +64,8 @@ def _require_gpu() -> dict[str, Any]:
         raise RuntimeError("PyTorch is not installed in this model runtime") from exc
     if not torch.cuda.is_available():
         raise RuntimeError(
-            "A CUDA GPU is required. In Colab choose Runtime > Change runtime type > GPU."
+            "A CUDA GPU is required. Enable a GPU accelerator in Colab, Kaggle, "
+            "or the local Jupyter host."
         )
     return {
         "torch": torch.__version__,
@@ -76,8 +87,17 @@ def ensure_model_environment(
     root = Path(drive_root).expanduser().resolve()
     changed = False
 
-    if in_colab():
-        runtime = provision_isolated_environment(model_id, repo, root)
+    if in_hosted_notebook():
+        runtime_base = os.environ.get(
+            "VISDRONE_MODEL_ENV_ROOT",
+            str(default_model_runtime_root(detect_notebook_platform())),
+        )
+        runtime = provision_isolated_environment(
+            model_id,
+            repo,
+            root,
+            runtime_base=runtime_base,
+        )
         result = {**runtime, "restart_required": False}
         if family == "rtdetr":
             result["checkpoint"] = RTDETR_CHECKPOINT
@@ -192,9 +212,21 @@ def ensure_model_environment(
         raise RuntimeError(
             "OpenMMLab package mismatch after setup: " + ", ".join(unresolved)
         )
-    mmdet_root = root / "frameworks" / "mmdetection"
+    local_runtime_base = Path(
+        os.environ.get(
+            "VISDRONE_MODEL_ENV_ROOT",
+            str(default_model_runtime_root("local")),
+        )
+    )
+    framework_root = _runtime_framework_root(local_runtime_base, platform="local")
+    mmdet_source = {
+        "name": "MMDetection",
+        "url": "https://github.com/open-mmlab/mmdetection.git",
+        "revision": MMDET_REVISION,
+    }
+    mmdet_root = _framework_checkout_path(framework_root, mmdet_source)
     _clone_pinned(
-        "https://github.com/open-mmlab/mmdetection.git",
+        str(mmdet_source["url"]),
         mmdet_root,
         MMDET_REVISION,
     )
@@ -208,9 +240,14 @@ def ensure_model_environment(
         **_require_gpu(),
     }
     if family == "vmamba":
-        vmamba_root = root / "frameworks" / "VMamba"
+        vmamba_source = {
+            "name": "VMamba",
+            "url": "https://github.com/MzeroMiko/VMamba.git",
+            "revision": VMAMBA_REVISION,
+        }
+        vmamba_root = _framework_checkout_path(framework_root, vmamba_source)
         _clone_pinned(
-            "https://github.com/MzeroMiko/VMamba.git",
+            str(vmamba_source["url"]),
             vmamba_root,
             VMAMBA_REVISION,
         )

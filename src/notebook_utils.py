@@ -21,6 +21,18 @@ def in_colab() -> bool:
         return False
 
 
+def in_kaggle() -> bool:
+    return bool(
+        os.environ.get("KAGGLE_KERNEL_RUN_TYPE")
+        or os.environ.get("KAGGLE_URL_BASE")
+        or Path("/kaggle/working").is_dir()
+    )
+
+
+def in_hosted_notebook() -> bool:
+    return in_colab() or in_kaggle()
+
+
 def find_repository_root(start: str | Path | None = None) -> Path:
     override = os.environ.get("BENCHMARK_REPO_ROOT")
     candidates: list[Path] = []
@@ -29,6 +41,7 @@ def find_repository_root(start: str | Path | None = None) -> Path:
     current = Path(start or Path.cwd()).resolve()
     candidates.extend([current, *current.parents])
     candidates.append(Path("/content/aerial-object-detection-benchmark"))
+    candidates.append(Path("/kaggle/working/aerial-object-detection-benchmark"))
     for candidate in candidates:
         if (candidate / "pyproject.toml").is_file() and (
             candidate / "src" / "__init__.py"
@@ -95,10 +108,13 @@ def require_gpu(runtime_name: str) -> None:
     try:
         import torch
     except ImportError as exc:
-        raise RuntimeError(f"{runtime_name} requires PyTorch and a Colab GPU runtime") from exc
+        raise RuntimeError(
+            f"{runtime_name} requires PyTorch and a CUDA notebook runtime"
+        ) from exc
     if not torch.cuda.is_available():
         raise RuntimeError(
-            f"{runtime_name} requires a CUDA GPU. In Colab choose Runtime > Change runtime type > GPU."
+            f"{runtime_name} requires a CUDA GPU. Enable a GPU accelerator in "
+            "Colab, Kaggle, or the local Jupyter host."
         )
 
 

@@ -11,3 +11,4 @@ pycocotools==2.0.10
 timm==0.9.16
 einops==0.8.1
 ninja==1.11.1.4
+psutil==7.0.0

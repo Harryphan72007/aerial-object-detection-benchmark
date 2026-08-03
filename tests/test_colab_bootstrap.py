@@ -59,7 +59,7 @@ def test_clone_branch_tag_commit_and_refuse_dirty_update(tmp_path: Path) -> None
         clone_or_checkout_repository(str(remote), clone, "main", "branch")
 
 
-def test_bootstrap_notebook_is_clean_and_never_starts_training() -> None:
+def test_bootstrap_notebook_is_cross_platform_clean_and_never_starts_training() -> None:
     notebook = nbformat.read(ROOT / "notebooks" / "00_bootstrap_colab.ipynb", as_version=4)
     nbformat.validate(notebook)
     code = "\n".join(cell.source for cell in notebook.cells if cell.cell_type == "code")
@@ -68,7 +68,8 @@ def test_bootstrap_notebook_is_clean_and_never_starts_training() -> None:
             assert cell.execution_count is None
             assert cell.outputs == []
     assert "checkout_repository_ref" in code
-    assert "drive.mount" in code
+    assert "setup_notebook_environment" in code
+    assert "IN_KAGGLE" in code
     assert "run_diagnostics" in code
     assert "trainer" not in code.lower()
     assert "START_EXPENSIVE_STAGE" not in code

@@ -42,7 +42,22 @@ def default_repository_root(platform: str, cwd: str | Path | None = None) -> Pat
         return Path("/content") / REPOSITORY_NAME
     if platform == "kaggle":
         return Path("/kaggle/working") / REPOSITORY_NAME
-    return Path(cwd or Path.cwd()).expanduser().resolve()
+    current = Path(cwd or Path.cwd()).expanduser().resolve()
+    if (current / "pyproject.toml").is_file() and (current / "src").is_dir():
+        return current
+    return current / REPOSITORY_NAME
+
+
+def is_git_worktree(path: str | Path) -> bool:
+    """Recognize normal clones and linked worktrees without assuming `.git` is a dir."""
+    candidate = Path(path).expanduser().resolve()
+    result = subprocess.run(
+        ["git", "-C", str(candidate), "rev-parse", "--is-inside-work-tree"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0 and result.stdout.strip().lower() == "true"
 
 
 def default_artifact_root(
@@ -138,6 +153,7 @@ def _install_shared_dependencies(
             "-e",
             str(repository_root),
             "--no-deps",
+            "--no-build-isolation",
         ],
         check=True,
     )
@@ -209,7 +225,7 @@ def setup_notebook_environment(
     values["VISDRONE_NOTEBOOK_PLATFORM"] = selected_platform
 
     should_install = (
-        selected_platform in {"colab", "kaggle"}
+        selected_platform in {"colab", "kaggle"} or requirements_file is not None
         if install_dependencies is None
         else install_dependencies
     )

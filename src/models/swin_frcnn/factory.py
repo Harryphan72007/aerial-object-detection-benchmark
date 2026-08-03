@@ -30,8 +30,10 @@ def configure_swin_frcnn(config: Any, *, image_size: int, num_classes: int) -> A
         raise ValueError("image_size and num_classes must be positive")
     model = config["model"]
     model["type"] = "FasterRCNN"
-    backbone = model["backbone"]
-    backbone["img_size"] = image_size
+    # Detection resolution is controlled by the MMDetection input pipeline.
+    # The pinned SwinTransformer constructor accepts ``pretrain_img_size`` but
+    # not ``img_size``; injecting the latter prevents real registry construction.
+    model.get("backbone", {}).pop("img_size", None)
     roi_head = model.get("roi_head", {})
     roi_head.pop("mask_roi_extractor", None)
     roi_head.pop("mask_head", None)

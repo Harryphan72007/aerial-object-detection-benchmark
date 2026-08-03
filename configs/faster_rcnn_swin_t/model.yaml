@@ -6,6 +6,6 @@ source_license: Apache-2.0
 framework_config: configs/swin/mask-rcnn_swin-t-p4-w7_fpn_1x_coco.py
 external_root_env: MMDET_ROOT
 strip_mask_branch: true
-pretrained: official MMDetection/Swin initialization referenced by base config
+pretrained: ImageNet Swin-T backbone initialization referenced by the MMDetection base config; detector heads start fresh
 approx_gpu_vram_gb_1024_bs2: 16
 supports_amp: true

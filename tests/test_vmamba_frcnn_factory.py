@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -63,17 +64,18 @@ def test_clean_process_registration(tmp_path: Path) -> None:
         text=True,
         capture_output=True,
         check=True,
+        env={key: value for key, value in os.environ.items() if key != "PYTHONPATH"},
     )
     assert json.loads(completed.stdout) == {"name": "model", "registered": "MM_VSSM"}
 
 
 def test_backend_report_prefers_approved_optimized_extension() -> None:
     report = detect_selective_scan_backend(
-        lambda name: object() if name == "selective_scan_cuda" else None
+        lambda name: object() if name == "selective_scan_cuda_oflex" else None
     )
     assert report == {
-        "module": "selective_scan_cuda",
-        "kind": "optimized_cuda",
+        "module": "selective_scan_cuda_oflex",
+        "kind": "optimized_cuda_oflex",
         "optimized": True,
         "approved": True,
     }
@@ -99,7 +101,7 @@ def test_factory_enforces_revision_registration_backend_and_pretraining(
     result = VMambaFRCNNFactory(ROOT).build(
         num_classes=2,
         revision_reader=lambda _: REVISION,
-        backend_finder=lambda name: object() if name == "selective_scan_cuda" else None,
+        backend_finder=lambda name: object() if name == "selective_scan_cuda_oflex" else None,
         config_loader=lambda _: _config(),
         model_builder=lambda config, checkpoint, device: {
             "config": config,

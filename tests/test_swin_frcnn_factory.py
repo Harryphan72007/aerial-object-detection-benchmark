@@ -47,7 +47,7 @@ def _config() -> dict:
 @pytest.mark.parametrize("image_size", [128, 640])
 def test_dynamic_size_and_every_fpn_input_contract(image_size: int) -> None:
     config = configure_swin_frcnn(copy.deepcopy(_config()), image_size=image_size, num_classes=2)
-    assert config["model"]["backbone"]["img_size"] == image_size
+    assert "img_size" not in config["model"]["backbone"]
     assert config["model"]["type"] == "FasterRCNN"
     assert config["model"]["roi_head"]["bbox_head"]["num_classes"] == 2
     assert "mask_head" not in config["model"]["roi_head"]
@@ -91,6 +91,6 @@ def test_factory_passes_configured_object_to_public_builder(
         config_loader=lambda _: copy.deepcopy(_config()),
         model_builder=builder,
     )
-    assert model["config"]["model"]["backbone"]["img_size"] == 640
+    assert "img_size" not in model["config"]["model"]["backbone"]
     assert model["device"] == "cpu"
     assert SWIN_FACTORY_MODEL_ID == "faster_rcnn_swin_t"

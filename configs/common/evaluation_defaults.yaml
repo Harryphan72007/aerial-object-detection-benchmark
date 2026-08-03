@@ -1,4 +1,6 @@
 confidence_threshold: 0.001
+score_thr: 0.001
+max_per_img: 500
 matching_iou_threshold: 0.5
 resolutions: [640, 1024, 1280]
 warmup_iterations: 100

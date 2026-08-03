@@ -8,13 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from src.drive_sync import (
-    initialize_drive_directories as _initialize_drive_directories,
-    validate_drive_writable as _validate_drive_writable,
-)
 from src.git_utils import DirtyRepositoryError, ensure_clean_for_update
-from src.paths import ProjectPaths
-from src.utils.serialization import read_yaml
 
 
 def mount_drive() -> None:
@@ -28,6 +22,8 @@ def mount_drive() -> None:
 
 def load_project_config(config_path: str | Path) -> dict[str, Any]:
     """Load the YAML configuration used by notebooks and scripts."""
+    from src.utils.serialization import read_yaml
+
     return read_yaml(config_path)
 
 
@@ -144,14 +140,18 @@ def install_project(repository_path: str | Path) -> None:
     subprocess.run([sys.executable, "-m", "pip", "install", "-e", str(repository_path)], check=True)
 
 
-def initialize_drive_directories(drive_root: str | Path) -> ProjectPaths:
+def initialize_drive_directories(drive_root: str | Path) -> Any:
     """Create and return the canonical persistent Google Drive layout."""
-    return _initialize_drive_directories(drive_root)
+    from src.drive_sync import initialize_drive_directories as _initialize
+
+    return _initialize(drive_root)
 
 
 def validate_drive_writable(drive_root: str | Path) -> None:
     """Raise before training when the configured Drive root cannot be written."""
-    _validate_drive_writable(drive_root)
+    from src.drive_sync import validate_drive_writable as _validate
+
+    _validate(drive_root)
 
 
 def print_environment_summary() -> None:

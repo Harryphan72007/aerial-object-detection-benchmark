@@ -7,17 +7,25 @@ import os
 from pathlib import Path
 from typing import Any
 
-from src.hpo.workflow import HPO_PROTOCOL_ID, _cleanup_accelerator_memory
+from src.evaluation.policy import detection_policy
+from src.hpo.workflow import (
+    HPO_PROTOCOL_ID,
+    OBJECTIVE_CONTRACT_VERSION,
+    _cleanup_accelerator_memory,
+    source_tree_fingerprint,
+)
 from src.hpo.rtdetr_v2 import RTDETR_HPO_PROTOCOL_ID
 from src.models.registry import load_model_config
 from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
+from src.reproducibility import git_commit
 from src.training.checkpointing import enforce_completed_checkpoint_policy, make_run_id
 from src.training.trainer import TrainingOrchestrator
 from src.utils.serialization import read_json, read_yaml, sha256_file, write_json
+from src.workflows.adapter_gate import adapter_fingerprint
 
 FINAL_SEEDS = (17, 42, 3407)
-FINAL_EPOCHS = 8
+FINAL_TRAIN_EPOCHS = 8
 IMAGE_SIZE = 640
 EFFECTIVE_BATCH_SIZE = 8
 
@@ -101,6 +109,13 @@ class FinalExperimentWorkflow:
         }
         if changed:
             raise ValueError(f"incompatible best HPO configuration: {changed}")
+        if self.model_id != "rtdetrv2_l":
+            contract_version = selected.get("objective_contract_version")
+            if contract_version != OBJECTIVE_CONTRACT_VERSION:
+                raise ValueError(
+                    "best HPO configuration predates the repaired objective "
+                    f"contract ({contract_version!r}); archive it and rerun HPO"
+                )
         self.selected_protocol_id = expected_protocol
         parameters = selected.get("parameters")
         if not isinstance(parameters, dict) or not parameters:
@@ -123,13 +138,13 @@ class FinalExperimentWorkflow:
                 f"effective batch size must be {EFFECTIVE_BATCH_SIZE}, got "
                 f"{effective}"
             )
-        final_epochs = 25 if self.model_id == "rtdetrv2_l" else FINAL_EPOCHS
+        final_epochs = 25 if self.model_id == "rtdetrv2_l" else FINAL_TRAIN_EPOCHS
         scheduler_horizon = final_epochs
         if self.model_id == "rtdetrv2_l":
             scheduler_horizon = int(
                 checked_in_recipe(self.repo_root)["scheduler_horizon_epochs"]
             )
-        return {
+        contract = {
             "model_id": self.model_id,
             "dataset_track": self.dataset_track,
             "protocol_id": self.selected_protocol_id,
@@ -144,6 +159,37 @@ class FinalExperimentWorkflow:
             "baseline_or_tuned": recipe,
             "restart_from_original_pretrained": True,
         }
+        if self.model_id != "rtdetrv2_l":
+            annotation_root = self.paths.coco(self.dataset_track) / "annotations"
+            annotation_paths = {
+                "train": annotation_root / "instances_train.json",
+                "validation": annotation_root / "instances_val.json",
+            }
+            missing = [str(path) for path in annotation_paths.values() if not path.is_file()]
+            if missing:
+                raise FileNotFoundError(
+                    "final-run contract cannot hash missing annotations: "
+                    + ", ".join(missing)
+                )
+            contract.update(
+                {
+                    "objective_contract_version": OBJECTIVE_CONTRACT_VERSION,
+                    "source_commit": git_commit(self.repo_root),
+                    "source_tree_fingerprint": source_tree_fingerprint(
+                        self.repo_root
+                    ),
+                    "environment_fingerprint": adapter_fingerprint(
+                        self.model_id, self.repo_root
+                    ),
+                    "dataset_hashes": {
+                        name: sha256_file(path)
+                        for name, path in annotation_paths.items()
+                    },
+                    "best_config_sha256": sha256_file(self.best_config_path),
+                    "evaluation_policy": detection_policy(),
+                }
+            )
+        return contract
 
     def _resumable(
         self, contract: dict[str, Any]
@@ -222,7 +268,9 @@ class FinalExperimentWorkflow:
         annotation_root = self.paths.coco(self.dataset_track) / "annotations"
         for recipe, parameters in (("baseline", {}), ("tuned", tuned)):
             applied_parameters = dict(parameters)
-            final_epochs = 25 if self.model_id == "rtdetrv2_l" else FINAL_EPOCHS
+            final_epochs = (
+                25 if self.model_id == "rtdetrv2_l" else FINAL_TRAIN_EPOCHS
+            )
             scheduler_horizon = final_epochs
             if self.model_id == "rtdetrv2_l":
                 static_recipe = checked_in_recipe(self.repo_root)

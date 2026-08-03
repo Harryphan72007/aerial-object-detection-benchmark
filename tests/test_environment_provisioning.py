@@ -87,7 +87,7 @@ def test_checked_subprocess_failure_contains_complete_child_output(
             ["fake-python", "-m", "fake.verifier"],
             1,
             stdout="package probe output\n",
-            stderr="selective_scan_cuda: undefined symbol\n",
+            stderr="selective_scan_cuda_oflex: undefined symbol\n",
         )
 
     probe = tmp_path / "environment_probe.json"
@@ -106,7 +106,7 @@ def test_checked_subprocess_failure_contains_complete_child_output(
     assert str(tmp_path.resolve()) in message
     assert "Return code: 1" in message
     assert "package probe output" in message
-    assert "selective_scan_cuda: undefined symbol" in message
+    assert "selective_scan_cuda_oflex: undefined symbol" in message
     assert "vmamba_complete_probe" in message
     assert str(probe) in message
 
@@ -391,8 +391,8 @@ def test_missing_selective_scan_is_actionable_and_writes_probe(
         "verify",
         lambda _args: (_ for _ in ()).throw(
             verifier.ProbeFailure(
-                "selective_scan_cuda_import",
-                "could not import selective_scan_cuda: undefined symbol",
+                "selective_scan_cuda_oflex_import",
+                "could not import selective_scan_cuda_oflex: undefined symbol",
             )
         ),
     )
@@ -409,13 +409,13 @@ def test_missing_selective_scan_is_actionable_and_writes_probe(
     )
     captured = capsys.readouterr()
     assert returncode == 1
-    assert "selective_scan_cuda_import" in captured.err
-    assert read_json(output)["stage"] == "selective_scan_cuda_import"
+    assert "selective_scan_cuda_oflex_import" in captured.err
+    assert read_json(output)["stage"] == "selective_scan_cuda_oflex_import"
 
 
 def test_parent_runtime_uses_exact_child_probe_stage(tmp_path: Path) -> None:
     probe = tmp_path / "environment_probe.json"
-    write_json(probe, {"status": "FAILED", "stage": "selective_scan_cuda_import"})
+    write_json(probe, {"status": "FAILED", "stage": "selective_scan_cuda_oflex_import"})
     error = CheckedSubprocessError(
         ["python", "-m", "scripts.verify_model_environments"],
         cwd=ROOT,
@@ -424,7 +424,7 @@ def test_parent_runtime_uses_exact_child_probe_stage(tmp_path: Path) -> None:
         stderr="child failed",
         stage="vmamba_complete_probe",
     )
-    assert isolated._failed_stage(error, probe) == "selective_scan_cuda_import"
+    assert isolated._failed_stage(error, probe) == "selective_scan_cuda_oflex_import"
 
 
 def test_missing_vmamba_pretrained_fails_before_hpo(

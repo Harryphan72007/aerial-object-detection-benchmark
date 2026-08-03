@@ -6,8 +6,10 @@ import hashlib
 import importlib.metadata
 import json
 import os
+import re
 import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 import time
@@ -809,6 +811,92 @@ def _family_paths(
     return values
 
 
+def _preflight_vmamba_toolchain(python: Path) -> dict[str, str]:
+    """Reject host toolchains that cannot compile the pinned Torch CUDA extension."""
+
+    torch_probe = subprocess.run(
+        [str(python), "-c", "import torch; print(torch.version.cuda or '')"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if torch_probe.returncode:
+        raise EnvironmentProvisioningError(
+            "VMamba CUDA preflight could not import Torch in the isolated runtime: "
+            + (torch_probe.stderr.strip() or "unknown error")
+        )
+    torch_cuda = torch_probe.stdout.strip()
+    cuda_home = os.environ.get("CUDA_HOME") or os.environ.get("CUDA_PATH")
+    nvcc = (
+        Path(cuda_home) / "bin" / ("nvcc.exe" if os.name == "nt" else "nvcc")
+        if cuda_home
+        else Path(shutil.which("nvcc") or "")
+    )
+    if not str(nvcc) or not nvcc.is_file():
+        raise EnvironmentProvisioningError(
+            "VMamba requires a host CUDA compiler; CUDA_HOME/nvcc was not found"
+        )
+    nvcc_probe = subprocess.run(
+        [str(nvcc), "--version"], check=False, capture_output=True, text=True
+    )
+    nvcc_output = f"{nvcc_probe.stdout}\n{nvcc_probe.stderr}"
+    match = re.search(r"release\s+(\d+)\.(\d+)", nvcc_output)
+    if nvcc_probe.returncode or match is None:
+        raise EnvironmentProvisioningError(
+            "VMamba could not determine the host CUDA version from nvcc --version"
+        )
+    host_cuda = f"{match.group(1)}.{match.group(2)}"
+    if torch_cuda and host_cuda.split(".", 1)[0] != torch_cuda.split(".", 1)[0]:
+        raise EnvironmentProvisioningError(
+            "VMamba CUDA major-version mismatch: "
+            f"Torch was built for CUDA {torch_cuda}, but nvcc is CUDA {host_cuda}. "
+            "Install a matching toolkit or use a verified prebuilt extension."
+        )
+    compiler = (shutil.which("cl") or "") if os.name == "nt" else (shutil.which("g++") or "")
+    compiler_version = "unknown"
+    if os.name == "nt":
+        if not compiler:
+            raise EnvironmentProvisioningError(
+                "VMamba requires the MSVC cl compiler in PATH"
+            )
+        compiler_probe = subprocess.run(
+            [compiler], check=False, capture_output=True, text=True
+        )
+        compiler_output = f"{compiler_probe.stdout}\n{compiler_probe.stderr}"
+        compiler_match = re.search(r"Version\s+([0-9.]+)", compiler_output)
+        if compiler_match is None:
+            raise EnvironmentProvisioningError(
+                "VMamba could not determine the MSVC compiler version"
+            )
+        compiler_version = compiler_match.group(1)
+    else:
+        if not compiler:
+            raise EnvironmentProvisioningError(
+                "VMamba requires g++ to compile selective_scan_cuda_oflex"
+            )
+        compiler_probe = subprocess.run(
+            [compiler, "-dumpfullversion", "-dumpversion"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        compiler_version = compiler_probe.stdout.strip()
+        if compiler_probe.returncode or not compiler_version:
+            raise EnvironmentProvisioningError("VMamba could not determine the g++ version")
+        if host_cuda.startswith("11.8") and int(compiler_version.split(".", 1)[0]) > 11:
+            raise EnvironmentProvisioningError(
+                "CUDA 11.8 requires a supported host compiler; use GCC/G++ 11 or older "
+                f"instead of {compiler_version}"
+            )
+    return {
+        "torch_cuda": torch_cuda,
+        "nvcc": str(nvcc),
+        "host_cuda": host_cuda,
+        "compiler": str(compiler),
+        "compiler_version": compiler_version,
+    }
+
+
 def _prepare_family(
     repo: Path,
     drive: Path,
@@ -853,6 +941,7 @@ def _prepare_family(
                 "is intentionally disabled."
             )
         if install_kernel:
+            _preflight_vmamba_toolchain(python)
             extension_source = paths["vmamba_root"] / "kernels" / "selective_scan"
             build_source = (
                 _environment_root_for_python(python)

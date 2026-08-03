@@ -9,20 +9,11 @@
           "line": 5,
           "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = \"/content/drive/MyDrive/visdrone_architecture_benchmark\""
+          "source": "DRIVE_ROOT = \"\"  # Empty selects Drive, Kaggle working, or local artifacts."
         },
         {
           "cell": 3,
-          "line": 2,
-          "literals": [
-            "requirements/legacy-colab.txt"
-          ],
-          "operations": [],
-          "source": "subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", \"-r\", str(repository / \"requirements/legacy-colab.txt\")], check=True)"
-        },
-        {
-          "cell": 3,
-          "line": 6,
+          "line": 3,
           "literals": [],
           "operations": [],
           "source": "from scripts.diagnostics.run_diagnostics import build_report"
@@ -32,25 +23,48 @@
           "line": 8,
           "literals": [],
           "operations": [],
-          "source": "paths = initialize_drive_directories(DRIVE_ROOT)"
+          "source": "artifact_root=DRIVE_ROOT or None,"
         },
         {
           "cell": 3,
           "line": 10,
+          "literals": [
+            "requirements/legacy-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file=\"requirements/legacy-colab.txt\","
+        },
+        {
+          "cell": 3,
+          "line": 13,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 3,
+          "line": 14,
+          "literals": [],
+          "operations": [],
+          "source": "paths = initialize_drive_directories(DRIVE_ROOT)"
+        },
+        {
+          "cell": 3,
+          "line": 16,
           "literals": [],
           "operations": [],
           "source": "report = build_report(repository)"
         },
         {
           "cell": 3,
-          "line": 11,
+          "line": 18,
           "literals": [],
           "operations": [],
           "source": "print(report)"
         },
         {
           "cell": 3,
-          "line": 12,
+          "line": 19,
           "literals": [],
           "operations": [],
           "source": "if report[\"repository\"][\"dirty\"]:"
@@ -58,17 +72,18 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "os",
         "pathlib",
         "scripts.diagnostics.run_diagnostics",
         "src.colab_setup",
+        "src.notebook_environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/00_bootstrap_colab.ipynb",
-      "sha256": "fcfe1f79485b1052c08695b265b588381ff8b3879ceba959106bebf42f79675e"
+      "sha256": "0ef9666c39ebba782b60b8ee874971a768687af62b4f0ff732b3442ffc7dbb47"
     },
     {
       "artifact_references": [
@@ -81,47 +96,19 @@
         },
         {
           "cell": 2,
-          "line": 27,
+          "line": 68,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
           "operations": [],
-          "source": "[sys.executable, \"-m\", \"pip\", \"install\", \"-r\", str(REPO_PATH / \"requirements-dataset-colab.txt\")],"
+          "source": "requirements_file='requirements-dataset-colab.txt',"
         },
         {
           "cell": 2,
-          "line": 33,
-          "literals": [
-            "dataset"
-          ],
-          "operations": [],
-          "source": "DRIVE_ROOT = REPO_PATH / \".notebook-smoke\" / \"dataset\""
-        },
-        {
-          "cell": 2,
-          "line": 35,
+          "line": 72,
           "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = ("
-        },
-        {
-          "cell": 2,
-          "line": 38,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT",
-            "local_artifacts"
-          ],
-          "operations": [],
-          "source": "else Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", REPO_PATH / \"local_artifacts\"))"
-        },
-        {
-          "cell": 2,
-          "line": 42,
-          "literals": [
-            "Persistent root: {DRIVE_ROOT}"
-          ],
-          "operations": [],
-          "source": "print(f\"Persistent root: {DRIVE_ROOT}\")"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -225,7 +212,6 @@
       ],
       "code_cell_count": 5,
       "imports": [
-        "google.colab",
         "importlib.util",
         "json",
         "matplotlib.patches",
@@ -236,6 +222,7 @@
         "src.data.dataset",
         "src.data.download",
         "src.data.smoke_dataset",
+        "src.notebook_environment",
         "src.workflows.dataset_setup",
         "subprocess",
         "sys",
@@ -243,35 +230,25 @@
       ],
       "nbformat": 4,
       "path": "notebooks/00_prepare_visdrone.ipynb",
-      "sha256": "c9026288b6415be3f2ea63c6628f89093130b83d2840afe042157c3e7aa56bd0"
+      "sha256": "5d44e5d85c8e417fa9eb4f4d0f4db438bc7b16e3ad4a7e8e6bd0382a1d088471"
     },
     {
       "artifact_references": [
         {
           "cell": 2,
-          "line": 27,
+          "line": 68,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
           "operations": [],
-          "source": "[sys.executable, \"-m\", \"pip\", \"install\", \"-r\", str(REPO_PATH / \"requirements-dataset-colab.txt\")],"
+          "source": "requirements_file='requirements-dataset-colab.txt',"
         },
         {
           "cell": 2,
-          "line": 31,
+          "line": 72,
           "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = ("
-        },
-        {
-          "cell": 2,
-          "line": 34,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT",
-            "local_artifacts"
-          ],
-          "operations": [],
-          "source": "else Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", REPO_PATH / \"local_artifacts\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -457,7 +434,6 @@
       ],
       "code_cell_count": 5,
       "imports": [
-        "google.colab",
         "importlib.util",
         "json",
         "os",
@@ -470,6 +446,7 @@
         "src.models.rtdetrv2.factory",
         "src.models.swin_frcnn.factory",
         "src.models.vmamba_frcnn.factory",
+        "src.notebook_environment",
         "src.pathing.resolver",
         "src.workflows.model_day",
         "src.workflows.notebook_entrypoints",
@@ -478,7 +455,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "194a8661e37ec5906edc02ceea31480bb9425d704bd9a7d53b8039d3f1dd20d9"
+      "sha256": "0bcc1944e5b0a13204cbd96607df587fb4b2b76daea1534488b1ff5ee26c7066"
     },
     {
       "artifact_references": [
@@ -493,20 +470,10 @@
         },
         {
           "cell": 2,
-          "line": 24,
+          "line": 72,
           "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = ("
-        },
-        {
-          "cell": 2,
-          "line": 27,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT",
-            "local_artifacts"
-          ],
-          "operations": [],
-          "source": "else Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", REPO_PATH / \"local_artifacts\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -608,38 +575,28 @@
       ],
       "code_cell_count": 4,
       "imports": [
-        "google.colab",
         "importlib.util",
         "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
+        "src.notebook_environment",
         "src.workflows.publishing",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/02_publish_results.ipynb",
-      "sha256": "2b2b7e9dea0436893590fc1766bf22ab11b8715c1049a13539ff4ca767178014"
+      "sha256": "a4ed5fd9bb212f33a3887ef2f3478aa6a06ca9a979b8b336c67d3ea8f1c36209"
     },
     {
       "artifact_references": [
         {
           "cell": 2,
-          "line": 24,
+          "line": 72,
           "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = ("
-        },
-        {
-          "cell": 2,
-          "line": 27,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT",
-            "local_artifacts"
-          ],
-          "operations": [],
-          "source": "else Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", REPO_PATH / \"local_artifacts\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -693,12 +650,12 @@
       "code_cell_count": 4,
       "imports": [
         "IPython.display",
-        "google.colab",
         "importlib.util",
         "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
+        "src.notebook_environment",
         "src.workflows.comparison",
         "src.workflows.versioned_comparison",
         "subprocess",
@@ -706,13 +663,20 @@
       ],
       "nbformat": 4,
       "path": "notebooks/03_compare_all_models.ipynb",
-      "sha256": "636cc17fcd5dcb4a23420c694505a012bfd56c1c36ee58e1a2d04048b6730f04"
+      "sha256": "c105f2923051cf397fc2fb943c45a709f822228e5b00c79b1de55351c516009f"
     },
     {
       "artifact_references": [
         {
           "cell": 2,
-          "line": 2,
+          "line": 72,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 2,
+          "line": 75,
           "literals": [],
           "operations": [
             "read"
@@ -721,7 +685,7 @@
         },
         {
           "cell": 2,
-          "line": 4,
+          "line": 76,
           "literals": [
             "tiling_v1.yaml"
           ],
@@ -732,7 +696,7 @@
         },
         {
           "cell": 2,
-          "line": 5,
+          "line": 77,
           "literals": [
             "sliced_inference_v1.yaml"
           ],
@@ -743,14 +707,14 @@
         },
         {
           "cell": 2,
-          "line": 6,
+          "line": 78,
           "literals": [],
           "operations": [],
           "source": "result = {\"preview\": not START_TILING, \"tile_version\": TILE_VERSION, \"config\": config, \"sliced_inference\": sliced_config}"
         },
         {
           "cell": 2,
-          "line": 7,
+          "line": 79,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -758,12 +722,18 @@
       ],
       "code_cell_count": 2,
       "imports": [
+        "importlib.util",
+        "json",
+        "os",
         "pathlib",
-        "src.utils.serialization"
+        "src.notebook_environment",
+        "src.utils.serialization",
+        "subprocess",
+        "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/07_performance_tiling.ipynb",
-      "sha256": "3b884aa8dfbccb69f0cd1aba5541e0d2072ee3935ca7c6423a1a6609c2da97dc"
+      "sha256": "ca3dcf5189db777794d3b4f267e1121bd3e7a1c27c9eec45e2cda4650a31bc21"
     },
     {
       "artifact_references": [
@@ -776,21 +746,19 @@
         },
         {
           "cell": 2,
-          "line": 18,
+          "line": 68,
           "literals": [
             "requirements-hpo-colab.txt"
           ],
           "operations": [],
-          "source": "subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", \"-r\", str(REPO_PATH / \"requirements-hpo-colab.txt\")], check=True)"
+          "source": "requirements_file='requirements-hpo-colab.txt',"
         },
         {
           "cell": 2,
-          "line": 23,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT"
-          ],
+          "line": 72,
+          "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -825,18 +793,19 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.hpo.workflow",
+        "src.notebook_environment",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/10_hpo_resnet50.ipynb",
-      "sha256": "e8165c8208cdbd2657c8743a33f9f5f67769e4060988d31f4b818bcd78b6093d"
+      "sha256": "0b971a60c0e1c657c4ea84881277d7358112c6ece10b81eb49a227e273fdb3ac"
     },
     {
       "artifact_references": [
@@ -849,21 +818,19 @@
         },
         {
           "cell": 2,
-          "line": 18,
+          "line": 68,
           "literals": [
             "requirements-hpo-colab.txt"
           ],
           "operations": [],
-          "source": "subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", \"-r\", str(REPO_PATH / \"requirements-hpo-colab.txt\")], check=True)"
+          "source": "requirements_file='requirements-hpo-colab.txt',"
         },
         {
           "cell": 2,
-          "line": 23,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT"
-          ],
+          "line": 72,
+          "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -898,18 +865,19 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.hpo.workflow",
+        "src.notebook_environment",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/11_hpo_swin_t.ipynb",
-      "sha256": "5349cf1516eb61d08c70bbaf2093dcdeb3fd9410b91625e598b41e7475ee3259"
+      "sha256": "b39c67c2336cf47f3bfdfcf70aac1d47bb7647f4bb935f61e9f98aab360c9935"
     },
     {
       "artifact_references": [
@@ -922,21 +890,19 @@
         },
         {
           "cell": 2,
-          "line": 18,
+          "line": 68,
           "literals": [
             "requirements-hpo-colab.txt"
           ],
           "operations": [],
-          "source": "subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", \"-r\", str(REPO_PATH / \"requirements-hpo-colab.txt\")], check=True)"
+          "source": "requirements_file='requirements-hpo-colab.txt',"
         },
         {
           "cell": 2,
-          "line": 23,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT"
-          ],
+          "line": 72,
+          "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -971,18 +937,19 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.hpo.workflow",
+        "src.notebook_environment",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/12_hpo_vmamba_t.ipynb",
-      "sha256": "fbc10f9c5304a940d774e744d03b213b4567c3cceadb62156c5378f4e6ed28d9"
+      "sha256": "61ec2f4a385b6433a3f763f6d7ff6a7b5bc17184b1c609be25ab66682ed0878a"
     },
     {
       "artifact_references": [
@@ -995,21 +962,19 @@
         },
         {
           "cell": 2,
-          "line": 18,
+          "line": 69,
           "literals": [
             "requirements-hpo-colab.txt"
           ],
           "operations": [],
-          "source": "subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", \"-r\", str(REPO_PATH / \"requirements-hpo-colab.txt\")], check=True)"
+          "source": "requirements_file='requirements-hpo-colab.txt',"
         },
         {
           "cell": 2,
-          "line": 23,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT"
-          ],
+          "line": 73,
+          "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -1044,18 +1009,19 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.hpo.rtdetr_v2",
+        "src.notebook_environment",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "fb0ac7bd294ccf822598eb1f8effe9055fe858195912204a52d61186d670c55e"
+      "sha256": "c1ef73970fe0410d522efe24de3ddb860d292a4fbae6e3106df8fd6a96601990"
     },
     {
       "artifact_references": [
@@ -1068,12 +1034,19 @@
         },
         {
           "cell": 2,
-          "line": 18,
+          "line": 68,
           "literals": [
-            "VISDRONE_DRIVE_ROOT"
+            "requirements-dataset-colab.txt"
           ],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "requirements_file=\"requirements-dataset-colab.txt\","
+        },
+        {
+          "cell": 2,
+          "line": 72,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -1106,18 +1079,19 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.hpo.final_workflow",
+        "src.notebook_environment",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/20_finetune_resnet50.ipynb",
-      "sha256": "a264c0e15f6ba4588236889916d7e6e3e684ff55278bbb0d6e073a9088d0c253"
+      "sha256": "578d6aa281f158e2c9673b749f2cf4d8525b3f6b246ef741e4b7edee80a37bf7"
     },
     {
       "artifact_references": [
@@ -1130,12 +1104,19 @@
         },
         {
           "cell": 2,
-          "line": 18,
+          "line": 68,
           "literals": [
-            "VISDRONE_DRIVE_ROOT"
+            "requirements-dataset-colab.txt"
           ],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "requirements_file=\"requirements-dataset-colab.txt\","
+        },
+        {
+          "cell": 2,
+          "line": 72,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -1168,19 +1149,20 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.hpo.final_workflow",
         "src.models.swin_frcnn.trainer",
+        "src.notebook_environment",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "30bf4b390555eab62b431e8f123c19e42667a63505d8ef177889c8231e857bf5"
+      "sha256": "4db46cc62fa1ccf812524df938a557628a7421634846a387f71e718e28fbbb67"
     },
     {
       "artifact_references": [
@@ -1193,12 +1175,19 @@
         },
         {
           "cell": 2,
-          "line": 18,
+          "line": 68,
           "literals": [
-            "VISDRONE_DRIVE_ROOT"
+            "requirements-dataset-colab.txt"
           ],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "requirements_file=\"requirements-dataset-colab.txt\","
+        },
+        {
+          "cell": 2,
+          "line": 72,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -1231,19 +1220,20 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.hpo.final_workflow",
         "src.models.vmamba_frcnn.trainer",
+        "src.notebook_environment",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "dd7b43ca41c544417d1791a8d8f7de7b259e8114a95a6c6d520a9bf9e1b23f48"
+      "sha256": "944437b27f728beb3bdb248e9b308fc59d92f0139476438af4d0be1f30bfec89"
     },
     {
       "artifact_references": [
@@ -1256,12 +1246,10 @@
         },
         {
           "cell": 2,
-          "line": 18,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT"
-          ],
+          "line": 73,
+          "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
@@ -1294,19 +1282,20 @@
       ],
       "code_cell_count": 3,
       "imports": [
-        "google.colab",
         "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.hpo.final_workflow",
         "src.models.rtdetrv2.trainer",
+        "src.notebook_environment",
         "src.workflows.environment",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "f357354b981b54e1adfb5a040cb3236bc93c0001444e7b76c33fff472d8aae01"
+      "sha256": "97f391e7fc39ae72059e3d9e35365b09347c491e13bd5f7cef88d7fe2c8be46b"
     },
     {
       "artifact_references": [
@@ -1319,23 +1308,21 @@
         },
         {
           "cell": 2,
-          "line": 5,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT"
-          ],
+          "line": 72,
+          "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 2,
-          "line": 9,
+          "line": 78,
           "literals": [],
           "operations": [],
           "source": "from src.evaluation.versioned import evaluate_prediction_artifact"
         },
         {
           "cell": 2,
-          "line": 12,
+          "line": 81,
           "literals": [
             "Legacy evaluator accepts controlled artifacts only"
           ],
@@ -1344,7 +1331,7 @@
         },
         {
           "cell": 2,
-          "line": 14,
+          "line": 83,
           "literals": [
             "dataset_track"
           ],
@@ -1353,7 +1340,7 @@
         },
         {
           "cell": 2,
-          "line": 16,
+          "line": 85,
           "literals": [
             "--dataset-track"
           ],
@@ -1362,7 +1349,7 @@
         },
         {
           "cell": 2,
-          "line": 20,
+          "line": 89,
           "literals": [
             "comparison.json",
             "report",
@@ -1373,7 +1360,7 @@
         },
         {
           "cell": 2,
-          "line": 21,
+          "line": 90,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1381,16 +1368,20 @@
       ],
       "code_cell_count": 2,
       "imports": [
+        "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
         "src.evaluation.versioned",
+        "src.notebook_environment",
         "src.subprocess_utils",
+        "subprocess",
         "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "c26e89464f4354d2d126e6ce4eea05b3d69ea26ad21352c71bc5dea41e1d01b0"
+      "sha256": "6dce20f39e8c4c5d3d7ab6977ca0e91cf1bc95c0c2b6fdf0b2da7ee309e99ed3"
     },
     {
       "artifact_references": [
@@ -1412,16 +1403,14 @@
         },
         {
           "cell": 2,
-          "line": 5,
-          "literals": [
-            "VISDRONE_DRIVE_ROOT"
-          ],
+          "line": 72,
+          "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = Path(os.environ.get(\"VISDRONE_DRIVE_ROOT\", \"/content/drive/MyDrive/visdrone_architecture_benchmark\"))"
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 2,
-          "line": 9,
+          "line": 78,
           "literals": [
             "Legacy publisher accepts controlled artifacts only"
           ],
@@ -1430,14 +1419,14 @@
         },
         {
           "cell": 2,
-          "line": 11,
+          "line": 80,
           "literals": [],
           "operations": [],
           "source": "result = {\"status\": \"guarded\", \"published\": False}"
         },
         {
           "cell": 2,
-          "line": 13,
+          "line": 82,
           "literals": [],
           "operations": [
             "write"
@@ -1446,7 +1435,7 @@
         },
         {
           "cell": 2,
-          "line": 14,
+          "line": 83,
           "literals": [],
           "operations": [
             "write"
@@ -1455,7 +1444,7 @@
         },
         {
           "cell": 2,
-          "line": 15,
+          "line": 84,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -1463,14 +1452,19 @@
       ],
       "code_cell_count": 2,
       "imports": [
+        "importlib.util",
+        "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
-        "src.workflows.publishing"
+        "src.notebook_environment",
+        "src.workflows.publishing",
+        "subprocess",
+        "sys"
       ],
       "nbformat": 4,
       "path": "notebooks/31_publish_results.ipynb",
-      "sha256": "07bd0f48bfa1a7bcdb0cad736ae4a9e9cf760cffaf445e2491ae4dcd9899fffe"
+      "sha256": "5e1bf29d8eb3227cb4f54e0af4651fbd0b857b1a6af4323037cda8a7a83ab352"
     },
     {
       "artifact_references": [
@@ -2266,7 +2260,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 19,
+          "line": 23,
           "literals": [],
           "operations": [
             "read",
@@ -2276,7 +2270,7 @@
         },
         {
           "cell": 0,
-          "line": 42,
+          "line": 46,
           "literals": [
             "instances_{split}.json"
           ],
@@ -2285,7 +2279,7 @@
         },
         {
           "cell": 0,
-          "line": 97,
+          "line": 101,
           "literals": [],
           "operations": [
             "read"
@@ -2294,7 +2288,7 @@
         },
         {
           "cell": 0,
-          "line": 107,
+          "line": 111,
           "literals": [],
           "operations": [
             "write"
@@ -2303,7 +2297,7 @@
         },
         {
           "cell": 0,
-          "line": 139,
+          "line": 143,
           "literals": [],
           "operations": [
             "discover"
@@ -2312,7 +2306,7 @@
         },
         {
           "cell": 0,
-          "line": 180,
+          "line": 184,
           "literals": [
             "instances_{args.dataset_track}_{args.split}_first_{count}.json"
           ],
@@ -2321,7 +2315,7 @@
         },
         {
           "cell": 0,
-          "line": 191,
+          "line": 195,
           "literals": [
             "model_config.yaml"
           ],
@@ -2332,7 +2326,7 @@
         },
         {
           "cell": 0,
-          "line": 195,
+          "line": 199,
           "literals": [],
           "operations": [
             "discover"
@@ -2341,7 +2335,7 @@
         },
         {
           "cell": 0,
-          "line": 214,
+          "line": 218,
           "literals": [],
           "operations": [
             "read"
@@ -2350,7 +2344,7 @@
         },
         {
           "cell": 0,
-          "line": 223,
+          "line": 227,
           "literals": [
             "evaluation_failures.json"
           ],
@@ -2361,7 +2355,7 @@
         },
         {
           "cell": 0,
-          "line": 224,
+          "line": 228,
           "literals": [],
           "operations": [
             "write"
@@ -2370,7 +2364,7 @@
         },
         {
           "cell": 0,
-          "line": 231,
+          "line": 235,
           "literals": [],
           "operations": [
             "write"
@@ -2379,7 +2373,7 @@
         },
         {
           "cell": 0,
-          "line": 235,
+          "line": 239,
           "literals": [
             "{run['run_id']}__{args.split}__res{resolution}.json"
           ],
@@ -2388,7 +2382,7 @@
         },
         {
           "cell": 0,
-          "line": 237,
+          "line": 241,
           "literals": [],
           "operations": [
             "write"
@@ -2397,7 +2391,7 @@
         },
         {
           "cell": 0,
-          "line": 287,
+          "line": 291,
           "literals": [
             "{run['run_id']}__res{resolution}__metrics.json"
           ],
@@ -2406,7 +2400,7 @@
         },
         {
           "cell": 0,
-          "line": 289,
+          "line": 293,
           "literals": [],
           "operations": [
             "write"
@@ -2415,7 +2409,7 @@
         },
         {
           "cell": 0,
-          "line": 292,
+          "line": 296,
           "literals": [],
           "operations": [
             "write"
@@ -2424,7 +2418,7 @@
         },
         {
           "cell": 0,
-          "line": 303,
+          "line": 307,
           "literals": [],
           "operations": [
             "write"
@@ -2433,7 +2427,7 @@
         },
         {
           "cell": 0,
-          "line": 305,
+          "line": 309,
           "literals": [
             "comparison_{args.dataset_track}_{args.split}.json"
           ],
@@ -2442,7 +2436,7 @@
         },
         {
           "cell": 0,
-          "line": 308,
+          "line": 312,
           "literals": [
             "evaluation_failures.json"
           ],
@@ -2464,6 +2458,7 @@
         "src.evaluation.coco_evaluator",
         "src.evaluation.detection_metrics",
         "src.evaluation.error_analysis",
+        "src.evaluation.policy",
         "src.models.registry",
         "src.paths",
         "src.training.checkpointing",
@@ -2471,7 +2466,7 @@
         "typing"
       ],
       "path": "scripts/evaluate.py",
-      "sha256": "ed80f21763b9e3a525b70cfd1442efb314afff081999e45a62e524df919855c7"
+      "sha256": "dd2cf13c91d40f9dbcfa0ef092075a238984688563fb59b38036ad47174cb945"
     },
     {
       "artifact_references": [
@@ -3002,7 +2997,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 20,
+          "line": 26,
           "literals": [],
           "operations": [
             "read"
@@ -3011,7 +3006,7 @@
         },
         {
           "cell": 0,
-          "line": 21,
+          "line": 27,
           "literals": [],
           "operations": [
             "write"
@@ -3020,7 +3015,7 @@
         },
         {
           "cell": 0,
-          "line": 22,
+          "line": 28,
           "literals": [],
           "operations": [
             "write"
@@ -3029,7 +3024,7 @@
         },
         {
           "cell": 0,
-          "line": 23,
+          "line": 29,
           "literals": [],
           "operations": [
             "write"
@@ -3038,16 +3033,36 @@
         },
         {
           "cell": 0,
-          "line": 78,
+          "line": 205,
           "literals": [
             "scalars.json"
           ],
           "operations": [],
-          "source": "scalar_file = run_dir / \"vis_data\" / \"scalars.json\""
+          "source": "candidates = {run_dir / \"vis_data\" / \"scalars.json\"}"
         },
         {
           "cell": 0,
-          "line": 82,
+          "line": 206,
+          "literals": [
+            "*/vis_data/scalars.json"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "candidates.update(run_dir.glob(\"*/vis_data/scalars.json\"))"
+        },
+        {
+          "cell": 0,
+          "line": 208,
+          "literals": [
+            "scalars.json"
+          ],
+          "operations": [],
+          "source": "candidates.add(Path(log_dir) / \"vis_data\" / \"scalars.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 211,
           "literals": [],
           "operations": [
             "read"
@@ -3056,16 +3071,16 @@
         },
         {
           "cell": 0,
-          "line": 86,
+          "line": 215,
           "literals": [],
           "operations": [
             "read"
           ],
-          "source": "rows.append(json.loads(line))"
+          "source": "value = json.loads(line)"
         },
         {
           "cell": 0,
-          "line": 95,
+          "line": 270,
           "literals": [],
           "operations": [
             "write"
@@ -3074,7 +3089,7 @@
         },
         {
           "cell": 0,
-          "line": 96,
+          "line": 271,
           "literals": [
             "epoch_metrics.jsonl"
           ],
@@ -3083,7 +3098,7 @@
         },
         {
           "cell": 0,
-          "line": 97,
+          "line": 272,
           "literals": [],
           "operations": [
             "write"
@@ -3092,7 +3107,7 @@
         },
         {
           "cell": 0,
-          "line": 100,
+          "line": 275,
           "literals": [
             "metrics_history.csv"
           ],
@@ -3103,7 +3118,7 @@
         },
         {
           "cell": 0,
-          "line": 251,
+          "line": 432,
           "literals": [
             "training_config.yaml"
           ],
@@ -3114,7 +3129,7 @@
         },
         {
           "cell": 0,
-          "line": 267,
+          "line": 448,
           "literals": [
             "pretrained"
           ],
@@ -3123,7 +3138,7 @@
         },
         {
           "cell": 0,
-          "line": 271,
+          "line": 452,
           "literals": [
             "PRETRAINING_WARNING.txt"
           ],
@@ -3134,7 +3149,7 @@
         },
         {
           "cell": 0,
-          "line": 277,
+          "line": 458,
           "literals": [],
           "operations": [
             "read"
@@ -3143,7 +3158,7 @@
         },
         {
           "cell": 0,
-          "line": 278,
+          "line": 459,
           "literals": [],
           "operations": [
             "read"
@@ -3152,7 +3167,7 @@
         },
         {
           "cell": 0,
-          "line": 280,
+          "line": 474,
           "literals": [
             "applied_overrides.json"
           ],
@@ -3163,7 +3178,7 @@
         },
         {
           "cell": 0,
-          "line": 281,
+          "line": 475,
           "literals": [],
           "operations": [
             "write"
@@ -3172,7 +3187,7 @@
         },
         {
           "cell": 0,
-          "line": 360,
+          "line": 545,
           "literals": [
             "last.pth"
           ],
@@ -3181,7 +3196,7 @@
         },
         {
           "cell": 0,
-          "line": 361,
+          "line": 546,
           "literals": [
             "last.pth"
           ],
@@ -3190,7 +3205,7 @@
         },
         {
           "cell": 0,
-          "line": 370,
+          "line": 555,
           "literals": [],
           "operations": [
             "write"
@@ -3199,7 +3214,7 @@
         },
         {
           "cell": 0,
-          "line": 371,
+          "line": 556,
           "literals": [
             "checkpoint_policy.json"
           ],
@@ -3208,7 +3223,7 @@
         },
         {
           "cell": 0,
-          "line": 377,
+          "line": 562,
           "literals": [
             "last.pth"
           ],
@@ -3217,7 +3232,7 @@
         },
         {
           "cell": 0,
-          "line": 396,
+          "line": 582,
           "literals": [
             "scheduler_contract.json"
           ],
@@ -3226,7 +3241,7 @@
         },
         {
           "cell": 0,
-          "line": 398,
+          "line": 584,
           "literals": [],
           "operations": [
             "read"
@@ -3235,7 +3250,7 @@
         },
         {
           "cell": 0,
-          "line": 399,
+          "line": 585,
           "literals": [],
           "operations": [
             "read"
@@ -3244,7 +3259,7 @@
         },
         {
           "cell": 0,
-          "line": 407,
+          "line": 593,
           "literals": [],
           "operations": [
             "write"
@@ -3253,7 +3268,7 @@
         },
         {
           "cell": 0,
-          "line": 408,
+          "line": 594,
           "literals": [],
           "operations": [
             "write"
@@ -3262,7 +3277,7 @@
         },
         {
           "cell": 0,
-          "line": 573,
+          "line": 758,
           "literals": [],
           "operations": [
             "write"
@@ -3271,7 +3286,7 @@
         },
         {
           "cell": 0,
-          "line": 595,
+          "line": 781,
           "literals": [],
           "operations": [
             "read"
@@ -3280,7 +3295,7 @@
         },
         {
           "cell": 0,
-          "line": 606,
+          "line": 793,
           "literals": [
             "last.pth"
           ],
@@ -3289,7 +3304,7 @@
         },
         {
           "cell": 0,
-          "line": 613,
+          "line": 800,
           "literals": [
             "last.pth"
           ],
@@ -3298,7 +3313,7 @@
         },
         {
           "cell": 0,
-          "line": 616,
+          "line": 803,
           "literals": [],
           "operations": [
             "read"
@@ -3307,7 +3322,7 @@
         },
         {
           "cell": 0,
-          "line": 633,
+          "line": 821,
           "literals": [
             "last.pth"
           ],
@@ -3316,7 +3331,7 @@
         },
         {
           "cell": 0,
-          "line": 636,
+          "line": 824,
           "literals": [],
           "operations": [
             "read"
@@ -3325,7 +3340,7 @@
         },
         {
           "cell": 0,
-          "line": 660,
+          "line": 850,
           "literals": [
             "last.pth"
           ],
@@ -3334,7 +3349,7 @@
         },
         {
           "cell": 0,
-          "line": 702,
+          "line": 897,
           "literals": [
             "best.pth"
           ],
@@ -3343,7 +3358,7 @@
         },
         {
           "cell": 0,
-          "line": 728,
+          "line": 923,
           "literals": [
             "final_metrics.json"
           ],
@@ -3354,7 +3369,7 @@
         },
         {
           "cell": 0,
-          "line": 731,
+          "line": 926,
           "literals": [
             "training_curves.png"
           ],
@@ -3371,6 +3386,7 @@
         "mmengine.hooks",
         "mmengine.runner",
         "pathlib",
+        "src.evaluation.policy",
         "src.optional_outputs",
         "src.reproducibility",
         "src.runtime_manifest",
@@ -3384,7 +3400,7 @@
         "typing"
       ],
       "path": "scripts/run_mmdetection.py",
-      "sha256": "535ed57aed06f3228b1d6bd8e221340d358f08e42c425b8f88d440dd2f276ba6"
+      "sha256": "5befd62057af36f9964b95f57c5217ffd78c1f552c3c92771c2ebd52049fd4d2"
     },
     {
       "artifact_references": [
@@ -4671,7 +4687,7 @@
         },
         {
           "cell": 0,
-          "line": 353,
+          "line": 403,
           "literals": [],
           "operations": [
             "write"
@@ -4680,7 +4696,7 @@
         },
         {
           "cell": 0,
-          "line": 362,
+          "line": 412,
           "literals": [],
           "operations": [
             "write"
@@ -4709,7 +4725,7 @@
         "typing"
       ],
       "path": "scripts/verify_model_environments.py",
-      "sha256": "3becdaa5eb2a31798e4a17dbe2f4582f723821c9a5c91e20a1a5fca19e1520be"
+      "sha256": "e6310dc895af972a57e2e758e14107588aad789578ece5a4e95a128eb35e1ce2"
     },
     {
       "artifact_references": [
@@ -5074,7 +5090,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 17,
+          "line": 25,
           "literals": [],
           "operations": [
             "read"
@@ -5083,7 +5099,7 @@
         },
         {
           "cell": 0,
-          "line": 31,
+          "line": 27,
           "literals": [],
           "operations": [
             "read"
@@ -5099,7 +5115,6 @@
         "platform",
         "src.drive_sync",
         "src.git_utils",
-        "src.paths",
         "src.utils.serialization",
         "subprocess",
         "sys",
@@ -5107,7 +5122,7 @@
         "typing"
       ],
       "path": "src/colab_setup.py",
-      "sha256": "308a6c0a3e616ce2623a7cdd948ce310ea10c79bb60afe570dde1ecde5ac25eb"
+      "sha256": "675af3145ce108314e10c023c081206b8f68eb782728a98940545345e9e98b49"
     },
     {
       "artifact_references": [
@@ -6903,7 +6918,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 17,
+          "line": 24,
           "literals": [],
           "operations": [
             "read",
@@ -6913,7 +6928,7 @@
         },
         {
           "cell": 0,
-          "line": 26,
+          "line": 34,
           "literals": [],
           "operations": [
             "write"
@@ -6922,7 +6937,7 @@
         },
         {
           "cell": 0,
-          "line": 68,
+          "line": 76,
           "literals": [
             "best_config.yaml"
           ],
@@ -6931,7 +6946,7 @@
         },
         {
           "cell": 0,
-          "line": 75,
+          "line": 83,
           "literals": [
             "best_config.yaml"
           ],
@@ -6940,7 +6955,7 @@
         },
         {
           "cell": 0,
-          "line": 85,
+          "line": 93,
           "literals": [],
           "operations": [
             "read"
@@ -6949,7 +6964,25 @@
         },
         {
           "cell": 0,
-          "line": 154,
+          "line": 165,
+          "literals": [
+            "instances_train.json"
+          ],
+          "operations": [],
+          "source": "\"train\": annotation_root / \"instances_train.json\","
+        },
+        {
+          "cell": 0,
+          "line": 166,
+          "literals": [
+            "instances_val.json"
+          ],
+          "operations": [],
+          "source": "\"validation\": annotation_root / \"instances_val.json\","
+        },
+        {
+          "cell": 0,
+          "line": 200,
           "literals": [
             "*/resume_contract.json"
           ],
@@ -6960,7 +6993,7 @@
         },
         {
           "cell": 0,
-          "line": 158,
+          "line": 204,
           "literals": [],
           "operations": [
             "read"
@@ -6969,7 +7002,7 @@
         },
         {
           "cell": 0,
-          "line": 161,
+          "line": 207,
           "literals": [
             "run_manifest.json"
           ],
@@ -6978,7 +7011,7 @@
         },
         {
           "cell": 0,
-          "line": 163,
+          "line": 209,
           "literals": [],
           "operations": [
             "read"
@@ -6987,7 +7020,7 @@
         },
         {
           "cell": 0,
-          "line": 166,
+          "line": 212,
           "literals": [
             "last.pth"
           ],
@@ -6996,7 +7029,7 @@
         },
         {
           "cell": 0,
-          "line": 201,
+          "line": 247,
           "literals": [
             "run_manifest.json"
           ],
@@ -7007,7 +7040,7 @@
         },
         {
           "cell": 0,
-          "line": 239,
+          "line": 287,
           "literals": [
             "run_manifest.json"
           ],
@@ -7018,7 +7051,7 @@
         },
         {
           "cell": 0,
-          "line": 244,
+          "line": 292,
           "literals": [
             "resume_contract.json"
           ],
@@ -7029,7 +7062,7 @@
         },
         {
           "cell": 0,
-          "line": 258,
+          "line": 306,
           "literals": [
             "instances_train.json"
           ],
@@ -7038,7 +7071,7 @@
         },
         {
           "cell": 0,
-          "line": 261,
+          "line": 309,
           "literals": [
             "instances_val.json"
           ],
@@ -7052,18 +7085,21 @@
         "json",
         "os",
         "pathlib",
+        "src.evaluation.policy",
         "src.hpo.rtdetr_v2",
         "src.hpo.workflow",
         "src.models.registry",
         "src.models.rtdetrv2.optimizer",
         "src.paths",
+        "src.reproducibility",
         "src.training.checkpointing",
         "src.training.trainer",
         "src.utils.serialization",
+        "src.workflows.adapter_gate",
         "typing"
       ],
       "path": "src/hpo/final_workflow.py",
-      "sha256": "a8bce30e8ce291140ac5782e010568e5f2d3bef3c45c98ff9043c547307fe75f"
+      "sha256": "0e13c6572b89f1f5619f635ff3042315631e16f6564a7febc020542fbe9e3a24"
     },
     {
       "artifact_references": [
@@ -7466,7 +7502,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 24,
+          "line": 25,
           "literals": [],
           "operations": [
             "read",
@@ -7476,7 +7512,7 @@
         },
         {
           "cell": 0,
-          "line": 48,
+          "line": 51,
           "literals": [],
           "operations": [
             "write"
@@ -7485,7 +7521,27 @@
         },
         {
           "cell": 0,
-          "line": 145,
+          "line": 62,
+          "literals": [],
+          "operations": [
+            "discover"
+          ],
+          "source": "for path in (root / directory).rglob(\"*\")"
+        },
+        {
+          "cell": 0,
+          "line": 70,
+          "literals": [
+            "requirements*.txt"
+          ],
+          "operations": [
+            "discover"
+          ],
+          "source": "for path in root.glob(\"requirements*.txt\")"
+        },
+        {
+          "cell": 0,
+          "line": 201,
           "literals": [
             "study.db",
             "study_smoke.db"
@@ -7495,7 +7551,7 @@
         },
         {
           "cell": 0,
-          "line": 152,
+          "line": 208,
           "literals": [
             "instances_train.json"
           ],
@@ -7504,7 +7560,7 @@
         },
         {
           "cell": 0,
-          "line": 157,
+          "line": 213,
           "literals": [
             "instances_val.json"
           ],
@@ -7513,7 +7569,7 @@
         },
         {
           "cell": 0,
-          "line": 160,
+          "line": 216,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7522,7 +7578,7 @@
         },
         {
           "cell": 0,
-          "line": 161,
+          "line": 217,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7531,7 +7587,7 @@
         },
         {
           "cell": 0,
-          "line": 162,
+          "line": 218,
           "literals": [
             "official_full_train.json"
           ],
@@ -7540,7 +7596,7 @@
         },
         {
           "cell": 0,
-          "line": 163,
+          "line": 219,
           "literals": [
             "official_validation.json"
           ],
@@ -7549,7 +7605,7 @@
         },
         {
           "cell": 0,
-          "line": 164,
+          "line": 220,
           "literals": [
             "split_summary.json"
           ],
@@ -7558,7 +7614,7 @@
         },
         {
           "cell": 0,
-          "line": 172,
+          "line": 228,
           "literals": [
             "split_summary.json"
           ],
@@ -7569,7 +7625,7 @@
         },
         {
           "cell": 0,
-          "line": 232,
+          "line": 299,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7578,7 +7634,7 @@
         },
         {
           "cell": 0,
-          "line": 235,
+          "line": 302,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7587,7 +7643,7 @@
         },
         {
           "cell": 0,
-          "line": 344,
+          "line": 417,
           "literals": [
             "trial_record.json"
           ],
@@ -7598,7 +7654,7 @@
         },
         {
           "cell": 0,
-          "line": 346,
+          "line": 419,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7607,7 +7663,7 @@
         },
         {
           "cell": 0,
-          "line": 347,
+          "line": 420,
           "literals": [
             "runtime_environment.json"
           ],
@@ -7616,7 +7672,7 @@
         },
         {
           "cell": 0,
-          "line": 348,
+          "line": 421,
           "literals": [
             "optional_output_warnings.json"
           ],
@@ -7625,7 +7681,7 @@
         },
         {
           "cell": 0,
-          "line": 352,
+          "line": 425,
           "literals": [],
           "operations": [
             "read",
@@ -7635,7 +7691,7 @@
         },
         {
           "cell": 0,
-          "line": 353,
+          "line": 426,
           "literals": [
             "final_metrics.json"
           ],
@@ -7644,7 +7700,7 @@
         },
         {
           "cell": 0,
-          "line": 355,
+          "line": 428,
           "literals": [],
           "operations": [
             "read"
@@ -7653,7 +7709,7 @@
         },
         {
           "cell": 0,
-          "line": 362,
+          "line": 435,
           "literals": [
             "final_metrics.json"
           ],
@@ -7664,7 +7720,7 @@
         },
         {
           "cell": 0,
-          "line": 473,
+          "line": 550,
           "literals": [
             "final_metrics.json"
           ],
@@ -7673,7 +7729,7 @@
         },
         {
           "cell": 0,
-          "line": 541,
+          "line": 618,
           "literals": [],
           "operations": [
             "write"
@@ -7682,7 +7738,7 @@
         },
         {
           "cell": 0,
-          "line": 542,
+          "line": 619,
           "literals": [
             "{phase}_trials.csv"
           ],
@@ -7691,7 +7747,7 @@
         },
         {
           "cell": 0,
-          "line": 570,
+          "line": 647,
           "literals": [
             "search_space.json"
           ],
@@ -7702,7 +7758,7 @@
         },
         {
           "cell": 0,
-          "line": 571,
+          "line": 648,
           "literals": [
             "best_config.json"
           ],
@@ -7713,7 +7769,7 @@
         },
         {
           "cell": 0,
-          "line": 572,
+          "line": 649,
           "literals": [
             "best_config.yaml"
           ],
@@ -7724,7 +7780,7 @@
         },
         {
           "cell": 0,
-          "line": 577,
+          "line": 654,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7733,7 +7789,7 @@
         },
         {
           "cell": 0,
-          "line": 581,
+          "line": 658,
           "literals": [],
           "operations": [
             "read"
@@ -7742,7 +7798,7 @@
         },
         {
           "cell": 0,
-          "line": 583,
+          "line": 660,
           "literals": [],
           "operations": [
             "write"
@@ -7751,7 +7807,7 @@
         },
         {
           "cell": 0,
-          "line": 584,
+          "line": 661,
           "literals": [
             "parameter_application_report.json"
           ],
@@ -7760,7 +7816,7 @@
         },
         {
           "cell": 0,
-          "line": 598,
+          "line": 675,
           "literals": [
             "best_config.yaml"
           ],
@@ -7769,7 +7825,7 @@
         },
         {
           "cell": 0,
-          "line": 604,
+          "line": 681,
           "literals": [
             "search_summary.json"
           ],
@@ -7790,6 +7846,7 @@
         "pandas",
         "pathlib",
         "shutil",
+        "src.evaluation.policy",
         "src.hpo.search_spaces",
         "src.models.registry",
         "src.models.rtdetrv2.optimizer",
@@ -7805,7 +7862,7 @@
         "typing"
       ],
       "path": "src/hpo/workflow.py",
-      "sha256": "600764bd9a52aa53fe07fea20e6d9876ecf1c16aee7aaa661adca498d3da759a"
+      "sha256": "ca91e64e20a0ad50dca0623c820ce548d343cf7d1e4a9dfe930c4f89e0da9759"
     },
     {
       "artifact_references": [
@@ -7934,7 +7991,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 13,
+          "line": 14,
           "literals": [],
           "operations": [
             "read"
@@ -7943,7 +8000,7 @@
         },
         {
           "cell": 0,
-          "line": 33,
+          "line": 45,
           "literals": [],
           "operations": [
             "read"
@@ -7952,7 +8009,7 @@
         },
         {
           "cell": 0,
-          "line": 46,
+          "line": 58,
           "literals": [],
           "operations": [
             "read"
@@ -7965,14 +8022,16 @@
         "__future__",
         "mmdet.apis",
         "numpy",
+        "os",
         "pathlib",
         "src.models.base_adapter",
+        "src.models.vmamba_frcnn.importer",
         "time",
         "torch",
         "typing"
       ],
       "path": "src/models/mmdetection_adapter.py",
-      "sha256": "d5d7102d98210f1b6edc9561379fbb93f61fe05cc050e3b4c83416e6174a8cc8"
+      "sha256": "883628a0c55af8dec6e3213b0a928a9072908e5161e4077557a3bec9b5a9a5cf"
     },
     {
       "artifact_references": [
@@ -8283,7 +8342,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 62,
+          "line": 75,
           "literals": [
             "instances_{split}.json"
           ],
@@ -8292,7 +8351,7 @@
         },
         {
           "cell": 0,
-          "line": 77,
+          "line": 90,
           "literals": [],
           "operations": [
             "read"
@@ -8301,7 +8360,7 @@
         },
         {
           "cell": 0,
-          "line": 151,
+          "line": 180,
           "literals": [
             "requirements-openmmlab-py310-cu118.txt"
           ],
@@ -8310,7 +8369,7 @@
         },
         {
           "cell": 0,
-          "line": 153,
+          "line": 182,
           "literals": [
             "requirements-rtdetr-colab.txt"
           ],
@@ -8334,7 +8393,7 @@
         "torch"
       ],
       "path": "src/notebook_utils.py",
-      "sha256": "394a22480750e0174b32d6bbbbb5240ab4bfb15520eb57fa6ef820fe873a10a3"
+      "sha256": "ab4c6b6998349dfd7fdf5f920fff59d0d7d3e21445cda35e9c60bd496731b664"
     },
     {
       "artifact_references": [
@@ -12281,7 +12340,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 110,
+          "line": 130,
           "literals": [
             "requirements-rtdetr-colab.txt"
           ],
@@ -12290,7 +12349,7 @@
         },
         {
           "cell": 0,
-          "line": 174,
+          "line": 194,
           "literals": [
             "https://download.openmmlab.com/mmcv/dist/cu118/torch2.1/index.html"
           ],
@@ -12299,7 +12358,7 @@
         },
         {
           "cell": 0,
-          "line": 186,
+          "line": 206,
           "literals": [
             "requirements-openmmlab-py310-cu118.txt"
           ],
@@ -12308,7 +12367,7 @@
         },
         {
           "cell": 0,
-          "line": 231,
+          "line": 268,
           "literals": [
             "pretrained",
             "vmamba_tiny_e292.pth"
@@ -12323,6 +12382,7 @@
         "importlib.util",
         "os",
         "pathlib",
+        "src.notebook_environment",
         "src.notebook_utils",
         "src.subprocess_utils",
         "src.workflows.contract",
@@ -12333,7 +12393,7 @@
         "typing"
       ],
       "path": "src/workflows/environment.py",
-      "sha256": "70a8d604357e51431bd324aff5e9c91d45d4e3b5f99b2eaeb046b7188140752a"
+      "sha256": "62bee5394cfe81f5eb564648b378bc6cf9266f6fc22833ce6144ffcb5fa208e5"
     },
     {
       "artifact_references": [
@@ -12415,7 +12475,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 21,
+          "line": 34,
           "literals": [],
           "operations": [
             "read",
@@ -12425,7 +12485,7 @@
         },
         {
           "cell": 0,
-          "line": 25,
+          "line": 38,
           "literals": [
             "configs/runtime_environments.yaml"
           ],
@@ -12434,7 +12494,16 @@
         },
         {
           "cell": 0,
-          "line": 44,
+          "line": 43,
+          "literals": [
+            ".provisioning_complete.json"
+          ],
+          "operations": [],
+          "source": "FRAMEWORK_COMPLETE_SENTINEL = \".provisioning_complete.json\""
+        },
+        {
+          "cell": 0,
+          "line": 61,
           "literals": [],
           "operations": [
             "read"
@@ -12443,7 +12512,7 @@
         },
         {
           "cell": 0,
-          "line": 52,
+          "line": 69,
           "literals": [
             "pretrained"
           ],
@@ -12452,7 +12521,7 @@
         },
         {
           "cell": 0,
-          "line": 53,
+          "line": 70,
           "literals": [
             "configs/faster_rcnn_vmamba_t/model.yaml"
           ],
@@ -12463,7 +12532,7 @@
         },
         {
           "cell": 0,
-          "line": 74,
+          "line": 92,
           "literals": [],
           "operations": [
             "write"
@@ -12472,7 +12541,7 @@
         },
         {
           "cell": 0,
-          "line": 78,
+          "line": 96,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
@@ -12481,7 +12550,7 @@
         },
         {
           "cell": 0,
-          "line": 89,
+          "line": 107,
           "literals": [
             "configs/faster_rcnn_vmamba_t/model.yaml"
           ],
@@ -12490,7 +12559,79 @@
         },
         {
           "cell": 0,
-          "line": 268,
+          "line": 388,
+          "literals": [
+            ".json"
+          ],
+          "operations": [],
+          "source": "metadata_path = lock_path.with_suffix(lock_path.suffix + \".json\")"
+        },
+        {
+          "cell": 0,
+          "line": 392,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "previous = read_json(metadata_path)"
+        },
+        {
+          "cell": 0,
+          "line": 419,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(metadata_path, acquired)"
+        },
+        {
+          "cell": 0,
+          "line": 429,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(metadata_path, released)"
+        },
+        {
+          "cell": 0,
+          "line": 524,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "record = read_json(sentinel)"
+        },
+        {
+          "cell": 0,
+          "line": 644,
+          "literals": [],
+          "operations": [
+            "discover"
+          ],
+          "source": "for incomplete in destination.parent.glob(f\"{destination.name}.building-*\"):"
+        },
+        {
+          "cell": 0,
+          "line": 739,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "exclude.read_text(encoding=\"utf-8\") if exclude.is_file() else \"\""
+        },
+        {
+          "cell": 0,
+          "line": 746,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json("
+        },
+        {
+          "cell": 0,
+          "line": 808,
           "literals": [
             "pretrained"
           ],
@@ -12499,7 +12640,7 @@
         },
         {
           "cell": 0,
-          "line": 301,
+          "line": 936,
           "literals": [
             "pretrained"
           ],
@@ -12508,7 +12649,16 @@
         },
         {
           "cell": 0,
-          "line": 330,
+          "line": 987,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "record = read_json(sentinel)"
+        },
+        {
+          "cell": 0,
+          "line": 1004,
           "literals": [
             "pretrained"
           ],
@@ -12517,7 +12667,7 @@
         },
         {
           "cell": 0,
-          "line": 369,
+          "line": 1043,
           "literals": [
             "pretrained"
           ],
@@ -12526,7 +12676,7 @@
         },
         {
           "cell": 0,
-          "line": 386,
+          "line": 1060,
           "literals": [
             "environment_probe.json",
             "quick_environment_probe.json"
@@ -12536,7 +12686,7 @@
         },
         {
           "cell": 0,
-          "line": 396,
+          "line": 1070,
           "literals": [
             "logs"
           ],
@@ -12545,7 +12695,7 @@
         },
         {
           "cell": 0,
-          "line": 398,
+          "line": 1072,
           "literals": [],
           "operations": [
             "read"
@@ -12554,7 +12704,7 @@
         },
         {
           "cell": 0,
-          "line": 441,
+          "line": 1115,
           "literals": [],
           "operations": [
             "write"
@@ -12563,7 +12713,43 @@
         },
         {
           "cell": 0,
-          "line": 479,
+          "line": 1139,
+          "literals": [
+            "benchmark_runtime.json"
+          ],
+          "operations": [],
+          "source": "environment / \"benchmark_runtime.json\","
+        },
+        {
+          "cell": 0,
+          "line": 1140,
+          "literals": [
+            "environment_probe.json"
+          ],
+          "operations": [],
+          "source": "environment / \"environment_probe.json\","
+        },
+        {
+          "cell": 0,
+          "line": 1141,
+          "literals": [
+            "quick_environment_probe.json"
+          ],
+          "operations": [],
+          "source": "environment / \"quick_environment_probe.json\","
+        },
+        {
+          "cell": 0,
+          "line": 1142,
+          "literals": [
+            "logs"
+          ],
+          "operations": [],
+          "source": "environment / \"logs\","
+        },
+        {
+          "cell": 0,
+          "line": 1189,
           "literals": [
             "pretrained"
           ],
@@ -12572,7 +12758,7 @@
         },
         {
           "cell": 0,
-          "line": 485,
+          "line": 1195,
           "literals": [],
           "operations": [
             "read"
@@ -12581,7 +12767,7 @@
         },
         {
           "cell": 0,
-          "line": 494,
+          "line": 1204,
           "literals": [
             "pretrained"
           ],
@@ -12590,7 +12776,7 @@
         },
         {
           "cell": 0,
-          "line": 517,
+          "line": 1229,
           "literals": [
             "benchmark_runtime.json"
           ],
@@ -12599,7 +12785,7 @@
         },
         {
           "cell": 0,
-          "line": 518,
+          "line": 1230,
           "literals": [
             "environment_probe.json"
           ],
@@ -12608,7 +12794,7 @@
         },
         {
           "cell": 0,
-          "line": 519,
+          "line": 1231,
           "literals": [
             "{runtime_hash}.json"
           ],
@@ -12617,7 +12803,7 @@
         },
         {
           "cell": 0,
-          "line": 522,
+          "line": 1237,
           "literals": [],
           "operations": [
             "read"
@@ -12626,7 +12812,7 @@
         },
         {
           "cell": 0,
-          "line": 546,
+          "line": 1269,
           "literals": [
             "quick_environment_probe.json"
           ],
@@ -12635,7 +12821,7 @@
         },
         {
           "cell": 0,
-          "line": 549,
+          "line": 1272,
           "literals": [
             "quick_environment_probe.json"
           ],
@@ -12644,7 +12830,7 @@
         },
         {
           "cell": 0,
-          "line": 564,
+          "line": 1294,
           "literals": [
             "logs"
           ],
@@ -12653,7 +12839,7 @@
         },
         {
           "cell": 0,
-          "line": 569,
+          "line": 1303,
           "literals": [],
           "operations": [
             "write"
@@ -12662,7 +12848,7 @@
         },
         {
           "cell": 0,
-          "line": 570,
+          "line": 1304,
           "literals": [],
           "operations": [
             "write"
@@ -12671,7 +12857,7 @@
         },
         {
           "cell": 0,
-          "line": 644,
+          "line": 1387,
           "literals": [
             "logs"
           ],
@@ -12680,7 +12866,7 @@
         },
         {
           "cell": 0,
-          "line": 661,
+          "line": 1407,
           "literals": [],
           "operations": [
             "write"
@@ -12690,21 +12876,32 @@
       ],
       "imports": [
         "__future__",
+        "contextlib",
         "datetime",
+        "fcntl",
         "hashlib",
         "importlib.metadata",
         "json",
+        "msvcrt",
         "os",
         "pathlib",
+        "psutil",
+        "re",
         "shutil",
+        "src.notebook_environment",
         "src.reproducibility",
         "src.subprocess_utils",
         "src.utils.serialization",
+        "stat",
+        "subprocess",
         "sys",
-        "typing"
+        "tempfile",
+        "time",
+        "typing",
+        "uuid"
       ],
       "path": "src/workflows/isolated_environment.py",
-      "sha256": "f686b049d5b8e591f5a860f67e0a1d894c338e0cd8a6004e05d299f1c43df1a9"
+      "sha256": "1e74c1a9d821063c54d9a5a001ad691223064c0f7aa8964b1c8b3ab063cccb99"
     },
     {
       "artifact_references": [

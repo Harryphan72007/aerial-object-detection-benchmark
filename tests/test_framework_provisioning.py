@@ -309,6 +309,11 @@ def test_vmamba_extension_build_uses_disposable_environment_copy(
     commands: list[list[str]] = []
     monkeypatch.setattr(isolated, "_clone_pinned", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
+        isolated,
+        "_preflight_vmamba_toolchain",
+        lambda *_args, **_kwargs: {"status": "compatible"},
+    )
+    monkeypatch.setattr(
         isolated, "_run", lambda command, **_kwargs: commands.append(command)
     )
     isolated._prepare_family(

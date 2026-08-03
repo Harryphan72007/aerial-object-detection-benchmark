@@ -29,6 +29,7 @@ from src.hpo.search_spaces import broad_search_space, refined_search_space
 HPO_PROTOCOL_ID = "two_stage_random_hpo_v1"
 SEARCH_SEED = 42
 PHASE_TRIALS = 5
+LR_SEARCH_EPOCHS = 3
 MAX_ATTEMPT_MULTIPLIER = 4
 DIVERGENCE_MARKERS = (
     "nan",
@@ -209,6 +210,8 @@ class TwoStageRandomHPO:
     ) -> tuple[float, float]:
         orchestrator = TrainingOrchestrator(self.repo_root, self.paths.root)
         epochs = 3 if phase == "phase_a" else 5
+        if self.model_id != "rtdetrv2_l":
+            epochs = LR_SEARCH_EPOCHS
         scheduler_horizon = epochs
         applied_parameters = dict(parameters)
         if self.model_id == "rtdetrv2_l":

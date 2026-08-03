@@ -17,7 +17,7 @@ from src.training.trainer import TrainingOrchestrator
 from src.utils.serialization import read_json, read_yaml, sha256_file, write_json
 
 FINAL_SEEDS = (17, 42, 3407)
-FINAL_EPOCHS = 25
+FINAL_EPOCHS = 8
 IMAGE_SIZE = 640
 EFFECTIVE_BATCH_SIZE = 8
 
@@ -123,7 +123,8 @@ class FinalExperimentWorkflow:
                 f"effective batch size must be {EFFECTIVE_BATCH_SIZE}, got "
                 f"{effective}"
             )
-        scheduler_horizon = FINAL_EPOCHS
+        final_epochs = 25 if self.model_id == "rtdetrv2_l" else FINAL_EPOCHS
+        scheduler_horizon = final_epochs
         if self.model_id == "rtdetrv2_l":
             scheduler_horizon = int(
                 checked_in_recipe(self.repo_root)["scheduler_horizon_epochs"]
@@ -137,7 +138,7 @@ class FinalExperimentWorkflow:
             "effective_batch_size": effective,
             "configuration_hash": configuration_hash(parameters),
             "scheduler_contract": {
-                "epochs": FINAL_EPOCHS,
+                "epochs": final_epochs,
                 "scheduler_horizon": scheduler_horizon,
             },
             "baseline_or_tuned": recipe,
@@ -221,7 +222,8 @@ class FinalExperimentWorkflow:
         annotation_root = self.paths.coco(self.dataset_track) / "annotations"
         for recipe, parameters in (("baseline", {}), ("tuned", tuned)):
             applied_parameters = dict(parameters)
-            scheduler_horizon = FINAL_EPOCHS
+            final_epochs = 25 if self.model_id == "rtdetrv2_l" else FINAL_EPOCHS
+            scheduler_horizon = final_epochs
             if self.model_id == "rtdetrv2_l":
                 static_recipe = checked_in_recipe(self.repo_root)
                 applied_parameters = {**static_recipe, **parameters}
@@ -247,7 +249,7 @@ class FinalExperimentWorkflow:
                         image_size=IMAGE_SIZE,
                         batch_size=batch_size,
                         gradient_accumulation_steps=accumulation,
-                        epochs=FINAL_EPOCHS,
+                        epochs=final_epochs,
                         seed=seed,
                         use_amp=True,
                         resume_run_id=resume,

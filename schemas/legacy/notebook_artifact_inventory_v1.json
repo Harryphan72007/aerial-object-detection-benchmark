@@ -6949,7 +6949,7 @@
         },
         {
           "cell": 0,
-          "line": 153,
+          "line": 154,
           "literals": [
             "*/resume_contract.json"
           ],
@@ -6960,7 +6960,7 @@
         },
         {
           "cell": 0,
-          "line": 157,
+          "line": 158,
           "literals": [],
           "operations": [
             "read"
@@ -6969,7 +6969,7 @@
         },
         {
           "cell": 0,
-          "line": 160,
+          "line": 161,
           "literals": [
             "run_manifest.json"
           ],
@@ -6978,7 +6978,7 @@
         },
         {
           "cell": 0,
-          "line": 162,
+          "line": 163,
           "literals": [],
           "operations": [
             "read"
@@ -6987,7 +6987,7 @@
         },
         {
           "cell": 0,
-          "line": 165,
+          "line": 166,
           "literals": [
             "last.pth"
           ],
@@ -6996,7 +6996,7 @@
         },
         {
           "cell": 0,
-          "line": 200,
+          "line": 201,
           "literals": [
             "run_manifest.json"
           ],
@@ -7007,7 +7007,7 @@
         },
         {
           "cell": 0,
-          "line": 237,
+          "line": 239,
           "literals": [
             "run_manifest.json"
           ],
@@ -7018,7 +7018,7 @@
         },
         {
           "cell": 0,
-          "line": 242,
+          "line": 244,
           "literals": [
             "resume_contract.json"
           ],
@@ -7029,7 +7029,7 @@
         },
         {
           "cell": 0,
-          "line": 256,
+          "line": 258,
           "literals": [
             "instances_train.json"
           ],
@@ -7038,7 +7038,7 @@
         },
         {
           "cell": 0,
-          "line": 259,
+          "line": 261,
           "literals": [
             "instances_val.json"
           ],
@@ -7063,7 +7063,7 @@
         "typing"
       ],
       "path": "src/hpo/final_workflow.py",
-      "sha256": "77ace67082f35cb12a328aedd34e8484a00ca6413006ba379ef637cfda6c074f"
+      "sha256": "a8bce30e8ce291140ac5782e010568e5f2d3bef3c45c98ff9043c547307fe75f"
     },
     {
       "artifact_references": [
@@ -7476,7 +7476,7 @@
         },
         {
           "cell": 0,
-          "line": 47,
+          "line": 48,
           "literals": [],
           "operations": [
             "write"
@@ -7485,7 +7485,7 @@
         },
         {
           "cell": 0,
-          "line": 144,
+          "line": 145,
           "literals": [
             "study.db",
             "study_smoke.db"
@@ -7495,7 +7495,7 @@
         },
         {
           "cell": 0,
-          "line": 151,
+          "line": 152,
           "literals": [
             "instances_train.json"
           ],
@@ -7504,7 +7504,7 @@
         },
         {
           "cell": 0,
-          "line": 156,
+          "line": 157,
           "literals": [
             "instances_val.json"
           ],
@@ -7513,7 +7513,7 @@
         },
         {
           "cell": 0,
-          "line": 159,
+          "line": 160,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7522,7 +7522,7 @@
         },
         {
           "cell": 0,
-          "line": 160,
+          "line": 161,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7531,7 +7531,7 @@
         },
         {
           "cell": 0,
-          "line": 161,
+          "line": 162,
           "literals": [
             "official_full_train.json"
           ],
@@ -7540,7 +7540,7 @@
         },
         {
           "cell": 0,
-          "line": 162,
+          "line": 163,
           "literals": [
             "official_validation.json"
           ],
@@ -7549,7 +7549,7 @@
         },
         {
           "cell": 0,
-          "line": 163,
+          "line": 164,
           "literals": [
             "split_summary.json"
           ],
@@ -7558,7 +7558,7 @@
         },
         {
           "cell": 0,
-          "line": 171,
+          "line": 172,
           "literals": [
             "split_summary.json"
           ],
@@ -7569,7 +7569,7 @@
         },
         {
           "cell": 0,
-          "line": 229,
+          "line": 232,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7578,7 +7578,7 @@
         },
         {
           "cell": 0,
-          "line": 232,
+          "line": 235,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7587,7 +7587,7 @@
         },
         {
           "cell": 0,
-          "line": 341,
+          "line": 344,
           "literals": [
             "trial_record.json"
           ],
@@ -7598,7 +7598,7 @@
         },
         {
           "cell": 0,
-          "line": 343,
+          "line": 346,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7607,7 +7607,7 @@
         },
         {
           "cell": 0,
-          "line": 344,
+          "line": 347,
           "literals": [
             "runtime_environment.json"
           ],
@@ -7616,7 +7616,7 @@
         },
         {
           "cell": 0,
-          "line": 345,
+          "line": 348,
           "literals": [
             "optional_output_warnings.json"
           ],
@@ -7625,7 +7625,7 @@
         },
         {
           "cell": 0,
-          "line": 349,
+          "line": 352,
           "literals": [],
           "operations": [
             "read",
@@ -7635,7 +7635,7 @@
         },
         {
           "cell": 0,
-          "line": 350,
+          "line": 353,
           "literals": [
             "final_metrics.json"
           ],
@@ -7644,7 +7644,7 @@
         },
         {
           "cell": 0,
-          "line": 352,
+          "line": 355,
           "literals": [],
           "operations": [
             "read"
@@ -7653,7 +7653,7 @@
         },
         {
           "cell": 0,
-          "line": 359,
+          "line": 362,
           "literals": [
             "final_metrics.json"
           ],
@@ -7664,7 +7664,7 @@
         },
         {
           "cell": 0,
-          "line": 470,
+          "line": 473,
           "literals": [
             "final_metrics.json"
           ],
@@ -7673,7 +7673,7 @@
         },
         {
           "cell": 0,
-          "line": 538,
+          "line": 541,
           "literals": [],
           "operations": [
             "write"
@@ -7682,7 +7682,7 @@
         },
         {
           "cell": 0,
-          "line": 539,
+          "line": 542,
           "literals": [
             "{phase}_trials.csv"
           ],
@@ -7691,7 +7691,7 @@
         },
         {
           "cell": 0,
-          "line": 567,
+          "line": 570,
           "literals": [
             "search_space.json"
           ],
@@ -7702,7 +7702,7 @@
         },
         {
           "cell": 0,
-          "line": 568,
+          "line": 571,
           "literals": [
             "best_config.json"
           ],
@@ -7713,7 +7713,7 @@
         },
         {
           "cell": 0,
-          "line": 569,
+          "line": 572,
           "literals": [
             "best_config.yaml"
           ],
@@ -7724,7 +7724,7 @@
         },
         {
           "cell": 0,
-          "line": 574,
+          "line": 577,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7733,7 +7733,7 @@
         },
         {
           "cell": 0,
-          "line": 578,
+          "line": 581,
           "literals": [],
           "operations": [
             "read"
@@ -7742,7 +7742,7 @@
         },
         {
           "cell": 0,
-          "line": 580,
+          "line": 583,
           "literals": [],
           "operations": [
             "write"
@@ -7751,7 +7751,7 @@
         },
         {
           "cell": 0,
-          "line": 581,
+          "line": 584,
           "literals": [
             "parameter_application_report.json"
           ],
@@ -7760,7 +7760,7 @@
         },
         {
           "cell": 0,
-          "line": 595,
+          "line": 598,
           "literals": [
             "best_config.yaml"
           ],
@@ -7769,7 +7769,7 @@
         },
         {
           "cell": 0,
-          "line": 601,
+          "line": 604,
           "literals": [
             "search_summary.json"
           ],
@@ -7805,7 +7805,7 @@
         "typing"
       ],
       "path": "src/hpo/workflow.py",
-      "sha256": "7caa37538fc8214846a7afd83e76363173755697870cf6c033788098e025d63d"
+      "sha256": "600764bd9a52aa53fe07fea20e6d9876ecf1c16aee7aaa661adca498d3da759a"
     },
     {
       "artifact_references": [

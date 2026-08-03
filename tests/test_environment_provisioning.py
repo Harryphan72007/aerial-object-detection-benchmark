@@ -54,7 +54,7 @@ def _fake_runtime_commands(
     monkeypatch.setattr(
         isolated,
         "_prepare_family",
-        lambda _repo, _drive, _python, _spec: {},
+        lambda _repo, _drive, _python, _spec, **_kwargs: {},
     )
 
 
@@ -432,12 +432,15 @@ def test_missing_vmamba_pretrained_fails_before_hpo(
 ) -> None:
     spec = isolated.resolved_runtime_spec(ROOT, "faster_rcnn_vmamba_t")
     drive = tmp_path / "drive"
-    paths = isolated._family_paths(drive, spec)
+    framework_root = tmp_path / "frameworks"
+    paths = isolated._family_paths(drive, spec, framework_root=framework_root)
     paths["vmamba_config"].parent.mkdir(parents=True, exist_ok=True)
     paths["vmamba_config"].write_text("# config", encoding="utf-8")
     monkeypatch.setattr(isolated, "_clone_pinned", lambda *_args, **_kwargs: None)
     with pytest.raises(FileNotFoundError, match="before HPO"):
-        isolated._prepare_family(ROOT, drive, Path("python"), spec)
+        isolated._prepare_family(
+            ROOT, drive, Path("python"), spec, framework_root=framework_root
+        )
 
 
 def test_mmcv_compiled_operation_failure_is_detected(

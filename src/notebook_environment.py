@@ -1,0 +1,225 @@
+"""One environment and path contract for Colab, Kaggle, and local notebooks."""
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Mapping, MutableMapping
+
+from src.notebook_utils import in_colab, in_kaggle
+
+SUPPORTED_NOTEBOOK_PLATFORMS = {"colab", "kaggle", "local"}
+REPOSITORY_NAME = "aerial-object-detection-benchmark"
+
+
+def detect_notebook_platform(
+    environ: Mapping[str, str] | None = None,
+) -> str:
+    values = os.environ if environ is None else environ
+    override = values.get("VISDRONE_NOTEBOOK_PLATFORM", "").strip().lower()
+    if override:
+        if override not in SUPPORTED_NOTEBOOK_PLATFORMS:
+            raise ValueError(
+                "VISDRONE_NOTEBOOK_PLATFORM must be colab, kaggle, or local"
+            )
+        return override
+    if environ is None and in_colab():
+        return "colab"
+    if values.get("COLAB_RELEASE_TAG") or values.get("COLAB_BACKEND_VERSION"):
+        return "colab"
+    if environ is None and in_kaggle():
+        return "kaggle"
+    if values.get("KAGGLE_KERNEL_RUN_TYPE") or values.get("KAGGLE_URL_BASE"):
+        return "kaggle"
+    return "local"
+
+
+def default_repository_root(platform: str, cwd: str | Path | None = None) -> Path:
+    if platform == "colab":
+        return Path("/content") / REPOSITORY_NAME
+    if platform == "kaggle":
+        return Path("/kaggle/working") / REPOSITORY_NAME
+    return Path(cwd or Path.cwd()).expanduser().resolve()
+
+
+def default_artifact_root(
+    platform: str,
+    repository_root: str | Path,
+    *,
+    use_google_drive: bool = True,
+) -> Path:
+    if platform == "colab" and use_google_drive:
+        return Path("/content/drive/MyDrive/visdrone_architecture_benchmark")
+    if platform == "kaggle":
+        return Path("/kaggle/working/visdrone_architecture_benchmark")
+    return Path(repository_root).resolve() / "local_artifacts"
+
+
+def default_local_cache_root(platform: str, repository_root: str | Path) -> Path:
+    if platform == "colab":
+        return Path("/content/visdrone_cache")
+    if platform == "kaggle":
+        return Path("/kaggle/working/visdrone_cache")
+    return Path(repository_root).resolve() / ".notebook-cache" / "visdrone"
+
+
+def default_model_runtime_root(platform: str) -> Path:
+    if platform == "colab":
+        return Path("/content/visdrone_model_envs")
+    if platform == "kaggle":
+        return Path("/kaggle/working/visdrone_model_envs")
+    return Path(tempfile.gettempdir()).resolve() / "visdrone_model_envs"
+
+
+def default_hpo_scratch_root(platform: str) -> Path:
+    if platform == "colab":
+        return Path("/content/visdrone_hpo_trials")
+    if platform == "kaggle":
+        return Path("/kaggle/working/visdrone_hpo_trials")
+    return Path(tempfile.gettempdir()).resolve() / "visdrone_hpo_trials"
+
+
+@dataclass(frozen=True)
+class NotebookEnvironment:
+    platform: str
+    repository_root: Path
+    artifact_root: Path
+    local_cache_root: Path
+    model_runtime_root: Path
+    hpo_scratch_root: Path
+
+    @property
+    def hosted(self) -> bool:
+        return self.platform in {"colab", "kaggle"}
+
+    def as_dict(self) -> dict[str, str | bool]:
+        return {
+            "platform": self.platform,
+            "hosted": self.hosted,
+            "repository_root": str(self.repository_root),
+            "artifact_root": str(self.artifact_root),
+            "local_cache_root": str(self.local_cache_root),
+            "model_runtime_root": str(self.model_runtime_root),
+            "hpo_scratch_root": str(self.hpo_scratch_root),
+        }
+
+
+def _mount_google_drive(platform: str, requested: bool) -> None:
+    if platform != "colab" or not requested:
+        return
+    try:
+        from google.colab import drive
+    except ImportError as error:
+        raise RuntimeError("Google Drive mounting is available only in Colab") from error
+    drive.mount("/content/drive")
+
+
+def _install_shared_dependencies(
+    repository_root: Path,
+    requirements_file: str | Path | None,
+) -> None:
+    if requirements_file:
+        requirement = repository_root / requirements_file
+        if not requirement.is_file():
+            raise FileNotFoundError(requirement)
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-r", str(requirement)],
+            check=True,
+        )
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-e",
+            str(repository_root),
+            "--no-deps",
+        ],
+        check=True,
+    )
+
+
+def setup_notebook_environment(
+    repository_root: str | Path,
+    *,
+    artifact_root: str | Path | None = None,
+    use_google_drive: bool = True,
+    requirements_file: str | Path | None = None,
+    install_dependencies: bool | None = None,
+    smoke_test: bool = False,
+    platform: str | None = None,
+    environ: MutableMapping[str, str] | None = None,
+) -> NotebookEnvironment:
+    """Resolve one runtime contract without changing benchmark semantics."""
+    values = os.environ if environ is None else environ
+    selected_platform = platform or detect_notebook_platform(
+        None if environ is None else values
+    )
+    if selected_platform not in SUPPORTED_NOTEBOOK_PLATFORMS:
+        raise ValueError(f"unsupported notebook platform: {selected_platform}")
+    repository = Path(repository_root).expanduser().resolve()
+    if not (repository / "pyproject.toml").is_file() or not (
+        repository / "src" / "__init__.py"
+    ).is_file():
+        raise FileNotFoundError(f"not a benchmark repository: {repository}")
+
+    _mount_google_drive(selected_platform, use_google_drive)
+    configured_artifacts = artifact_root or values.get("VISDRONE_DRIVE_ROOT")
+    artifacts = (
+        Path(configured_artifacts).expanduser().resolve()
+        if configured_artifacts
+        else default_artifact_root(
+            selected_platform,
+            repository,
+            use_google_drive=use_google_drive,
+        ).resolve()
+    )
+    if smoke_test:
+        artifacts = (repository / ".notebook-smoke" / "dataset").resolve()
+    local_cache = Path(
+        values.get(
+            "VISDRONE_LOCAL_CACHE_ROOT",
+            str(default_local_cache_root(selected_platform, repository)),
+        )
+    ).expanduser().resolve()
+    model_runtime = Path(
+        values.get(
+            "VISDRONE_MODEL_ENV_ROOT",
+            str(default_model_runtime_root(selected_platform)),
+        )
+    ).expanduser().resolve()
+    hpo_scratch = Path(
+        values.get(
+            "VISDRONE_HPO_SCRATCH_ROOT",
+            str(default_hpo_scratch_root(selected_platform)),
+        )
+    ).expanduser().resolve()
+
+    for path in (artifacts, local_cache, model_runtime, hpo_scratch):
+        path.mkdir(parents=True, exist_ok=True)
+    values["BENCHMARK_REPO_ROOT"] = str(repository)
+    values["VISDRONE_DRIVE_ROOT"] = str(artifacts)
+    values["VISDRONE_LOCAL_CACHE_ROOT"] = str(local_cache)
+    values["VISDRONE_MODEL_ENV_ROOT"] = str(model_runtime)
+    values["VISDRONE_HPO_SCRATCH_ROOT"] = str(hpo_scratch)
+    values["VISDRONE_NOTEBOOK_PLATFORM"] = selected_platform
+
+    should_install = (
+        selected_platform in {"colab", "kaggle"}
+        if install_dependencies is None
+        else install_dependencies
+    )
+    if should_install:
+        _install_shared_dependencies(repository, requirements_file)
+    return NotebookEnvironment(
+        platform=selected_platform,
+        repository_root=repository,
+        artifact_root=artifacts,
+        local_cache_root=local_cache,
+        model_runtime_root=model_runtime,
+        hpo_scratch_root=hpo_scratch,
+    )

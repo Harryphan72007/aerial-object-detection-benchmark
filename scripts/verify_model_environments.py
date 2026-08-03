@@ -100,6 +100,21 @@ def _git_revision(path: Path, expected: str, stage: str) -> str:
             stage,
             f"source revision mismatch at {path}: expected {expected}, observed {observed}",
         )
+    if (path / ".git" / "index.lock").exists():
+        raise ProbeFailure(stage, f"source checkout has an active Git index lock: {path}")
+    status = subprocess.run(
+        ["git", "-C", str(path), "status", "--porcelain", "--untracked-files=all"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if status.returncode:
+        raise ProbeFailure(stage, status.stderr.strip() or "git status probe failed")
+    if status.stdout.strip():
+        raise ProbeFailure(
+            stage,
+            f"source checkout is dirty at {path}: {status.stdout.strip()}",
+        )
     return observed
 
 
@@ -156,13 +171,14 @@ def _openmmlab_probe(
     versions: dict[str, str],
 ) -> dict[str, Any]:
     for package, expected in (
+        ("psutil", "7.0.0"),
         ("numpy", "1.26.4"),
         ("mmcv", str(spec["mmcv"]["version"])),
         ("mmengine", "0.10.7"),
         ("mmdet", "3.3.0"),
     ):
         _require_exact(package, expected, versions)
-    for module in ("numpy", "mmcv", "mmengine", "mmdet"):
+    for module in ("psutil", "numpy", "mmcv", "mmengine", "mmdet"):
         _require_import(module, f"{module}_import")
     operations = _require_import("mmcv.ops", "mmcv_compiled_operation")
     if not hasattr(operations, "nms"):

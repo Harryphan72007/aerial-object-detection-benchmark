@@ -72,7 +72,18 @@ notebooks.
 | ResNet-50 | [`10_hpo_resnet50.ipynb`](notebooks/10_hpo_resnet50.ipynb) | [`20_finetune_resnet50.ipynb`](notebooks/20_finetune_resnet50.ipynb) |
 | Swin-T | [`11_hpo_swin_t.ipynb`](notebooks/11_hpo_swin_t.ipynb) | [`21_finetune_swin_t.ipynb`](notebooks/21_finetune_swin_t.ipynb) |
 | VMamba-T | [`12_hpo_vmamba_t.ipynb`](notebooks/12_hpo_vmamba_t.ipynb) | [`22_finetune_vmamba_t.ipynb`](notebooks/22_finetune_vmamba_t.ipynb) |
-| RT-DETRv2 | Historical results only; do not start new search | Historical results only; do not start new fine-tuning |
+| RT-DETRv2-L | [`13_hpo_rtdetrv2.ipynb`](notebooks/13_hpo_rtdetrv2.ipynb) | [`23_finetune_rtdetrv2.ipynb`](notebooks/23_finetune_rtdetrv2.ipynb) |
+
+RT-DETRv2-L is a full member of the four-family controlled benchmark. Its earlier
+quarantine is lifted now that (a) the variant is the intended L/`r50vd` model, and
+(b) it shares the identical controlled epoch budget as every other model. Before
+trusting any RT-DETRv2 run, the GPU adapter smoke gate must pass on the target
+hardware, exactly as for the other three families — no full run should start
+without a stored passing smoke record. The historical over-fine-tuning
+observation (see
+[`docs/reference/rtdetr_training_results_diagnosis_2026-08-03.md`](docs/reference/rtdetr_training_results_diagnosis_2026-08-03.md))
+described a 25–40 epoch run selected on official validation; the controlled track
+now trains only 8 epochs with early stopping.
 
 Then use [`30_evaluate_all_models.ipynb`](notebooks/30_evaluate_all_models.ipynb)
 and [`31_publish_results.ipynb`](notebooks/31_publish_results.ipynb).

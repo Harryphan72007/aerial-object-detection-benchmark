@@ -210,6 +210,16 @@ def test_active_model_and_epoch_contracts_remain_bounded() -> None:
         assert flag in "".join(notebook["cells"][1]["source"])
 
 
+def test_rtdetrv2_quarantine_is_lifted_in_the_readme() -> None:
+    """PR-04: RT-DETRv2 is a first-class four-family model, not quarantined."""
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "Historical results only" not in readme
+    assert "do not start new" not in readme
+    # The HPO/final notebooks are advertised as the active RT-DETR entry points.
+    assert "13_hpo_rtdetrv2.ipynb" in readme
+    assert "23_finetune_rtdetrv2.ipynb" in readme
+
+
 def test_non_rtdetr_canonical_notebooks_preserve_the_selected_git_ref() -> None:
     selected = (
         "00_prepare_visdrone.ipynb",

@@ -63,8 +63,8 @@ def _config() -> dict[str, object]:
     return {
         "model_id": RTDETR_FACTORY_MODEL_ID,
         "framework": "transformers",
-        "pretrained_model_name_or_path": "PekingU/rtdetr_v2_r101vd",
-        "pretrained_revision": "2c5dbbd2d4d8c8814827a3b42737ba1afce3cf2a",
+        "pretrained_model_name_or_path": "PekingU/rtdetr_v2_r50vd",
+        "pretrained_revision": "282494075698cab9faa1096ae26856890030c817",
         "input_resolution": 640,
     }
 
@@ -133,3 +133,25 @@ def test_factory_source_does_not_define_optimizer_or_scheduler() -> None:
     source = (ROOT / "src" / "models" / "rtdetrv2" / "factory.py").read_text()
     assert "torch.optim" not in source
     assert "lr_scheduler" not in source
+
+
+def test_configured_checkpoint_matches_declared_l_variant() -> None:
+    """The v2 S/M/L/X names map to R18/R34/R50/R101; L must be r50vd.
+
+    Guards against the historical mislabel where `rtdetrv2_l` was pinned to the
+    R101 (X) checkpoint while advertising the L variant.
+    """
+    from src.utils.serialization import read_yaml
+
+    config = read_yaml(ROOT / "configs" / RTDETR_FACTORY_MODEL_ID / "model.yaml")
+    checkpoint = str(config["pretrained_model_name_or_path"])
+
+    assert config["variant"] == "L"
+    assert config["backbone"] == "r50vd"
+    # L is the r50vd backbone; r101vd is the X variant and must not appear here.
+    assert "r50vd" in checkpoint
+    assert "r101vd" not in checkpoint
+
+    # Declared parameter band must be consistent with L (~42M), not X (~77M).
+    params_m = int(config["approx_parameters_millions"])
+    assert 35 <= params_m <= 55

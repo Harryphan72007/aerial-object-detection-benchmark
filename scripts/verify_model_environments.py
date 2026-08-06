@@ -305,7 +305,7 @@ def _rtdetr_probe(
             "rtdetr_import",
             f"RT-DETRv2 class import failed: {error}",
         ) from error
-    source = _source(spec, "PekingU/rtdetr_v2_r101vd")
+    source = _source(spec, "PekingU/rtdetr_v2_r50vd")
     try:
         config = RTDetrV2Config.from_pretrained(
             str(source["name"]),

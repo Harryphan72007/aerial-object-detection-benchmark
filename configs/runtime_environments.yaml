@@ -16,9 +16,9 @@ rtdetr:
       url: https://github.com/lyuwenyu/RT-DETR
       revision: a21d516aca15da57e65f35c47659c7535ad2b6b3
       license: Apache-2.0
-    - name: PekingU/rtdetr_v2_r101vd
-      url: https://huggingface.co/PekingU/rtdetr_v2_r101vd
-      revision: 2c5dbbd2d4d8c8814827a3b42737ba1afce3cf2a
+    - name: PekingU/rtdetr_v2_r50vd
+      url: https://huggingface.co/PekingU/rtdetr_v2_r50vd
+      revision: 282494075698cab9faa1096ae26856890030c817
       license: Apache-2.0
 
 openmmlab:

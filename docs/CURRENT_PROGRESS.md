@@ -52,10 +52,11 @@ interrupted during epoch 40. The persistent 39.7% decline is consistent with
 over-fine-tuning, although the absent training-loss output prevents a conclusive
 classic-overfitting diagnosis.
 
-This observation is **not a project benchmark result**. It uses the R50vd
-checkpoint rather than the repository's R101 `rtdetrv2_l`, batch size 2 rather
-than the controlled effective batch 8, one final seed rather than three, and
-official validation for repeated checkpoint selection. It must not be published
+This observation is **not a project benchmark result**. It uses the same R50vd
+(RT-DETRv2-L) architecture the repository now trains as `rtdetrv2_l`, so it is
+architecturally comparable, but it remains methodologically incompatible: batch
+size 2 rather than the controlled effective batch 8, one final seed rather than
+three, and official validation for repeated checkpoint selection. It must not be published
 under `results/` or compared with canonical runs. See the full
 [compatibility, evaluation, and disposition note](reference/rtdetrv2_legacy_training_status.md).
 

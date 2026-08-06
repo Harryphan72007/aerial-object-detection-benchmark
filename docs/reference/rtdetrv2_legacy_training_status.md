@@ -15,7 +15,7 @@ published result bundle.
 
 | Contract item | Observed notebook | Maintained project |
 |---|---|---|
-| Architecture | RT-DETRv2 R50/L (`r50vd`) | `rtdetrv2_l`: RT-DETRv2 R101 |
+| Architecture | RT-DETRv2 R50/L (`r50vd`) | `rtdetrv2_l`: RT-DETRv2-L (`r50vd`) — same architecture |
 | Workflow | External notebook 04 | Notebooks 13, 23, 30, and 31 |
 | Batch contract | Batch size 2 | Effective batch size 8 for `lr_controlled_v1` |
 | Final seeds | 42 only | 17, 42, and 3407 for `two_stage_random_hpo_v1` |
@@ -23,9 +23,12 @@ published result bundle.
 | Environment | Python 3.12.13, PyTorch 2.11.0+cu128 | Pinned RT-DETR environment in `configs/runtime_environments.yaml` |
 | Checkpoint names | `best.pt`, `latest.pt` | Canonical `.pth` checkpoint contract |
 
-Because these items affect architecture, optimization, selection bias, and
-reproducibility, the observed AP values are not comparable with canonical
-repository results. The run should be identified as
+The legacy run uses the same RT-DETRv2-L (`r50vd`) architecture that the
+repository now trains, so it is architecturally comparable. It remains
+**methodologically** incompatible: the batch contract, seed count, and
+selection-data policy differ, which affects optimization, selection bias, and
+reproducibility. The observed AP values are therefore still not comparable with
+canonical repository results. The run should be identified as
 `legacy_rtdetrv2_r50vd_2class_seed42` in discussion or notes.
 
 ## Run status
@@ -124,6 +127,7 @@ validation for final evaluation.
 
 The external run is resumable, but it has passed its useful validation point.
 Its mAP declined from 0.211 at epoch 0 to 0.127 at epoch 39. That finding is
-valuable for refining the training recipe, but the run is architecturally and
-methodologically incompatible with the maintained benchmark and cannot serve as
-the project's RT-DETRv2-L result.
+valuable for refining the training recipe, but the run is methodologically
+incompatible with the maintained benchmark (batch contract, seed count, and
+selection-data policy) and cannot serve as the project's RT-DETRv2-L result,
+even though it shares the R50/L architecture.

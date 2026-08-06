@@ -6,6 +6,12 @@
 
 **Model:** `rtdetrv2_l` (`PekingU/rtdetr_v2_r101vd`)
 
+> **Historical scope (post-PR-01 note):** this diagnosis was conducted against
+> the earlier `rtdetrv2_l` configuration, which pinned the R101 (**X**) checkpoint.
+> The repository has since corrected `rtdetrv2_l` to the intended **L** variant
+> (`PekingU/rtdetr_v2_r50vd`). The `r101vd` reference below is preserved as an
+> accurate record of the run that was actually observed, not the current config.
+
 **Dataset track:** VisDrone2019-DET two-class PERSON/VEHICLE track
 
 **Evidence reviewed:** the supplied Colab log through epoch 12 of the first

@@ -70,7 +70,7 @@ class RTDetrV2Factory:
             )
         base_source = str(
             self.config.get(
-                "pretrained_model_name_or_path", "PekingU/rtdetr_v2_r101vd"
+                "pretrained_model_name_or_path", "PekingU/rtdetr_v2_r50vd"
             )
         )
         revision = self.config.get("pretrained_revision")

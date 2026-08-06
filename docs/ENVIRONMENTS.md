@@ -4,7 +4,7 @@ Hosted Colab and Kaggle are supported through isolated subprocess environments:
 
 | Family | Python | PyTorch / CUDA | Pinned source |
 |---|---|---|---|
-| RT-DETRv2 | 3.11.13 | 2.7.1+cu128 | RT-DETR `a21d516…`; R101 weights `a558a479…` |
+| RT-DETRv2 L (R50) | 3.11.13 | 2.7.1+cu128 | RT-DETR `a21d516…`; `PekingU/rtdetr_v2_r50vd` revision `282494…` |
 | ResNet-50 / Swin-T | 3.10.16 | 2.1.0+cu118 | MMDetection `44ebd17…`, MMCV 2.1.0 |
 | VMamba-T | 3.10.16 | 2.1.0+cu118 | MMDetection `44ebd17…`, VMamba `2ed52ea…` |
 

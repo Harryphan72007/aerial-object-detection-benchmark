@@ -1,10 +1,15 @@
 model_id: rtdetrv2_l
 architecture_family: End-to-end Transformer
 framework: transformers
-# The public integration uses backbone names; R101 is the concrete large variant.
-pretrained_model_name_or_path: PekingU/rtdetr_v2_r101vd
-pretrained_revision: 2c5dbbd2d4d8c8814827a3b42737ba1afce3cf2a
+# RT-DETRv2 variant provenance: the v2 S/M/L/X names map onto the v1 ResNet
+# backbone sizes R18/R34/R50/R101. The "L" variant is therefore r50vd (~42M
+# params); r101vd is the "X" variant (~77M params). This benchmark trains L.
+variant: L
+backbone: r50vd
+approx_parameters_millions: 42
+pretrained_model_name_or_path: PekingU/rtdetr_v2_r50vd
+pretrained_revision: 282494075698cab9faa1096ae26856890030c817
 source_license: Apache-2.0
 expected_num_queries: 300
-approx_gpu_vram_gb_1024_bs2: 18
+approx_gpu_vram_gb_1024_bs2: 14
 supports_amp: true

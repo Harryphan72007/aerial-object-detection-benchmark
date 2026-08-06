@@ -24,7 +24,7 @@ from src.workflows.isolated_environment import (
 
 MMDET_REVISION = "44ebd17b145c2372c4b700bfb9cb20dbd28ab64a"
 VMAMBA_REVISION = "2ed52ead062a51a64521ed3871d52914bf532876"
-RTDETR_CHECKPOINT = "PekingU/rtdetr_v2_r101vd"
+RTDETR_CHECKPOINT = "PekingU/rtdetr_v2_r50vd"
 
 
 def model_family(model_id: str) -> str:

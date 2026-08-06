@@ -7,7 +7,7 @@ Student-friendly, resumable VisDrone experiments for four detector families:
 | `faster_rcnn_resnet50` | Faster R-CNN + ResNet-50-FPN |
 | `faster_rcnn_swin_t` | Faster R-CNN + Swin-T-FPN |
 | `faster_rcnn_vmamba_t` | Faster R-CNN + VMamba-T-FPN |
-| `rtdetrv2_l` | RT-DETRv2 R101 |
+| `rtdetrv2_l` | RT-DETRv2-L (R50) |
 
 YOLOX is excluded. No benchmark metric in this repository is a placeholder.
 

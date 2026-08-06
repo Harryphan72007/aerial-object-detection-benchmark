@@ -190,7 +190,7 @@ def test_selected_yaml_round_trip_and_restart_from_pretrained(tmp_path):
         "CosineAnnealingLR",
         0.05,
         {"epochs": 0},
-        "PekingU/rtdetr_v2_r101vd",
+        "PekingU/rtdetr_v2_r50vd",
     )
     selected = CandidateResult(
         candidate_id("rtdetrv2_l", 1e-4),

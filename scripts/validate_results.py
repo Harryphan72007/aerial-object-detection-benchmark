@@ -12,6 +12,7 @@ from src.models.registry import MODEL_CONFIGS
 from src.result_export import (
     EXCLUDED_EXTENSIONS,
     find_secret_like_content,
+    is_dry_run_bundle,
     validate_bundle,
 )
 
@@ -34,12 +35,22 @@ def validate_repo_results(results_root: str | Path, max_file_size_mb: float = 20
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         return [f"invalid latest result manifest: {exc}"]
+    if is_dry_run_bundle(manifest):
+        return [
+            "dry-run-tiny bundle must not be published under results/; it belongs "
+            "in the dry_run namespace and can never be a canonical result"
+        ]
     bundle_path = root / str(
         manifest.get(
             "bundle_path",
             f"bundles/{manifest.get('result_bundle_id', '')}",
         )
     )
+    bundle_manifest_path = bundle_path / "bundle_manifest.json"
+    if bundle_manifest_path.is_file() and is_dry_run_bundle(
+        json.loads(bundle_manifest_path.read_text(encoding="utf-8"))
+    ):
+        return ["dry-run-tiny bundle present under results/bundles; not canonical"]
     errors.extend(validate_bundle(bundle_path, max_file_size_mb))
     track = manifest.get("dataset_track")
     if track not in {"2class", "10class"}:

@@ -74,6 +74,23 @@ REQUIRED_MANIFEST_FIELDS = {
     "intentionally_excluded_files",
     "export_status",
 }
+# Namespace for the end-to-end dry-run-tiny bundle. A dry-run bundle exercises the
+# real train -> eval -> profile -> manifest -> validate chain on a tiny subset so
+# publication bugs surface in minutes, not after 30 GPU-hours. It must never be
+# mistaken for a canonical result: it lives under this namespace, is marked in its
+# manifest, and is rejected by the results/ publisher and validator.
+DRY_RUN_NAMESPACE = "dry_run"
+
+
+def is_dry_run_bundle(manifest: Mapping[str, Any]) -> bool:
+    """True if a bundle manifest describes a dry-run-tiny bundle."""
+    if bool(manifest.get("dry_run_tiny")):
+        return True
+    if str(manifest.get("bundle_kind", "")) == DRY_RUN_NAMESPACE:
+        return True
+    return DRY_RUN_NAMESPACE in str(manifest.get("result_bundle_id", ""))
+
+
 APPROVED_EXTENSIONS = {
     ".csv", ".json", ".yaml", ".yml", ".md", ".html", ".png", ".jpg",
     ".jpeg", ".txt",
@@ -568,6 +585,12 @@ def export_bundle(
     """Copy one validated bundle into ``results/bundles`` without Git actions."""
     drive = Path(drive_root).expanduser().resolve()
     bundle = drive / "result_bundles" / bundle_id
+    manifest_path = bundle / "bundle_manifest.json"
+    if manifest_path.is_file() and is_dry_run_bundle(read_json(manifest_path)):
+        raise ValueError(
+            "refusing to publish a dry-run-tiny bundle to results/; dry-run "
+            "bundles stay in the dry_run namespace and are never canonical"
+        )
     errors = validate_bundle(bundle, max_file_size_mb)
     errors.extend(_verify_bundle_registry(drive, bundle))
     if errors:

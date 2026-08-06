@@ -26,8 +26,7 @@
         "faster_rcnn_resnet50",
         "faster_rcnn_swin_t",
         "faster_rcnn_vmamba_t",
-        "rtdetrv2_l",
-        "yolox_s"
+        "rtdetrv2_l"
       ]
     },
     "dataset_track": {"enum": ["2class", "10class"]},

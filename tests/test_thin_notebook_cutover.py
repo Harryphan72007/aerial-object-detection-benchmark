@@ -37,6 +37,23 @@ def test_every_model_has_hpo_and_final_smoke_entrypoints() -> None:
         assert any(name.startswith("2") and model in name for name in PRIMARY_NOTEBOOKS)
 
 
+def test_retired_lr_controlled_protocol_entry_point_raises(tmp_path) -> None:
+    """PR-11: only two_stage_random_hpo_v1 is live; lr_controlled_v1 is retired."""
+    import pytest
+
+    from src.workflows.model_day import (
+        ModelDayOptions,
+        RetiredProtocolError,
+        run_model_day,
+    )
+
+    options = ModelDayOptions(
+        model_id="faster_rcnn_resnet50", start_expensive_stage=True
+    )
+    with pytest.raises(RetiredProtocolError, match="lr_controlled_v1"):
+        run_model_day(ROOT, tmp_path, options)
+
+
 def test_canonical_notebooks_do_not_require_browser_uploads() -> None:
     for name in CANONICAL_NOTEBOOKS:
         notebook = nbformat.read(ROOT / "notebooks" / name, as_version=4)

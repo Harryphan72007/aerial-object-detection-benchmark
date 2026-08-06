@@ -43,6 +43,13 @@ class Stage(str, Enum):
     COMPLETE = "COMPLETE"
 
 
+RETIRED_PROTOCOL_ID = "lr_controlled_v1"
+
+
+class RetiredProtocolError(RuntimeError):
+    """The lr_controlled_v1 protocol is retired in favour of two_stage_random_hpo_v1."""
+
+
 @dataclass(frozen=True)
 class ModelDayOptions:
     model_id: str
@@ -369,6 +376,15 @@ def run_model_day(
 ) -> dict[str, Any]:
     """Run all currently actionable stages, skipping completed persistent state."""
     options.validate()
+    if options.start_expensive_stage:
+        # PR-11: only two_stage_random_hpo_v1 remains a live protocol. Keeping two
+        # runnable protocols doubled maintenance and confused provenance; the
+        # lr_controlled_v1 entry point is retired so it cannot start a new run.
+        raise RetiredProtocolError(
+            "The lr_controlled_v1 protocol (notebooks 01-03) is retired. Run the "
+            "two_stage_random_hpo_v1 workflow instead: notebooks 10-13 (HPO) and "
+            "20-23 (final), then 30/31 to evaluate and publish."
+        )
     repo = Path(repo_root).resolve()
     paths = ProjectPaths.from_value(drive_root)
     initial = inspect_model_day(

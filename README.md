@@ -9,7 +9,7 @@ Student-friendly, resumable VisDrone experiments for four detector families:
 | `faster_rcnn_vmamba_t` | Faster R-CNN + VMamba-T-FPN |
 | `rtdetrv2_l` | RT-DETRv2-L (R50) |
 
-YOLOX is excluded. No benchmark metric in this repository is a placeholder.
+YOLOX has been removed from the codebase (no adapter, config, or registry entry).
 
 ## Current progress
 
@@ -48,8 +48,9 @@ configuration contract matches.
 ## Start in Colab, Kaggle, or local Jupyter
 
 1. Run [`00_prepare_visdrone.ipynb`](notebooks/00_prepare_visdrone.ipynb).
-2. Choose either the preserved LR workflow (01 → 02 → 03) or one model’s HPO
-   and final pair below.
+2. Run one model’s HPO and final pair below (the `two_stage_random_hpo_v1`
+   workflow). The older `lr_controlled_v1` workflow (notebooks 01–03) is retired
+   — its entry point raises if a new run is started.
 3. Change only the small parameter cell and run all cells.
 4. After interruption, reopen the same notebook and run all cells again.
 
@@ -89,9 +90,17 @@ now trains only 8 epochs with early stopping.
 Then use [`30_evaluate_all_models.ipynb`](notebooks/30_evaluate_all_models.ipynb)
 and [`31_publish_results.ipynb`](notebooks/31_publish_results.ipynb).
 
+[`07_performance_tiling.ipynb`](notebooks/07_performance_tiling.ipynb) is an
+experimental performance-track (tiled-training) notebook. The performance track
+is not yet a runnable protocol (see
+[`docs/experiments/controlled_performance_tracks.md`](docs/experiments/controlled_performance_tracks.md)),
+so this notebook is exploratory and not part of the controlled benchmark.
+
 ## Protocols and tracks
 
-- `lr_controlled_v1` preserves the seed-42, LR-only workflow in notebooks 01–03.
+- `lr_controlled_v1` (notebooks 01–03) is **retired**; only
+  `two_stage_random_hpo_v1` is a live protocol. The retired entry point raises on
+  execution so two protocols can no longer be confused.
 - `two_stage_random_hpo_v1` runs five Phase A and five Phase B LR-only random
   trials, then a single **tuned** final run at seed **42** on the `2class` track
   — the headline matrix that fits roughly one model per GPU-day. The full

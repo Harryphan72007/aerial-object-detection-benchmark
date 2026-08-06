@@ -67,12 +67,11 @@ def source_tree_fingerprint(repo_root: str | Path) -> str:
             if path.is_file()
             and "__pycache__" not in path.parts
             and "rtdetr" not in path.as_posix().lower()
-            and "yolox" not in path.as_posix().lower()
         )
     candidates.extend(
         path
         for path in root.glob("requirements*.txt")
-        if "rtdetr" not in path.name.lower() and "yolox" not in path.name.lower()
+        if "rtdetr" not in path.name.lower()
     )
     digest = hashlib.sha256()
     digest.update(f"source-fingerprint-v{SOURCE_FINGERPRINT_VERSION}\n".encode())

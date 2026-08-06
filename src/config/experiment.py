@@ -16,7 +16,6 @@ MODEL_IDS = frozenset(
         "faster_rcnn_swin_t",
         "faster_rcnn_vmamba_t",
         "rtdetrv2_l",
-        "yolox_s",
     }
 )
 DATASET_TRACKS = frozenset({"2class", "10class"})

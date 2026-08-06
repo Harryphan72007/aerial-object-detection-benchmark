@@ -27,9 +27,12 @@ EXPERIMENT_NAME = "visdrone_lr_controlled_benchmark"
 EXPERIMENT_DISPLAY_NAME = "VisDrone Learning-Rate-Controlled Architecture Benchmark"
 EXPERIMENT_CLAIM = (
     "Each model receives the same learning-rate search protocol, search data policy, "
-    "promotion rules, final dataset, input resolution, effective batch size, seed "
-    "policy, evaluation protocol, and final training budget. Only the learning rate "
-    "differs between candidates."
+    "promotion rules, final dataset (official train minus a fixed held-out "
+    "model-selection split), model-selection policy, input resolution, effective "
+    "batch size, seed policy, evaluation protocol, and final training budget. The "
+    "final checkpoint is selected on the held-out model-selection split; official "
+    "validation is evaluated exactly once, at the end, and never drives selection. "
+    "Only the learning rate differs between candidates."
 )
 SUPPORTED_PRIMARY_MODELS = {
     "faster_rcnn_resnet50",
@@ -437,6 +440,7 @@ def create_lr_search_manifests(
     seed: int = 42,
     search_train_fraction: float = 0.20,
     search_validation_fraction: float = 0.05,
+    model_selection_fraction: float = 0.05,
     source_archive_identities: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     official_train_json = Path(official_train_json).resolve()
@@ -479,6 +483,20 @@ def create_lr_search_manifests(
     search_train_ids = _stratified_take(all_ids, features, train_count, seed)
     remaining = sorted(set(all_ids) - set(search_train_ids))
     search_validation_ids = _stratified_take(remaining, features, validation_count, seed + 1)
+    # Held-out model-selection split: drawn from official train but disjoint from
+    # both search subsets, so the final checkpoint is selected on data that never
+    # informed the learning-rate search and is never in the official validation
+    # set. Final training uses official train MINUS this holdout; official
+    # validation is evaluated exactly once, at the end, and never drives selection.
+    selection_pool = sorted(
+        set(all_ids) - set(search_train_ids) - set(search_validation_ids)
+    )
+    selection_count = round(len(all_ids) * model_selection_fraction)
+    selection_count = min(selection_count, len(selection_pool))
+    model_selection_ids = _stratified_take(
+        selection_pool, features, selection_count, seed + 2
+    )
+    final_train_ids = sorted(set(all_ids) - set(model_selection_ids))
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     maximum_train_id = max(all_ids, default=0)
@@ -491,6 +509,18 @@ def create_lr_search_manifests(
             train,
             set(search_validation_ids),
             "VisDrone LR search validation subset drawn only from official train (seed 42)",
+        ),
+        "model_selection_seed42.json": _subset_coco(
+            train,
+            set(model_selection_ids),
+            "VisDrone held-out model-selection split from official train, disjoint "
+            "from the search subsets (seed 42); drives final best.pth selection",
+        ),
+        "final_train_seed42.json": _subset_coco(
+            train,
+            set(final_train_ids),
+            "VisDrone final training set: official train minus the model-selection "
+            "holdout (seed 42)",
         ),
         "official_full_train.json": {
             **train,
@@ -516,6 +546,7 @@ def create_lr_search_manifests(
         "fractions": {
             "search_train": search_train_fraction,
             "search_validation": search_validation_fraction,
+            "model_selection": model_selection_fraction,
         },
         "statistics": {name: summarize_coco(payload) for name, payload in payloads.items()},
         "verification": verification,
@@ -548,6 +579,12 @@ def validate_lr_search_manifests(
     search_validation = json.loads(
         (root / "search_validation_seed42.json").read_text(encoding="utf-8")
     )
+    model_selection = json.loads(
+        (root / "model_selection_seed42.json").read_text(encoding="utf-8")
+    )
+    final_train = json.loads(
+        (root / "final_train_seed42.json").read_text(encoding="utf-8")
+    )
     official_train = json.loads((root / "official_full_train.json").read_text(encoding="utf-8"))
     official_validation = json.loads(
         (root / "official_validation.json").read_text(encoding="utf-8")
@@ -555,6 +592,8 @@ def validate_lr_search_manifests(
     ids = lambda data: {int(image["id"]) for image in data["images"]}
     search_train_ids = ids(search_train)
     search_validation_ids = ids(search_validation)
+    model_selection_ids = ids(model_selection)
+    final_train_ids = ids(final_train)
     official_train_ids = ids(official_train)
     official_validation_ids = ids(official_validation)
     filenames = lambda data: {str(image["file_name"]) for image in data["images"]}
@@ -568,6 +607,8 @@ def validate_lr_search_manifests(
     }
     search_train_filenames = filenames(search_train)
     search_validation_filenames = filenames(search_validation)
+    model_selection_filenames = filenames(model_selection)
+    final_train_filenames = filenames(final_train)
     official_train_filenames = filenames(official_train)
     official_validation_filenames = filenames(official_validation)
     search_train_identities = identities(search_train)
@@ -594,6 +635,27 @@ def validate_lr_search_manifests(
         ),
         "official_train_validation_filenames_disjoint": not (
             official_train_filenames & official_validation_filenames
+        ),
+        "model_selection_subset_official_train": (
+            model_selection_ids <= official_train_ids
+        ),
+        "model_selection_disjoint_search_train": not (
+            model_selection_ids & search_train_ids
+        ),
+        "model_selection_disjoint_search_validation": not (
+            model_selection_ids & search_validation_ids
+        ),
+        "model_selection_disjoint_final_train": not (
+            model_selection_ids & final_train_ids
+        ),
+        "final_train_union_model_selection_equals_official_train": (
+            (final_train_ids | model_selection_ids) == official_train_ids
+        ),
+        "model_selection_filenames_disjoint_official_validation": not (
+            model_selection_filenames & official_validation_filenames
+        ),
+        "final_train_filenames_disjoint_official_validation": not (
+            final_train_filenames & official_validation_filenames
         ),
         "search_train_stable_identities_subset_official_train": (
             search_train_identities <= official_train_identities
@@ -702,6 +764,46 @@ def assert_final_training_uses_official_train(
     }
     assert final_train_identities == official_train_identities
     assert not (final_train_identities & official_validation_identities)
+
+
+def assert_selection_split_held_out(manifest_dir: str | Path) -> None:
+    """Prove the two-stage HPO final protocol never selects on official val.
+
+    The final training set (``final_train_seed42.json``) is official train minus
+    the held-out ``model_selection_seed42.json`` split. Selection runs on the
+    holdout, which is disjoint from both search subsets and from official
+    validation. This is the invariant that makes the reported number free of the
+    checkpoint-selection bias that the earlier per-epoch official-val selection
+    introduced.
+    """
+    root = Path(manifest_dir)
+    load = lambda name: json.loads((root / name).read_text(encoding="utf-8"))
+    ids = lambda data: {int(image["id"]) for image in data["images"]}
+    names = lambda data: {str(image["file_name"]) for image in data["images"]}
+
+    final_train = load("final_train_seed42.json")
+    model_selection = load("model_selection_seed42.json")
+    search_train = load("search_train_seed42.json")
+    search_validation = load("search_validation_seed42.json")
+    official_train = load("official_full_train.json")
+    official_validation = load("official_validation.json")
+
+    final_ids = ids(final_train)
+    selection_ids = ids(model_selection)
+    if final_ids & selection_ids:
+        raise AssertionError("final-train and model-selection splits overlap")
+    if (final_ids | selection_ids) != ids(official_train):
+        raise AssertionError(
+            "final-train + model-selection must partition official train"
+        )
+    if selection_ids & ids(search_train):
+        raise AssertionError("model-selection overlaps the search-train subset")
+    if selection_ids & ids(search_validation):
+        raise AssertionError("model-selection overlaps the search-validation subset")
+    if names(model_selection) & names(official_validation):
+        raise AssertionError("model-selection overlaps official validation")
+    if names(final_train) & names(official_validation):
+        raise AssertionError("final-train overlaps official validation")
 
 
 def exponential_moving_average(values: Iterable[float], beta: float = 0.98) -> list[float]:

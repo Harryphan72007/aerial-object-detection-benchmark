@@ -220,6 +220,8 @@ class TwoStageRandomHPO:
         required = [
             self.manifest_dir / "search_train_seed42.json",
             self.manifest_dir / "search_validation_seed42.json",
+            self.manifest_dir / "model_selection_seed42.json",
+            self.manifest_dir / "final_train_seed42.json",
             self.manifest_dir / "official_full_train.json",
             self.manifest_dir / "official_validation.json",
             self.manifest_dir / "split_summary.json",

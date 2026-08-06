@@ -77,6 +77,53 @@ def _best_config(root: Path) -> None:
     )
 
 
+def _coco_dataset(image_count: int, *, validation: bool = False) -> dict[str, Any]:
+    images = [
+        {
+            "id": index + 1,
+            "file_name": f"{'val' if validation else 'train'}_{index:04d}.jpg",
+            "width": 100,
+            "height": 100,
+        }
+        for index in range(image_count)
+    ]
+    annotations = []
+    annotation_id = 1
+    for index, image in enumerate(images):
+        if index % 10 == 0:
+            continue
+        cats = (1, 2) if index % 3 == 0 else (1 if index % 2 else 2,)
+        for offset, category_id in enumerate(cats):
+            width = 8 if offset == 0 else 20
+            annotations.append(
+                {
+                    "id": annotation_id,
+                    "image_id": image["id"],
+                    "category_id": category_id,
+                    "bbox": [1, 1, width, width],
+                    "area": width * width,
+                    "iscrowd": 0,
+                }
+            )
+            annotation_id += 1
+    return {
+        "images": images,
+        "annotations": annotations,
+        "categories": [{"id": 1, "name": "person"}, {"id": 2, "name": "vehicle"}],
+    }
+
+
+def _prepare_official_dataset(workflow: "FinalExperimentWorkflow") -> None:
+    """Write a tiny but valid official train/val so the held-out selection
+    manifests (PR-05) can be built by the final workflow."""
+    annotation_root = workflow.paths.coco(workflow.dataset_track) / "annotations"
+    annotation_root.mkdir(parents=True, exist_ok=True)
+    write_json(annotation_root / "instances_train.json", _coco_dataset(60))
+    write_json(
+        annotation_root / "instances_val.json", _coco_dataset(12, validation=True)
+    )
+
+
 def test_model_specific_spaces_refine_only_observed_values():
     broad = broad_search_space(MODEL_ID)
     strongest = [
@@ -193,6 +240,7 @@ def test_final_workflow_automatically_runs_two_recipes_and_three_seeds(tmp_path)
     workflow = FinalExperimentWorkflow(
         ROOT, tmp_path, MODEL_ID, "2class", orchestrator=fake
     )
+    _prepare_official_dataset(workflow)
     result = workflow.run(start_expensive_stage=True)
     assert len(result["runs"]) == 6
     assert {call["seed"] for call in fake.calls} == set(FINAL_SEEDS)
@@ -201,8 +249,19 @@ def test_final_workflow_automatically_runs_two_recipes_and_three_seeds(tmp_path)
         "tuned",
     }
     assert all(call["protocol_id"] == HPO_PROTOCOL_ID for call in fake.calls)
+    # PR-05: final training uses the held-out final-train split and selects
+    # best.pth on the model-selection split, never on official validation.
     assert all(
-        call["train_annotation_override"].name == "instances_train.json"
+        call["train_annotation_override"].name == "final_train_seed42.json"
+        for call in fake.calls
+    )
+    assert all(
+        call["validation_annotation_override"].name == "model_selection_seed42.json"
+        for call in fake.calls
+    )
+    # The selection images come from train, not the official validation images.
+    assert all(
+        call["validation_images_override"] == workflow.paths.images("train")
         for call in fake.calls
     )
 

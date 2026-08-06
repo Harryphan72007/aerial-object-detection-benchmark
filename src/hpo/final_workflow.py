@@ -21,6 +21,11 @@ from src.models.rtdetrv2.optimizer import checked_in_recipe
 from src.paths import ProjectPaths
 from src.reproducibility import git_commit
 from src.training.checkpointing import enforce_completed_checkpoint_policy, make_run_id
+from src.training.lr_search import (
+    assert_selection_split_held_out,
+    create_lr_search_manifests,
+    validate_lr_search_manifests,
+)
 from src.training.trainer import TrainingOrchestrator
 from src.utils.serialization import read_json, read_yaml, sha256_file, write_json
 from src.workflows.adapter_gate import adapter_fingerprint
@@ -77,6 +82,7 @@ class FinalExperimentWorkflow:
             / model_id
             / dataset_track
         )
+        self.manifest_dir = self.paths.dataset_manifests / "hpo" / dataset_track
 
     @property
     def best_config_path(self) -> Path:
@@ -168,6 +174,11 @@ class FinalExperimentWorkflow:
             "restart_from_original_pretrained": True,
         }
         if self.model_id != "rtdetrv2_l":
+            # Hash the official source annotations. The final-train and
+            # model-selection manifests are deterministic functions of these plus
+            # the seed, so a change to the source data changes this contract; the
+            # held-out selection itself is enforced by the run-time overrides and
+            # validate_lr_search_manifests, not by the resume contract.
             annotation_root = self.paths.coco(self.dataset_track) / "annotations"
             annotation_paths = {
                 "train": annotation_root / "instances_train.json",
@@ -237,8 +248,11 @@ class FinalExperimentWorkflow:
             "tuned_parameters": tuned,
             "recipes": ("baseline", "tuned"),
             "seeds": tuple(self.protocol["final_seeds"]),
-            "full_official_train": True,
+            "final_train_split": "final_train_seed42.json",
+            "model_selection_split": "model_selection_seed42.json",
+            "full_official_train": False,
             "official_validation_used_for_tuning": False,
+            "official_validation_used_for_selection": False,
         }
 
     @staticmethod
@@ -258,6 +272,45 @@ class FinalExperimentWorkflow:
         write_json(run_dir / "run_manifest.json", manifest)
         return manifest
 
+    def _ensure_selection_manifests(self) -> None:
+        """Guarantee the held-out model-selection split exists and is valid.
+
+        Final training reads ``final_train_seed42.json`` (official train minus the
+        holdout) and selects ``best.pth`` on ``model_selection_seed42.json``. The
+        HPO search normally creates these; rebuild them from the official
+        annotations if a final run starts without a completed search directory.
+        """
+        annotation_root = self.paths.coco(self.dataset_track) / "annotations"
+        train = annotation_root / "instances_train.json"
+        validation = annotation_root / "instances_val.json"
+        required = [
+            self.manifest_dir / name
+            for name in (
+                "final_train_seed42.json",
+                "model_selection_seed42.json",
+                "search_train_seed42.json",
+                "search_validation_seed42.json",
+                "official_full_train.json",
+                "official_validation.json",
+                "split_summary.json",
+            )
+        ]
+        if all(path.is_file() for path in required):
+            validate_lr_search_manifests(
+                self.manifest_dir,
+                official_train_json=train,
+                official_validation_json=validation,
+            )
+        else:
+            create_lr_search_manifests(
+                train,
+                validation,
+                self.manifest_dir,
+                dataset_track=self.dataset_track,
+                seed=int(self.protocol["search_seed"]),
+            )
+        assert_selection_split_held_out(self.manifest_dir)
+
     def run(
         self,
         *,
@@ -275,8 +328,8 @@ class FinalExperimentWorkflow:
                 ),
             }
         tuned = self._load_tuned_parameters()
+        self._ensure_selection_manifests()
         manifests: list[dict[str, Any]] = []
-        annotation_root = self.paths.coco(self.dataset_track) / "annotations"
         for recipe, parameters in (("baseline", {}), ("tuned", tuned)):
             applied_parameters = dict(parameters)
             final_epochs = int(self.protocol["final_train_epochs"])
@@ -312,18 +365,22 @@ class FinalExperimentWorkflow:
                         resume_run_id=resume,
                         overrides=applied_parameters,
                         train_annotation_override=(
-                            annotation_root / "instances_train.json"
+                            self.manifest_dir / "final_train_seed42.json"
                         ),
                         validation_annotation_override=(
-                            annotation_root / "instances_val.json"
+                            self.manifest_dir / "model_selection_seed42.json"
                         ),
                         train_images_override=self.paths.images("train"),
-                        validation_images_override=self.paths.images("val"),
+                        validation_images_override=self.paths.images("train"),
                         explicit_run_dir=run_dir,
                         explicit_run_id=run_id,
                         register_run=True,
                         scheduler_horizon=scheduler_horizon,
                         validation_interval=1,
+                        # Stable pipeline identifier (recognised by export /
+                        # comparison / bundle machinery). The training set is now
+                        # official train minus the held-out model-selection split;
+                        # see the run manifest's dataset_hashes for the exact data.
                         run_kind="final_complete_official_train",
                         protocol_id=self.selected_protocol_id,
                         baseline_or_tuned=recipe,

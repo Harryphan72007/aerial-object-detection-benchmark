@@ -20,10 +20,15 @@ RT-DETRv2 numerical divergence and CUDA OOM are persisted as `PRUNED` trials.
 Other runtime or implementation errors remain fatal.
 
 Search train and validation are deterministic subsets of official train.
-Official validation never tunes a model. The selected config is frozen once.
-Baseline and tuned recipes restart from original pretrained weights, use full
-official train, and run seeds 17, 42, and 3407. Final manifests record
-`protocol_id`, `run_kind`, and `baseline_or_tuned`.
+Official validation never tunes a model, and it never selects a checkpoint. The
+selected config is frozen once. Baseline and tuned recipes restart from original
+pretrained weights and train on official train **minus a fixed, seeded
+model-selection holdout** (`final_train_seed42.json`). The final `best.pth` is
+selected on that held-out `model_selection_seed42.json` split — which is disjoint
+from both search subsets and from official validation — and official validation
+is evaluated exactly once, at the end, as the reported number. This removes the
+checkpoint-selection bias of the earlier per-epoch official-validation selection.
+Final manifests record `protocol_id`, `run_kind`, and `baseline_or_tuned`.
 
 Evaluation includes COCO AP, AP50/AP75, size and per-class metrics,
 precision/recall/F1 and PR curves, calibration, error decomposition, training

@@ -11,6 +11,7 @@ from src.training.lr_search import (
     CandidateResult,
     assert_final_training_uses_official_train,
     assert_only_learning_rate_changes,
+    assert_selection_split_held_out,
     boundary_extension_candidates,
     boundary_status,
     candidate_checkpoint_dir,
@@ -119,6 +120,44 @@ def test_manifest_reproducibility_and_split_contract(tmp_path):
     assert len(search_train["images"]) == 20
     assert len(search_validation["images"]) == 5
     assert_final_training_uses_official_train(first)
+
+
+def test_model_selection_split_is_held_out_from_search_and_official_val(tmp_path):
+    """PR-05: best.pth is selected on a held-out split, never on official val."""
+    train, val = _write_inputs(tmp_path)
+    out = tmp_path / "manifests"
+    create_lr_search_manifests(train, val, out)
+    checks = validate_lr_search_manifests(out)
+    for key in (
+        "model_selection_subset_official_train",
+        "model_selection_disjoint_search_train",
+        "model_selection_disjoint_search_validation",
+        "model_selection_disjoint_final_train",
+        "final_train_union_model_selection_equals_official_train",
+        "model_selection_filenames_disjoint_official_validation",
+        "final_train_filenames_disjoint_official_validation",
+    ):
+        assert checks[key], key
+
+    ids = lambda name: {
+        int(image["id"])
+        for image in json.loads((out / name).read_text())["images"]
+    }
+    search_train = ids("search_train_seed42.json")
+    search_validation = ids("search_validation_seed42.json")
+    selection = ids("model_selection_seed42.json")
+    final_train = ids("final_train_seed42.json")
+    official_train = ids("official_full_train.json")
+
+    # Zero image-ID overlap between search subsets and the selection split.
+    assert selection.isdisjoint(search_train)
+    assert selection.isdisjoint(search_validation)
+    # Final-train and selection partition the complete official train exactly.
+    assert final_train.isdisjoint(selection)
+    assert final_train | selection == official_train
+    assert len(selection) == round(len(official_train) * 0.05)
+
+    assert_selection_split_held_out(out)
 
 
 def test_only_learning_rate_changes_and_effective_batch_is_fixed():

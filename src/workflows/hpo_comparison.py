@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 import statistics
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from src.hpo.final_workflow import FINAL_SEEDS, IMAGE_SIZE
 from src.hpo.workflow import HPO_PROTOCOL_ID
@@ -40,9 +40,13 @@ def _flatten_numeric(
 
 
 def compatible_final_runs(
-    drive_root: str | Path, dataset_track: str
+    drive_root: str | Path,
+    dataset_track: str,
+    *,
+    required_seeds: Sequence[int] = FINAL_SEEDS,
 ) -> list[dict[str, Any]]:
     paths = ProjectPaths.from_value(drive_root)
+    seeds = set(int(seed) for seed in required_seeds)
     return [
         run
         for run in RunRegistry(paths).list_available_runs(
@@ -52,7 +56,7 @@ def compatible_final_runs(
         and run.get("protocol_id") == HPO_PROTOCOL_ID
         and run.get("run_kind") == "final_complete_official_train"
         and run.get("baseline_or_tuned") in {"baseline", "tuned"}
-        and int(run.get("seed", -1)) in FINAL_SEEDS
+        and int(run.get("seed", -1)) in seeds
         and int(run.get("input_resolution", -1)) == IMAGE_SIZE
     ]
 
@@ -61,9 +65,12 @@ def aggregate_hpo_results(
     drive_root: str | Path,
     dataset_track: str,
     output_dir: str | Path | None = None,
+    *,
+    required_seeds: Sequence[int] = FINAL_SEEDS,
 ) -> dict[str, Any]:
     if dataset_track not in {"2class", "10class"}:
         raise ValueError(f"unsupported dataset track: {dataset_track}")
+    required_seeds = tuple(int(seed) for seed in required_seeds)
     paths = ProjectPaths.from_value(drive_root)
     output = (
         Path(output_dir)
@@ -73,7 +80,9 @@ def aggregate_hpo_results(
         / HPO_PROTOCOL_ID
         / dataset_track
     )
-    runs = compatible_final_runs(paths.root, dataset_track)
+    runs = compatible_final_runs(
+        paths.root, dataset_track, required_seeds=required_seeds
+    )
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for run in runs:
         grouped.setdefault(
@@ -85,7 +94,7 @@ def aggregate_hpo_results(
         for recipe in ("baseline", "tuned"):
             selected = grouped.get((model_id, recipe), [])
             by_seed = {int(run["seed"]): run for run in selected}
-            absent = [seed for seed in FINAL_SEEDS if seed not in by_seed]
+            absent = [seed for seed in required_seeds if seed not in by_seed]
             if absent:
                 missing.append(
                     {
@@ -96,7 +105,7 @@ def aggregate_hpo_results(
                 )
             metric_rows: list[dict[str, float]] = []
             included: list[dict[str, Any]] = []
-            for seed in FINAL_SEEDS:
+            for seed in required_seeds:
                 run = by_seed.get(seed)
                 if run is None:
                     continue
@@ -151,7 +160,7 @@ def aggregate_hpo_results(
                     "baseline_or_tuned": recipe,
                     "status": (
                         "COMPLETE"
-                        if len(included) == len(FINAL_SEEDS)
+                        if len(included) == len(required_seeds)
                         else "INCOMPLETE"
                     ),
                     "runs": included,
@@ -161,7 +170,7 @@ def aggregate_hpo_results(
     payload = {
         "dataset_track": dataset_track,
         "protocol_id": HPO_PROTOCOL_ID,
-        "required_seeds": FINAL_SEEDS,
+        "required_seeds": required_seeds,
         "groups": comparisons,
         "missing": missing,
         "note": (

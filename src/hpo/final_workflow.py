@@ -35,7 +35,10 @@ from src.workflows.adapter_gate import adapter_fingerprint
 # deviation) is applied at runtime via resolve_controlled_protocol; these
 # module-level names expose the shared base for imports and previews.
 _CONTROLLED_PROTOCOL = load_protocol(Path(__file__).resolve().parents[2], "controlled")
+# Headline default matrix: one tuned recipe at one seed (PR-06). The full
+# baseline+tuned x multi-seed matrix is opt-in via run(full_matrix=True).
 FINAL_SEEDS = tuple(int(seed) for seed in _CONTROLLED_PROTOCOL["final_seeds"])
+FULL_MATRIX_SEEDS = tuple(int(seed) for seed in _CONTROLLED_PROTOCOL["full_matrix_seeds"])
 FINAL_TRAIN_EPOCHS = int(_CONTROLLED_PROTOCOL["final_train_epochs"])
 IMAGE_SIZE = int(_CONTROLLED_PROTOCOL["image_size"])
 EFFECTIVE_BATCH_SIZE = int(_CONTROLLED_PROTOCOL["effective_batch_size"])
@@ -246,8 +249,12 @@ class FinalExperimentWorkflow:
             "protocol_id": HPO_PROTOCOL_ID,
             "best_config": str(self.best_config_path),
             "tuned_parameters": tuned,
-            "recipes": ("baseline", "tuned"),
-            "seeds": tuple(self.protocol["final_seeds"]),
+            "recipes": tuple(self.protocol["final_recipes"]),
+            "seeds": tuple(int(seed) for seed in self.protocol["final_seeds"]),
+            "full_matrix_recipes": tuple(self.protocol["full_matrix_recipes"]),
+            "full_matrix_seeds": tuple(
+                int(seed) for seed in self.protocol["full_matrix_seeds"]
+            ),
             "final_train_split": "final_train_seed42.json",
             "model_selection_split": "model_selection_seed42.json",
             "full_official_train": False,
@@ -311,12 +318,24 @@ class FinalExperimentWorkflow:
             )
         assert_selection_split_held_out(self.manifest_dir)
 
+    def _matrix(self, full_matrix: bool) -> tuple[tuple[str, ...], tuple[int, ...]]:
+        if full_matrix:
+            return (
+                tuple(self.protocol["full_matrix_recipes"]),
+                tuple(int(seed) for seed in self.protocol["full_matrix_seeds"]),
+            )
+        return (
+            tuple(self.protocol["final_recipes"]),
+            tuple(int(seed) for seed in self.protocol["final_seeds"]),
+        )
+
     def run(
         self,
         *,
         start_expensive_stage: bool = False,
         batch_size: int = 1,
         accumulation: int = 8,
+        full_matrix: bool = False,
     ) -> dict[str, Any]:
         preview = self.inspect()
         if not start_expensive_stage:
@@ -329,8 +348,11 @@ class FinalExperimentWorkflow:
             }
         tuned = self._load_tuned_parameters()
         self._ensure_selection_manifests()
+        recipes, seeds = self._matrix(full_matrix)
+        recipe_parameters = {"baseline": {}, "tuned": tuned}
         manifests: list[dict[str, Any]] = []
-        for recipe, parameters in (("baseline", {}), ("tuned", tuned)):
+        for recipe in recipes:
+            parameters = recipe_parameters[recipe]
             applied_parameters = dict(parameters)
             final_epochs = int(self.protocol["final_train_epochs"])
             scheduler_horizon = final_epochs
@@ -338,7 +360,7 @@ class FinalExperimentWorkflow:
                 static_recipe = checked_in_recipe(self.repo_root)
                 applied_parameters = {**static_recipe, **parameters}
                 scheduler_horizon = int(static_recipe["scheduler_horizon_epochs"])
-            for seed in self.protocol["final_seeds"]:
+            for seed in seeds:
                 contract = self._contract(
                     seed, recipe, applied_parameters, batch_size, accumulation
                 )

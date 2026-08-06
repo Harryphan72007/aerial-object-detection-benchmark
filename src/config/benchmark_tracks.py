@@ -32,9 +32,13 @@ PROTOCOL_REQUIRED_FIELDS = frozenset(
         "phase_a_epochs",
         "phase_b_epochs",
         "final_train_epochs",
+        "final_recipes",
         "final_seeds",
+        "full_matrix_recipes",
+        "full_matrix_seeds",
     }
 )
+_PROTOCOL_RECIPE_CHOICES = frozenset({"baseline", "tuned"})
 # A per-model config must never redeclare any of these; they are frozen by the
 # controlled track so every model shares them (learning_rate is the only tuned
 # value). ``epochs`` and ``seed`` are included to catch legacy field names.
@@ -50,7 +54,10 @@ PROTOCOL_FROZEN_FIELDS = frozenset(
         "phase_a_epochs",
         "phase_b_epochs",
         "final_train_epochs",
+        "final_recipes",
         "final_seeds",
+        "full_matrix_recipes",
+        "full_matrix_seeds",
         "epochs",
         "seed",
     }
@@ -81,9 +88,20 @@ def _validate_protocol_block(
             "protocol effective_batch_size must equal batch_size * "
             f"gradient_accumulation_steps ({effective})"
         )
-    seeds = protocol["final_seeds"]
-    if not isinstance(seeds, list) or not seeds:
-        raise ValueError("protocol final_seeds must be a non-empty list")
+    for field in ("final_seeds", "full_matrix_seeds"):
+        seeds = protocol[field]
+        if not isinstance(seeds, list) or not seeds:
+            raise ValueError(f"protocol {field} must be a non-empty list")
+    for field in ("final_recipes", "full_matrix_recipes"):
+        recipes = protocol[field]
+        if not isinstance(recipes, list) or not recipes:
+            raise ValueError(f"protocol {field} must be a non-empty list")
+        invalid = sorted(set(recipes) - _PROTOCOL_RECIPE_CHOICES)
+        if invalid:
+            raise ValueError(
+                f"protocol {field} may only contain "
+                f"{sorted(_PROTOCOL_RECIPE_CHOICES)}, got {invalid}"
+            )
     return dict(protocol)
 
 
@@ -190,7 +208,10 @@ def resolve_controlled_protocol(
         reject_frozen_protocol_overrides(read_yaml(model_config_path))
 
     resolved = {field: protocol[field] for field in PROTOCOL_REQUIRED_FIELDS}
-    resolved["final_seeds"] = tuple(int(seed) for seed in protocol["final_seeds"])
+    for field in ("final_seeds", "full_matrix_seeds"):
+        resolved[field] = tuple(int(seed) for seed in protocol[field])
+    for field in ("final_recipes", "full_matrix_recipes"):
+        resolved[field] = tuple(str(recipe) for recipe in protocol[field])
     resolved["phase_b_epochs"] = int(protocol["phase_b_epochs"])
     resolved["final_train_epochs"] = int(protocol["final_train_epochs"])
     return resolved

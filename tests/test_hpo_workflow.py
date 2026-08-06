@@ -10,6 +10,7 @@ import pytest
 
 from src.hpo.final_workflow import (
     FINAL_SEEDS,
+    FULL_MATRIX_SEEDS,
     FinalExperimentWorkflow,
     configuration_hash,
 )
@@ -234,7 +235,8 @@ def test_legacy_checkpoint_resolver_does_not_materialize_aliases(tmp_path):
     assert not (tmp_path / "best.pt").exists()
 
 
-def test_final_workflow_automatically_runs_two_recipes_and_three_seeds(tmp_path):
+def test_final_workflow_default_matrix_is_one_recipe_one_seed(tmp_path):
+    """PR-06: the headline matrix is a single tuned recipe at a single seed."""
     _best_config(tmp_path)
     fake = FakeOrchestrator()
     workflow = FinalExperimentWorkflow(
@@ -242,13 +244,28 @@ def test_final_workflow_automatically_runs_two_recipes_and_three_seeds(tmp_path)
     )
     _prepare_official_dataset(workflow)
     result = workflow.run(start_expensive_stage=True)
+    assert len(result["runs"]) == 1
+    assert FINAL_SEEDS == (42,)
+    assert {call["seed"] for call in fake.calls} == {42}
+    assert {call["baseline_or_tuned"] for call in fake.calls} == {"tuned"}
+    assert all(call["protocol_id"] == HPO_PROTOCOL_ID for call in fake.calls)
+
+
+def test_final_workflow_full_matrix_override_runs_two_recipes_three_seeds(tmp_path):
+    """The full baseline+tuned x multi-seed matrix stays reachable via opt-in."""
+    _best_config(tmp_path)
+    fake = FakeOrchestrator()
+    workflow = FinalExperimentWorkflow(
+        ROOT, tmp_path, MODEL_ID, "2class", orchestrator=fake
+    )
+    _prepare_official_dataset(workflow)
+    result = workflow.run(start_expensive_stage=True, full_matrix=True)
     assert len(result["runs"]) == 6
-    assert {call["seed"] for call in fake.calls} == set(FINAL_SEEDS)
+    assert {call["seed"] for call in fake.calls} == set(FULL_MATRIX_SEEDS)
     assert {call["baseline_or_tuned"] for call in fake.calls} == {
         "baseline",
         "tuned",
     }
-    assert all(call["protocol_id"] == HPO_PROTOCOL_ID for call in fake.calls)
     # PR-05: final training uses the held-out final-train split and selects
     # best.pth on the model-selection split, never on official validation.
     assert all(
@@ -394,7 +411,7 @@ def test_controlled_override_report_must_match_every_requested_value(tmp_path):
 def test_hpo_aggregation_separates_recipe_and_reports_missing_seeds(tmp_path):
     registry: dict[str, Any] = {"schema_version": 1, "runs": {}}
     for recipe in ("baseline", "tuned"):
-        for seed in FINAL_SEEDS:
+        for seed in FULL_MATRIX_SEEDS:
             run_id = f"{MODEL_ID}__2class__640__20260101_000000__seed{seed}_{recipe}"
             registry["runs"][run_id] = {
                 "run_id": run_id,
@@ -424,7 +441,9 @@ def test_hpo_aggregation_separates_recipe_and_reports_missing_seeds(tmp_path):
         tmp_path / "experiment_registry" / "checkpoint_registry.json",
         registry,
     )
-    result = aggregate_hpo_results(tmp_path, "2class")
+    result = aggregate_hpo_results(
+        tmp_path, "2class", required_seeds=FULL_MATRIX_SEEDS
+    )
     selected = [
         group
         for group in result["groups"]

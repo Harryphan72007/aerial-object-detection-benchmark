@@ -30,6 +30,16 @@ is evaluated exactly once, at the end, as the reported number. This removes the
 checkpoint-selection bias of the earlier per-epoch official-validation selection.
 Final manifests record `protocol_id`, `run_kind`, and `baseline_or_tuned`.
 
+The headline run matrix is one tuned recipe at seed 42 on the `2class` track per
+model — the smallest scientifically defensible matrix that fits about one model
+per GPU-day. Because a single seed gives no variance estimate, architecture
+differences below typical VisDrone seed noise (~0.3–0.8 mAP) are not claimed from
+it. The full `baseline`+`tuned` × seed `17/42/3407` matrix is an explicit opt-in
+(`full_matrix=True`); the default-LR baseline is recorded only as a diagnostic
+(it is a second, worse learning rate, not a scientific control), and the extra
+seeds provide the variance estimate required before publishing conclusions. Every
+matrix value is read from `configs/controlled/benchmark.yaml`, not hardcoded.
+
 Evaluation includes COCO AP, AP50/AP75, size and per-class metrics,
 precision/recall/F1 and PR curves, calibration, error decomposition, training
 and convergence facts, parameters, checkpoint size, valid FLOPs/MACs, memory,

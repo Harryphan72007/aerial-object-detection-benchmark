@@ -33,7 +33,18 @@ protocol:
   phase_a_epochs: 3
   phase_b_epochs: 3
   final_train_epochs: 8
-  final_seeds: [17, 42, 3407]
+  # Headline run matrix (default): one tuned recipe at one seed per model, on the
+  # 2class track only. This is what actually fits ~one model per GPU-day. A
+  # default-LR "baseline" is a second, worse LR, not a scientific control, so it
+  # is not part of the headline matrix. Differences below seed noise
+  # (~0.3-0.8 mAP on VisDrone) must not be claimed from a single-seed table.
+  final_recipes: [tuned]
+  final_seeds: [42]
+  # Explicit opt-in override (run with full_matrix=True): the default-LR baseline
+  # diagnostic plus multi-seed validation. Report separately, before publishing
+  # conclusions, as the variance estimate the single-seed headline lacks.
+  full_matrix_recipes: [baseline, tuned]
+  full_matrix_seeds: [17, 42, 3407]
   # No per-model epoch deviations. The controlled track gives every architecture
   # an identical epoch budget; a differing budget would be exactly the confound
   # this track exists to eliminate. Any model-specific schedule length belongs in

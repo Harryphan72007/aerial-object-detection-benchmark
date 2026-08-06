@@ -92,7 +92,12 @@ and [`31_publish_results.ipynb`](notebooks/31_publish_results.ipynb).
 
 - `lr_controlled_v1` preserves the seed-42, LR-only workflow in notebooks 01–03.
 - `two_stage_random_hpo_v1` runs five Phase A and five Phase B LR-only random
-  trials, then baseline and tuned final recipes at seeds 17, 42, and 3407.
+  trials, then a single **tuned** final run at seed **42** on the `2class` track
+  — the headline matrix that fits roughly one model per GPU-day. The full
+  `baseline`+`tuned` × seed `17/42/3407` matrix (a default-LR diagnostic plus a
+  multi-seed variance estimate) is an explicit opt-in (`full_matrix=True`),
+  reported separately before any conclusions are drawn. A single-seed table
+  cannot claim differences below seed noise (~0.3–0.8 mAP on VisDrone).
   RT-DETRv2 retains `1e-6` to `5e-4` in both phases; other models refine Phase B
   around the strongest finite Phase A candidates.
 - Track A (`2class`) preserves the PERSON/VEHICLE collapse. Track B (`10class`)

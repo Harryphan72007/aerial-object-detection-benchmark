@@ -122,7 +122,8 @@ def compare_completed_models(
         "",
         rendered_table if rendered_table is not None else frame.to_string(index=False),
         "",
-        "Only seed-42, 640-pixel, 25-epoch, effective-batch-8 final runs are included.",
+        "Only seed-42, 640-pixel, 8-epoch, effective-batch-8 controlled final runs "
+        "are included; performance-track runs never appear in this table.",
         "",
     ]
     write_text_atomic(output / "comparison.md", "\n".join(markdown))

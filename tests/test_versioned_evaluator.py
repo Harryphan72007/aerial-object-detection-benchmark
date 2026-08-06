@@ -51,27 +51,50 @@ def test_old_and_versioned_prediction_paths_have_metric_parity(tmp_path: Path) -
     assert_metric_parity(legacy_v2["metrics"], versioned_v2["metrics"])
 
 
+def _artifact(index: int, track: str, mode: str) -> dict:
+    return {
+        "schema_version": 2,
+        "identity": {**IDENTITY, "run_id": f"run-{index}"},
+        "benchmark_track": track,
+        "inference_mode": mode,
+        "weight_variant": "raw",
+        "metrics": {"mAP": index / 10},
+    }
+
+
 def test_track_and_inference_tables_are_written_separately(tmp_path: Path) -> None:
-    artifacts = []
-    for index, (track, mode) in enumerate(
-        (("controlled", "full"), ("performance", "full"), ("performance", "sliced"), ("performance", "ensemble"))
-    ):
-        artifacts.append(
-            {
-                "schema_version": 2,
-                "identity": {**IDENTITY, "run_id": f"run-{index}"},
-                "benchmark_track": track,
-                "inference_mode": mode,
-                "weight_variant": "raw",
-                "metrics": {"mAP": index / 10},
-            }
-        )
+    # All performance-track, so the inference-mode tables never mix namespaces.
+    artifacts = [
+        _artifact(0, "performance", "full"),
+        _artifact(1, "performance", "full"),
+        _artifact(2, "performance", "sliced"),
+        _artifact(3, "performance", "ensemble"),
+    ]
     tables = build_comparison_tables(artifacts)
-    assert [row["run_id"] for row in tables["controlled"]] == ["run-0"]
-    assert {row["run_id"] for row in tables["performance"]} == {"run-1", "run-2", "run-3"}
+    assert tables["controlled"] == []
+    assert {row["run_id"] for row in tables["performance"]} == {
+        "run-0",
+        "run-1",
+        "run-2",
+        "run-3",
+    }
     assert {row["run_id"] for row in tables["full"]} == {"run-0", "run-1"}
     assert [row["run_id"] for row in tables["sliced"]] == ["run-2"]
     assert [row["run_id"] for row in tables["ensemble"]] == ["run-3"]
     outputs = write_comparison_tables(tmp_path, tables)
     assert len(outputs) == 10
-    assert read_json(outputs["controlled_json"])["table"] == "controlled"
+    assert read_json(outputs["performance_json"])["table"] == "performance"
+
+
+def test_comparison_table_refuses_to_mix_controlled_and_performance() -> None:
+    """PR-10: a single output table can never mix the two namespaces."""
+    import pytest
+
+    # Both runs are inference_mode "full", so they would land in the same "full"
+    # table while belonging to different tracks.
+    artifacts = [
+        _artifact(0, "controlled", "full"),
+        _artifact(1, "performance", "full"),
+    ]
+    with pytest.raises(ValueError, match="mixes benchmark tracks"):
+        build_comparison_tables(artifacts)

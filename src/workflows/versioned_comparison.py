@@ -32,6 +32,24 @@ def _row(artifact: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _assert_single_namespace(
+    rows: list[dict[str, Any]], table_name: str
+) -> None:
+    """A single output table must never mix controlled and performance runs.
+
+    The controlled track answers "which architecture, all else equal"; the
+    performance track answers "how good can each get". A row from each in one
+    table is a category error, so it is refused rather than silently rendered.
+    """
+    namespaces = {str(row["benchmark_track"]) for row in rows}
+    if len(namespaces) > 1:
+        raise ValueError(
+            f"comparison table {table_name!r} mixes benchmark tracks "
+            f"{sorted(namespaces)}; controlled and performance runs must never "
+            "share a table"
+        )
+
+
 def build_comparison_tables(
     artifacts: Iterable[Mapping[str, Any]],
 ) -> dict[str, list[dict[str, Any]]]:
@@ -47,6 +65,10 @@ def build_comparison_tables(
         require_comparison_track(row, "controlled")
     for row in tables["performance"]:
         require_comparison_track(row, "performance")
+    # The inference-mode tables (full/sliced/ensemble) are filtered by mode, not
+    # by track, so guard them explicitly against mixing namespaces.
+    for name, table_rows in tables.items():
+        _assert_single_namespace(table_rows, name)
     return tables
 
 

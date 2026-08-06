@@ -17,3 +17,27 @@ defaults:
   batch_size: 1
   gradient_accumulation_steps: 8
   use_amp: true
+# Single source of truth for the controlled two-stage HPO protocol. The HPO
+# search workflow and the final-training workflow read every resolution / batch /
+# accumulation / epoch / seed value from here; no protocol constant is hardcoded
+# in src/hpo/. Per-model configs may only differ by learning_rate.
+protocol:
+  protocol_id: two_stage_random_hpo_v1
+  image_size: 640
+  batch_size: 1
+  gradient_accumulation_steps: 8
+  effective_batch_size: 8
+  use_amp: true
+  search_seed: 42
+  phase_trials: 5
+  phase_a_epochs: 3
+  phase_b_epochs: 3
+  final_train_epochs: 8
+  final_seeds: [17, 42, 3407]
+  # Model-specific epoch deviations from the frozen budget above. Recorded here
+  # explicitly so the confound is visible rather than buried in code. PR-03
+  # removes this block once the controlled track is fully uniform.
+  model_epoch_overrides:
+    rtdetrv2_l:
+      phase_b_epochs: 5
+      final_train_epochs: 25

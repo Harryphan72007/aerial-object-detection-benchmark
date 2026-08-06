@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from src.config.benchmark_tracks import load_protocol, resolve_controlled_protocol
 from src.models.registry import load_model_config
 from src.evaluation.policy import detection_policy
 from src.models.rtdetrv2.optimizer import checked_in_recipe
@@ -30,9 +31,12 @@ from src.hpo.search_spaces import broad_search_space, refined_search_space
 HPO_PROTOCOL_ID = "two_stage_random_hpo_v1"
 OBJECTIVE_CONTRACT_VERSION = "mmdet_map_aptiny_same_epoch_v2"
 SOURCE_FINGERPRINT_VERSION = 1
-SEARCH_SEED = 42
-PHASE_TRIALS = 5
-LR_SEARCH_EPOCHS = 3
+# The controlled protocol is the single source of truth. Search seed and the
+# per-phase trial count are read from configs/controlled/benchmark.yaml, not
+# hardcoded here; per-epoch counts are resolved per model in _run_training_trial.
+_CONTROLLED_PROTOCOL = load_protocol(Path(__file__).resolve().parents[2], "controlled")
+SEARCH_SEED = int(_CONTROLLED_PROTOCOL["search_seed"])
+PHASE_TRIALS = int(_CONTROLLED_PROTOCOL["phase_trials"])
 MAX_ATTEMPT_MULTIPLIER = 4
 DIVERGENCE_MARKERS = (
     "nan",
@@ -159,6 +163,7 @@ class TwoStageRandomHPO:
         self.model_id = model_id
         self.dataset_track = dataset_track
         self.protocol_id = str(protocol_id)
+        self.protocol = resolve_controlled_protocol(self.repo_root, model_id)
         self.smoke_test = os.environ.get("SMOKE_TEST", "").lower() in {
             "1",
             "true",
@@ -276,9 +281,11 @@ class TwoStageRandomHPO:
         run_dir: Path,
     ) -> tuple[float, float]:
         orchestrator = TrainingOrchestrator(self.repo_root, self.paths.root)
-        epochs = 3 if phase == "phase_a" else 5
-        if self.model_id != "rtdetrv2_l":
-            epochs = LR_SEARCH_EPOCHS
+        epochs = int(
+            self.protocol["phase_a_epochs"]
+            if phase == "phase_a"
+            else self.protocol["phase_b_epochs"]
+        )
         scheduler_horizon = epochs
         applied_parameters = dict(parameters)
         if self.model_id == "rtdetrv2_l":
@@ -288,9 +295,11 @@ class TwoStageRandomHPO:
         manifest = orchestrator.run(
             self.model_id,
             dataset_track=self.dataset_track,
-            image_size=640,
-            batch_size=1,
-            gradient_accumulation_steps=8,
+            image_size=int(self.protocol["image_size"]),
+            batch_size=int(self.protocol["batch_size"]),
+            gradient_accumulation_steps=int(
+                self.protocol["gradient_accumulation_steps"]
+            ),
             epochs=epochs,
             seed=SEARCH_SEED,
             use_amp=True,

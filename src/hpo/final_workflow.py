@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from src.config.benchmark_tracks import load_protocol, resolve_controlled_protocol
 from src.evaluation.policy import detection_policy
 from src.hpo.workflow import (
     HPO_PROTOCOL_ID,
@@ -24,10 +25,15 @@ from src.training.trainer import TrainingOrchestrator
 from src.utils.serialization import read_json, read_yaml, sha256_file, write_json
 from src.workflows.adapter_gate import adapter_fingerprint
 
-FINAL_SEEDS = (17, 42, 3407)
-FINAL_TRAIN_EPOCHS = 8
-IMAGE_SIZE = 640
-EFFECTIVE_BATCH_SIZE = 8
+# Base controlled-protocol values, read from configs/controlled/benchmark.yaml
+# (the single source of truth). Per-model resolution (e.g. the RT-DETR epoch
+# deviation) is applied at runtime via resolve_controlled_protocol; these
+# module-level names expose the shared base for imports and previews.
+_CONTROLLED_PROTOCOL = load_protocol(Path(__file__).resolve().parents[2], "controlled")
+FINAL_SEEDS = tuple(int(seed) for seed in _CONTROLLED_PROTOCOL["final_seeds"])
+FINAL_TRAIN_EPOCHS = int(_CONTROLLED_PROTOCOL["final_train_epochs"])
+IMAGE_SIZE = int(_CONTROLLED_PROTOCOL["image_size"])
+EFFECTIVE_BATCH_SIZE = int(_CONTROLLED_PROTOCOL["effective_batch_size"])
 
 
 def configuration_hash(value: dict[str, Any]) -> str:
@@ -55,6 +61,7 @@ class FinalExperimentWorkflow:
         self.paths = ProjectPaths.from_value(drive_root).create()
         self.model_id = model_id
         self.dataset_track = dataset_track
+        self.protocol = resolve_controlled_protocol(self.repo_root, model_id)
         self.protocol_id = (
             RTDETR_HPO_PROTOCOL_ID if model_id == "rtdetrv2_l" else HPO_PROTOCOL_ID
         )
@@ -133,12 +140,13 @@ class FinalExperimentWorkflow:
         effective = (
             batch_size * accumulation * int(os.environ.get("WORLD_SIZE", "1"))
         )
-        if effective != EFFECTIVE_BATCH_SIZE:
+        expected_effective = int(self.protocol["effective_batch_size"])
+        if effective != expected_effective:
             raise ValueError(
-                f"effective batch size must be {EFFECTIVE_BATCH_SIZE}, got "
+                f"effective batch size must be {expected_effective}, got "
                 f"{effective}"
             )
-        final_epochs = 25 if self.model_id == "rtdetrv2_l" else FINAL_TRAIN_EPOCHS
+        final_epochs = int(self.protocol["final_train_epochs"])
         scheduler_horizon = final_epochs
         if self.model_id == "rtdetrv2_l":
             scheduler_horizon = int(
@@ -149,7 +157,7 @@ class FinalExperimentWorkflow:
             "dataset_track": self.dataset_track,
             "protocol_id": self.selected_protocol_id,
             "seed": seed,
-            "image_size": IMAGE_SIZE,
+            "image_size": int(self.protocol["image_size"]),
             "effective_batch_size": effective,
             "configuration_hash": configuration_hash(parameters),
             "scheduler_contract": {
@@ -212,7 +220,10 @@ class FinalExperimentWorkflow:
                 if (run_dir / "last.pth").is_file():
                     return run_dir.name, run_dir, run_dir.name
         run_id = make_run_id(
-            self.model_id, self.dataset_track, IMAGE_SIZE, int(contract["seed"])
+            self.model_id,
+            self.dataset_track,
+            int(self.protocol["image_size"]),
+            int(contract["seed"]),
         )
         return run_id, model_root / run_id, None
 
@@ -225,7 +236,7 @@ class FinalExperimentWorkflow:
             "best_config": str(self.best_config_path),
             "tuned_parameters": tuned,
             "recipes": ("baseline", "tuned"),
-            "seeds": FINAL_SEEDS,
+            "seeds": tuple(self.protocol["final_seeds"]),
             "full_official_train": True,
             "official_validation_used_for_tuning": False,
         }
@@ -268,15 +279,13 @@ class FinalExperimentWorkflow:
         annotation_root = self.paths.coco(self.dataset_track) / "annotations"
         for recipe, parameters in (("baseline", {}), ("tuned", tuned)):
             applied_parameters = dict(parameters)
-            final_epochs = (
-                25 if self.model_id == "rtdetrv2_l" else FINAL_TRAIN_EPOCHS
-            )
+            final_epochs = int(self.protocol["final_train_epochs"])
             scheduler_horizon = final_epochs
             if self.model_id == "rtdetrv2_l":
                 static_recipe = checked_in_recipe(self.repo_root)
                 applied_parameters = {**static_recipe, **parameters}
                 scheduler_horizon = int(static_recipe["scheduler_horizon_epochs"])
-            for seed in FINAL_SEEDS:
+            for seed in self.protocol["final_seeds"]:
                 contract = self._contract(
                     seed, recipe, applied_parameters, batch_size, accumulation
                 )
@@ -294,7 +303,7 @@ class FinalExperimentWorkflow:
                     manifest = self.orchestrator.run(
                         self.model_id,
                         dataset_track=self.dataset_track,
-                        image_size=IMAGE_SIZE,
+                        image_size=int(self.protocol["image_size"]),
                         batch_size=batch_size,
                         gradient_accumulation_steps=accumulation,
                         epochs=final_epochs,

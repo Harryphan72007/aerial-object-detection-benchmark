@@ -15,6 +15,86 @@ PERFORMANCE_ONLY_OPTIONS = frozenset(
     {"ema_enabled", "tiled_training", "sliced_inference", "label_granularity"}
 )
 
+# The controlled two-stage HPO protocol is defined once, in
+# ``configs/controlled/benchmark.yaml`` under a ``protocol:`` block. These are
+# the fields the search and final workflows must read from there rather than
+# hardcoding.
+PROTOCOL_REQUIRED_FIELDS = frozenset(
+    {
+        "protocol_id",
+        "image_size",
+        "batch_size",
+        "gradient_accumulation_steps",
+        "effective_batch_size",
+        "use_amp",
+        "search_seed",
+        "phase_trials",
+        "phase_a_epochs",
+        "phase_b_epochs",
+        "final_train_epochs",
+        "final_seeds",
+    }
+)
+# A per-model config must never redeclare any of these; they are frozen by the
+# controlled track so every model shares them (learning_rate is the only tuned
+# value). ``epochs`` and ``seed`` are included to catch legacy field names.
+PROTOCOL_FROZEN_FIELDS = frozenset(
+    {
+        "image_size",
+        "batch_size",
+        "gradient_accumulation_steps",
+        "effective_batch_size",
+        "use_amp",
+        "search_seed",
+        "phase_trials",
+        "phase_a_epochs",
+        "phase_b_epochs",
+        "final_train_epochs",
+        "final_seeds",
+        "epochs",
+        "seed",
+    }
+)
+_PROTOCOL_EPOCH_OVERRIDE_FIELDS = frozenset({"phase_b_epochs", "final_train_epochs"})
+
+
+def _validate_protocol_block(
+    value: Mapping[str, Any], model_ids: set[str]
+) -> dict[str, Any]:
+    protocol = dict(value)
+    overrides = protocol.pop("model_epoch_overrides", {})
+    missing = sorted(PROTOCOL_REQUIRED_FIELDS - set(protocol))
+    unknown = sorted(set(protocol) - PROTOCOL_REQUIRED_FIELDS)
+    if missing:
+        raise ValueError(f"protocol block missing required fields: {missing}")
+    if unknown:
+        raise ValueError(f"protocol block has unknown fields: {unknown}")
+    effective = int(protocol["batch_size"]) * int(
+        protocol["gradient_accumulation_steps"]
+    )
+    if effective != int(protocol["effective_batch_size"]):
+        raise ValueError(
+            "protocol effective_batch_size must equal batch_size * "
+            f"gradient_accumulation_steps ({effective})"
+        )
+    seeds = protocol["final_seeds"]
+    if not isinstance(seeds, list) or not seeds:
+        raise ValueError("protocol final_seeds must be a non-empty list")
+    if not isinstance(overrides, Mapping):
+        raise ValueError("protocol model_epoch_overrides must be a mapping")
+    for model_id, override in overrides.items():
+        if model_id not in model_ids:
+            raise ValueError(
+                f"model_epoch_overrides names unknown model {model_id!r}"
+            )
+        unexpected = sorted(set(override) - _PROTOCOL_EPOCH_OVERRIDE_FIELDS)
+        if unexpected:
+            raise ValueError(
+                f"model_epoch_overrides[{model_id!r}] may only override "
+                f"{sorted(_PROTOCOL_EPOCH_OVERRIDE_FIELDS)}, got {unexpected}"
+            )
+    return {**protocol, "model_epoch_overrides": dict(overrides)}
+
 
 def validate_track_config(value: Mapping[str, Any]) -> dict[str, Any]:
     config = dict(value)
@@ -27,7 +107,13 @@ def validate_track_config(value: Mapping[str, Any]) -> dict[str, Any]:
         "allowed_options",
         "defaults",
     }
-    if set(config) != required or config["schema_version"] != 1:
+    optional = {"protocol"}
+    keys = set(config)
+    if (
+        not required <= keys
+        or not keys <= (required | optional)
+        or config["schema_version"] != 1
+    ):
         raise ValueError("benchmark track config does not match schema v1")
     track = str(config["benchmark_track"])
     if track not in BENCHMARK_TRACKS:
@@ -44,6 +130,10 @@ def validate_track_config(value: Mapping[str, Any]) -> dict[str, Any]:
     if allowed != expected_allowed:
         raise ValueError("track allowed-options contract changed")
     validate_run_options(config, dict(config["defaults"]))
+    if "protocol" in config:
+        config["protocol"] = _validate_protocol_block(
+            config["protocol"], set(config["model_ids"])
+        )
     return config
 
 
@@ -65,6 +155,58 @@ def validate_run_options(
             f"options are not allowed in {track_config['benchmark_track']} mode: {unknown}"
         )
     return dict(options)
+
+
+def load_protocol(repo_root: str | Path, track: str = "controlled") -> dict[str, Any]:
+    """Return the validated protocol block for a track's benchmark config."""
+    config = load_track_config(repo_root, track)
+    protocol = config.get("protocol")
+    if not protocol:
+        raise ValueError(f"{track} track defines no protocol block")
+    return dict(protocol)
+
+
+def reject_frozen_protocol_overrides(model_config: Mapping[str, Any]) -> None:
+    """Raise if a per-model config redeclares any controlled-frozen field."""
+    conflicts = sorted(PROTOCOL_FROZEN_FIELDS & set(model_config))
+    if conflicts:
+        raise ValueError(
+            "per-model config must not override controlled-track-frozen protocol "
+            f"fields: {conflicts}"
+        )
+
+
+def resolve_controlled_protocol(
+    repo_root: str | Path, model_id: str
+) -> dict[str, Any]:
+    """Resolve the controlled protocol for one model.
+
+    The base protocol is identical for every model; only ``phase_b_epochs`` and
+    ``final_train_epochs`` may differ through an explicit, recorded
+    ``model_epoch_overrides`` entry. The per-model ``model.yaml`` is checked to
+    ensure it does not silently redefine a frozen field.
+    """
+    config = load_track_config(repo_root, "controlled")
+    if model_id not in set(config["model_ids"]):
+        raise ValueError(f"{model_id!r} is not a controlled-track model")
+    protocol = config.get("protocol")
+    if not protocol:
+        raise ValueError("controlled track defines no protocol block")
+
+    model_config_path = Path(repo_root) / "configs" / model_id / "model.yaml"
+    if model_config_path.is_file():
+        reject_frozen_protocol_overrides(read_yaml(model_config_path))
+
+    resolved = {field: protocol[field] for field in PROTOCOL_REQUIRED_FIELDS}
+    resolved["final_seeds"] = tuple(int(seed) for seed in protocol["final_seeds"])
+    override = dict(protocol.get("model_epoch_overrides", {})).get(model_id, {})
+    resolved["phase_b_epochs"] = int(
+        override.get("phase_b_epochs", protocol["phase_b_epochs"])
+    )
+    resolved["final_train_epochs"] = int(
+        override.get("final_train_epochs", protocol["final_train_epochs"])
+    )
+    return resolved
 
 
 def track_output_root(drive_root: str | Path, track: str) -> Path:

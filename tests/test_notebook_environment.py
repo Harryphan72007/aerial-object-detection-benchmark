@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from src import notebook_environment as notebook_env
+from src.utils.serialization import read_yaml
 from src.workflows import environment as model_environment
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -183,8 +184,15 @@ def test_active_model_and_epoch_contracts_remain_bounded() -> None:
     final = (ROOT / "src" / "hpo" / "final_workflow.py").read_text(
         encoding="utf-8"
     )
-    assert "LR_SEARCH_EPOCHS = 3" in workflow
-    assert "FINAL_TRAIN_EPOCHS = 8" in final
+    # The protocol is defined once in configs/controlled/benchmark.yaml; both
+    # workflows resolve it rather than hardcoding epoch/batch/resolution constants.
+    assert "resolve_controlled_protocol" in workflow
+    assert "resolve_controlled_protocol" in final
+    protocol = read_yaml(
+        ROOT / "configs" / "controlled" / "benchmark.yaml"
+    )["protocol"]
+    assert protocol["phase_a_epochs"] == 3
+    assert protocol["final_train_epochs"] == 8
     for model_id in ACTIVE_MODELS:
         assert model_id in (
             ROOT / "src" / "hpo" / "search_spaces.py"

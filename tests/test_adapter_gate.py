@@ -105,3 +105,114 @@ def test_gate_decision_never_mutates_checkpoint_tree(tmp_path: Path) -> None:
 
     assert decision == "retry"
     assert checkpoint.read_bytes() == b"checkpoint"
+
+
+# --- PR-08: GPU adapter smoke-gate assertion logic (CPU-testable) -------------
+
+from src.workflows.adapter_gate import (  # noqa: E402
+    AdapterGateError,
+    assert_checkpoint_roundtrip,
+    assert_detection_head_class_count,
+    assert_feature_map_contract,
+    assert_finite_loss,
+    assert_pretrained_load_complete,
+    assert_wellformed_predictions,
+    build_smoke_record,
+    SMOKE_CHECK_ORDER,
+)
+
+
+def test_partial_weight_load_is_fatal():
+    assert_pretrained_load_complete([], [])  # complete load is fine
+    with pytest.raises(AdapterGateError, match="missing="):
+        assert_pretrained_load_complete(["backbone.stage4.weight"], [])
+    with pytest.raises(AdapterGateError, match="unexpected="):
+        assert_pretrained_load_complete([], ["head.coco80.bias"])
+
+
+def test_feature_map_contract_checks_channels_stride_and_nchw():
+    # FPN at 640px: 256 channels, strides 4/8/16/32 -> 160/80/40/20 spatial.
+    fmaps = [
+        {"shape": (2, 256, 160, 160), "stride": 4},
+        {"shape": (2, 256, 80, 80), "stride": 8},
+        {"shape": (2, 256, 40, 40), "stride": 16},
+        {"shape": (2, 256, 20, 20), "stride": 32},
+    ]
+    expected = [(256, 4), (256, 8), (256, 16), (256, 32)]
+    assert_feature_map_contract(fmaps, expected, image_size=640)
+
+    wrong_channels = [dict(fmaps[0], shape=(2, 512, 160, 160))] + fmaps[1:]
+    with pytest.raises(AdapterGateError, match="channels"):
+        assert_feature_map_contract(wrong_channels, expected, image_size=640)
+
+    # 224px feature map slipped in where 640 was configured.
+    wrong_spatial = [dict(fmaps[0], shape=(2, 256, 56, 56))] + fmaps[1:]
+    with pytest.raises(AdapterGateError, match="spatial"):
+        assert_feature_map_contract(wrong_spatial, expected, image_size=640)
+
+    not_nchw = [{"shape": (256, 160, 160), "stride": 4}]
+    with pytest.raises(AdapterGateError, match="not NCHW"):
+        assert_feature_map_contract(not_nchw, [(256, 4)], image_size=640)
+
+
+def test_detection_head_rejects_coco_residue():
+    assert_detection_head_class_count(2, 2)
+    with pytest.raises(AdapterGateError, match="COCO-80 residue"):
+        assert_detection_head_class_count(80, 2)
+
+
+def test_finite_loss_guard():
+    assert assert_finite_loss(1.5) == 1.5
+    with pytest.raises(AdapterGateError, match="non-finite"):
+        assert_finite_loss(float("nan"))
+    with pytest.raises(AdapterGateError, match="non-finite"):
+        assert_finite_loss(float("inf"))
+
+
+def test_wellformed_predictions_guard():
+    good = [{"boxes": [[1, 1, 5, 5]], "scores": [0.9], "labels": [1]}]
+    assert_wellformed_predictions(good, num_classes=2)
+    degenerate = [{"boxes": [[5, 5, 1, 1]], "scores": [0.9], "labels": [1]}]
+    with pytest.raises(AdapterGateError, match="degenerate box"):
+        assert_wellformed_predictions(degenerate, num_classes=2)
+    bad_score = [{"boxes": [[1, 1, 5, 5]], "scores": [1.4], "labels": [1]}]
+    with pytest.raises(AdapterGateError, match=r"score outside"):
+        assert_wellformed_predictions(bad_score, num_classes=2)
+    bad_label = [{"boxes": [[1, 1, 5, 5]], "scores": [0.5], "labels": [7]}]
+    with pytest.raises(AdapterGateError, match="outside"):
+        assert_wellformed_predictions(bad_label, num_classes=2)
+
+
+def test_checkpoint_roundtrip_guard():
+    before = {"a": "h1", "b": "h2"}
+    assert_checkpoint_roundtrip(before, dict(before))
+    with pytest.raises(AdapterGateError, match="changed across save/load"):
+        assert_checkpoint_roundtrip(before, {"a": "h1", "b": "CHANGED"})
+    with pytest.raises(AdapterGateError, match="names changed"):
+        assert_checkpoint_roundtrip(before, {"a": "h1"})
+
+
+def _passing_checks():
+    return [{"name": name, "passed": True} for name in SMOKE_CHECK_ORDER]
+
+
+def test_build_smoke_record_signs_and_orders_checks():
+    record = build_smoke_record(
+        MODEL_ID, _fingerprint(), _passing_checks(), gpu="Tesla T4"
+    )
+    assert record["status"] == "READY"
+    assert record["artifact_kind"] == "gpu_adapter_smoke"
+    assert len(record["signature"]) == 64
+    # A single failed check flips the record to FAILED_ADAPTER.
+    failed = _passing_checks()
+    failed[4]["passed"] = False
+    assert build_smoke_record(MODEL_ID, _fingerprint(), failed, gpu="T4")[
+        "status"
+    ] == "FAILED_ADAPTER"
+
+
+def test_build_smoke_record_requires_full_ordered_check_set():
+    with pytest.raises(AdapterGateError, match="in order"):
+        build_smoke_record(
+            MODEL_ID, _fingerprint(), _passing_checks()[:3], gpu="T4"
+        )

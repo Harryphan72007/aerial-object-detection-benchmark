@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import math
 import os
 import platform
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping, Sequence
 
 from src.models.registry import load_model_config
 from src.reproducibility import git_commit
@@ -140,6 +142,157 @@ def adapter_gate_decision(
             f"persisted {status} fingerprint matches the current source and environment"
         ]
     return "retry", [f"persisted gate has unsupported status {status!r}"]
+
+
+class AdapterGateError(RuntimeError):
+    """A GPU adapter smoke check failed; a full run must not start."""
+
+
+def assert_pretrained_load_complete(
+    missing_keys: Sequence[str] | None,
+    unexpected_keys: Sequence[str] | None,
+) -> None:
+    """Reject a partial weight load. A warn-only load hides the historical Swin
+    and VMamba failure modes; here any missing/unexpected key is fatal."""
+    missing = list(missing_keys or [])
+    unexpected = list(unexpected_keys or [])
+    if missing or unexpected:
+        raise AdapterGateError(
+            f"pretrained weights loaded partially: missing={missing}, "
+            f"unexpected={unexpected}"
+        )
+
+
+def assert_feature_map_contract(
+    feature_maps: Sequence[Mapping[str, Any]],
+    expected: Sequence[tuple[int, int]],
+    image_size: int,
+) -> None:
+    """Verify backbone/FPN feature maps: channels, strides, and NCHW spatial
+    dims at the *configured* resolution (not 224). ``expected`` is an ordered
+    sequence of ``(channels, stride)`` and ``feature_maps`` carry an NCHW
+    ``shape`` and a ``stride``."""
+    if len(feature_maps) != len(expected):
+        raise AdapterGateError(
+            f"expected {len(expected)} feature levels, got {len(feature_maps)}"
+        )
+    for level, (fmap, (channels, stride)) in enumerate(zip(feature_maps, expected)):
+        shape = tuple(int(dim) for dim in fmap["shape"])
+        if len(shape) != 4:
+            raise AdapterGateError(
+                f"feature level {level} is not NCHW: shape={shape}"
+            )
+        _, c, h, w = shape
+        if c != channels:
+            raise AdapterGateError(
+                f"feature level {level} has {c} channels, expected {channels}"
+            )
+        if int(fmap.get("stride", -1)) != stride:
+            raise AdapterGateError(
+                f"feature level {level} stride {fmap.get('stride')} != {stride}"
+            )
+        expected_hw = image_size // stride
+        if h != expected_hw or w != expected_hw:
+            raise AdapterGateError(
+                f"feature level {level} spatial {h}x{w} != "
+                f"{expected_hw}x{expected_hw} for stride {stride} at "
+                f"resolution {image_size}"
+            )
+
+
+def assert_detection_head_class_count(
+    head_class_count: int, expected_classes: int
+) -> None:
+    """The detection head must be reset to the track's class count with no
+    COCO-80 residue."""
+    if int(head_class_count) != int(expected_classes):
+        raise AdapterGateError(
+            f"detection head exposes {head_class_count} classes, expected "
+            f"{expected_classes} (COCO-80 residue?)"
+        )
+
+
+def assert_finite_loss(loss: Any) -> float:
+    value = float(loss)
+    if not math.isfinite(value):
+        raise AdapterGateError(f"non-finite training loss: {value}")
+    return value
+
+
+def assert_wellformed_predictions(
+    predictions: Sequence[Mapping[str, Any]], *, num_classes: int
+) -> None:
+    for item in predictions:
+        boxes = list(item["boxes"])
+        scores = list(item["scores"])
+        labels = list(item["labels"])
+        if not (len(boxes) == len(scores) == len(labels)):
+            raise AdapterGateError("prediction boxes/scores/labels length mismatch")
+        for box, score, label in zip(boxes, scores, labels):
+            x1, y1, x2, y2 = (float(value) for value in box)
+            if x2 < x1 or y2 < y1:
+                raise AdapterGateError(f"degenerate box: {(x1, y1, x2, y2)}")
+            if not 0.0 <= float(score) <= 1.0:
+                raise AdapterGateError(f"score outside [0, 1]: {score}")
+            if not 0 <= int(label) < num_classes:
+                raise AdapterGateError(
+                    f"label {label} outside [0, {num_classes})"
+                )
+
+
+def assert_checkpoint_roundtrip(
+    before: Mapping[str, Any], after: Mapping[str, Any]
+) -> None:
+    """Parameters must be identical after save -> load."""
+    if set(before) != set(after):
+        raise AdapterGateError("parameter names changed across save/load")
+    mismatched = [key for key in before if before[key] != after[key]]
+    if mismatched:
+        raise AdapterGateError(
+            f"parameters changed across save/load: {mismatched[:5]}"
+        )
+
+
+SMOKE_CHECK_ORDER = (
+    "constructs",
+    "pretrained_weights_complete",
+    "feature_map_contract",
+    "detection_head_class_count",
+    "forward_backward_finite_loss",
+    "predict_wellformed",
+    "checkpoint_roundtrip",
+)
+
+
+def build_smoke_record(
+    model_id: str,
+    fingerprint: Mapping[str, Any],
+    checks: Sequence[Mapping[str, Any]],
+    *,
+    gpu: str,
+) -> dict[str, Any]:
+    """Assemble a signed smoke-gate record. Written to the artifact root, never
+    to ``results/`` — a smoke pass is not a benchmark result."""
+    ordered = [str(check["name"]) for check in checks]
+    if ordered != list(SMOKE_CHECK_ORDER):
+        raise AdapterGateError(
+            f"smoke checks must run in order {SMOKE_CHECK_ORDER}, got {ordered}"
+        )
+    passed = all(bool(check["passed"]) for check in checks)
+    record = {
+        "schema_version": ADAPTER_GATE_SCHEMA_VERSION,
+        "artifact_kind": "gpu_adapter_smoke",
+        "model_id": model_id,
+        "gpu": gpu,
+        "status": "READY" if passed else "FAILED_ADAPTER",
+        "commit": fingerprint.get("git_commit"),
+        "fingerprint": dict(fingerprint),
+        "checks": [dict(check) for check in checks],
+    }
+    signature = hashlib.sha256(
+        json.dumps(record, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return {**record, "signature": signature}
 
 
 def print_gate_decision(decision: str, reasons: list[str]) -> None:

@@ -77,9 +77,10 @@ notebooks.
 RT-DETRv2-L is a full member of the four-family controlled benchmark. Its earlier
 quarantine is lifted now that (a) the variant is the intended L/`r50vd` model, and
 (b) it shares the identical controlled epoch budget as every other model. Before
-trusting any RT-DETRv2 run, the GPU adapter smoke gate must pass on the target
-hardware, exactly as for the other three families — no full run should start
-without a stored passing smoke record. The historical over-fine-tuning
+trusting any RT-DETRv2 run, the
+[GPU adapter smoke gate](docs/release/GPU_VALIDATION_CHECKLIST.md) must pass on
+the target hardware, exactly as for the other three families — no full run should
+start without a stored passing smoke record. The historical over-fine-tuning
 observation (see
 [`docs/reference/rtdetr_training_results_diagnosis_2026-08-03.md`](docs/reference/rtdetr_training_results_diagnosis_2026-08-03.md))
 described a 25–40 epoch run selected on official validation; the controlled track

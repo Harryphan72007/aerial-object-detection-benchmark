@@ -1,6 +1,6 @@
 """Parameter, memory, timing, and optional NVML measurements."""
 from __future__ import annotations
-import os, time
+import math, os, time
 from contextlib import contextmanager
 from typing import Any, Callable, Iterator, Mapping
 import psutil
@@ -32,6 +32,47 @@ def optimizer_state_bytes(optimizer:Any)->int:
         for value in state.values():
             if hasattr(value,"numel") and hasattr(value,"element_size"): total+=value.numel()*value.element_size()
     return int(total)
+
+
+def flops_measurement(
+    measure: Callable[[], float] | None, *, method: str
+) -> dict[str, Any]:
+    """A FLOPs/MACs measurement, or null-with-reason on failure.
+
+    A failed or unavailable FLOPs measurement must serialise as ``None`` with a
+    recorded reason, never as ``0`` — a zero would silently read as a free model.
+    ``method`` names how it was measured (e.g. "fvcore", "thop") for provenance.
+    """
+    if measure is None:
+        return {"flops_macs": None, "method": method, "reason": "no measurement available"}
+    try:
+        value = float(measure())
+    except Exception as error:  # noqa: BLE001 - any failure becomes a recorded reason
+        return {
+            "flops_macs": None,
+            "method": method,
+            "reason": f"measurement failed: {error}",
+        }
+    if not math.isfinite(value) or value <= 0:
+        return {
+            "flops_macs": None,
+            "method": method,
+            "reason": f"non-positive FLOPs measurement ({value})",
+        }
+    return {"flops_macs": value, "method": method, "reason": None}
+
+
+def assert_flops_valid(record: Mapping[str, Any]) -> None:
+    """A FLOPs record is valid only if positive, or null with a stated reason."""
+    value = record.get("flops_macs")
+    if value is None:
+        if not record.get("reason"):
+            raise ValueError("null FLOPs must record a reason, not a bare null")
+        return
+    if not math.isfinite(float(value)) or float(value) <= 0:
+        raise ValueError(
+            f"FLOPs must be positive or null-with-reason, got {value!r}"
+        )
 
 
 def _default_synchronize() -> None:

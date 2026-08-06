@@ -11,6 +11,8 @@ import pytest
 
 from src.config.benchmark_tracks import load_protocol, resolve_controlled_protocol
 from src.training.profiling import (
+    assert_flops_valid,
+    flops_measurement,
     measure_iteration_seconds,
     render_runtime_budget,
 )
@@ -91,3 +93,27 @@ def test_render_runtime_budget_reads_only_config_values() -> None:
     protocol = load_protocol(ROOT, "controlled")
     assert protocol["final_seeds"] == [42]
     assert protocol["full_matrix_seeds"] == [17, 42, 3407]
+
+
+def test_flops_measurement_never_reports_zero_for_failure() -> None:
+    ok = flops_measurement(lambda: 1.2e10, method="fvcore")
+    assert ok["flops_macs"] == pytest.approx(1.2e10)
+    assert ok["reason"] is None
+
+    # Unavailable / failed / non-positive all become null with a reason, not 0.
+    for record in (
+        flops_measurement(None, method="fvcore"),
+        flops_measurement(lambda: 1 / 0, method="thop"),
+        flops_measurement(lambda: 0.0, method="fvcore"),
+    ):
+        assert record["flops_macs"] is None
+        assert record["reason"]
+
+
+def test_assert_flops_valid_rejects_zero_and_bare_null() -> None:
+    assert_flops_valid({"flops_macs": 5.0})
+    assert_flops_valid({"flops_macs": None, "reason": "fvcore unavailable"})
+    with pytest.raises(ValueError, match="positive or null"):
+        assert_flops_valid({"flops_macs": 0.0})
+    with pytest.raises(ValueError, match="record a reason"):
+        assert_flops_valid({"flops_macs": None})

@@ -43,8 +43,12 @@ matrix value is read from `configs/controlled/benchmark.yaml`, not hardcoded.
 Evaluation includes COCO AP, AP50/AP75, size and per-class metrics,
 precision/recall/F1 and PR curves, calibration, error decomposition, training
 and convergence facts, parameters, checkpoint size, valid FLOPs/MACs, memory,
-latency percentiles, FPS, throughput, and resolution scaling when measured.
-Nothing is fabricated when a model, run, or measurement is missing.
+latency percentiles (p50/p90/p95/p99), FPS, throughput, and resolution scaling
+when measured. Nothing is fabricated when a model, run, or measurement is
+missing: a missing metric serialises as `null`, and a FLOPs/MACs measurement that
+fails or is unavailable records `null` with a reason — never `0`, which would
+read as a free model. Latency is always labelled with the batch size it was
+measured at; batch latency is never presented as single-image latency.
 
 ## Reproducibility policy
 

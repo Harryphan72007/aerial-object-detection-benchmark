@@ -283,9 +283,10 @@ class FinalExperimentWorkflow:
         """Guarantee the held-out model-selection split exists and is valid.
 
         Final training reads ``final_train_seed42.json`` (official train minus the
-        holdout) and selects ``best.pth`` on ``model_selection_seed42.json``. The
-        HPO search normally creates these; rebuild them from the official
-        annotations if a final run starts without a completed search directory.
+        holdout) and selects the canonical best checkpoint on
+        ``model_selection_seed42.json``. The HPO search normally creates these;
+        rebuild them from the official annotations if a final run starts without
+        a completed search directory.
         """
         annotation_root = self.paths.coco(self.dataset_track) / "annotations"
         train = annotation_root / "instances_train.json"

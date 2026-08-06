@@ -1827,7 +1827,7 @@
       "sha256": "b0f201d8d5d4b86e493835c1caea12c81f3ece6cdad40f4721ed21156ef88c73"
     }
   ],
-  "python_source_count": 99,
+  "python_source_count": 101,
   "python_sources": [
     {
       "artifact_references": [
@@ -2255,6 +2255,95 @@
       ],
       "path": "scripts/diagnostics/run_diagnostics.py",
       "sha256": "b726f537647552421edb48514d52f0479615607b3cfe001e0bda644bcf6480f5"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 29,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 34,
+          "literals": [
+            "result_bundles"
+          ],
+          "operations": [],
+          "source": "return Path(drive_root).expanduser().resolve() / DRY_RUN_NAMESPACE / \"result_bundles\""
+        },
+        {
+          "cell": 0,
+          "line": 39,
+          "literals": [
+            "bundle_manifest.json"
+          ],
+          "operations": [],
+          "source": "manifest_path = Path(bundle_dir) / \"bundle_manifest.json\""
+        },
+        {
+          "cell": 0,
+          "line": 40,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "manifest = read_json(manifest_path)"
+        },
+        {
+          "cell": 0,
+          "line": 43,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json(manifest_path, manifest)"
+        },
+        {
+          "cell": 0,
+          "line": 75,
+          "literals": [
+            "bundle_manifest.json"
+          ],
+          "operations": [],
+          "source": "manifest_path = bundle / \"bundle_manifest.json\""
+        },
+        {
+          "cell": 0,
+          "line": 77,
+          "literals": [
+            "dry-run bundle has no bundle_manifest.json"
+          ],
+          "operations": [],
+          "source": "return errors + [\"dry-run bundle has no bundle_manifest.json\"]"
+        },
+        {
+          "cell": 0,
+          "line": 78,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "if not is_dry_run_bundle(read_json(manifest_path)):"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "pathlib",
+        "src.hpo.final_workflow",
+        "src.result_export",
+        "src.utils.serialization",
+        "sys",
+        "typing"
+      ],
+      "path": "scripts/dry_run_tiny.py",
+      "sha256": "06ba9d35411e50052af8b7e3f7470dc1638036587d42a0c18075a4ccae9fdc1f"
     },
     {
       "artifact_references": [
@@ -2766,6 +2855,53 @@
       "artifact_references": [
         {
           "cell": 0,
+          "line": 103,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "model_holder[\"model\"] = adapter.load_model(\"\", config)"
+        },
+        {
+          "cell": 0,
+          "line": 178,
+          "literals": [
+            "{model_id}__{args.dataset_track}__smoke.json"
+          ],
+          "operations": [
+            "write"
+          ],
+          "source": "(out_dir / f\"{model_id}__{args.dataset_track}__smoke.json\").write_text("
+        },
+        {
+          "cell": 0,
+          "line": 179,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(record, indent=2), encoding=\"utf-8\""
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "pathlib",
+        "src.config.benchmark_tracks",
+        "src.models.registry",
+        "src.workflows.adapter_gate",
+        "sys",
+        "torch",
+        "typing"
+      ],
+      "path": "scripts/gpu_adapter_smoke.py",
+      "sha256": "639e4681493c2eebdbb37feaf7393922c0331e0a03fe9b5c56ed9734cb64fa17"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
           "line": 24,
           "literals": [
             "project_config.yaml"
@@ -2882,6 +3018,80 @@
       ],
       "path": "scripts/lr_search.py",
       "sha256": "173a2a06a2076d00bb0dd50b244cbae82dcc5a200d101d5d483d4b66a4f76974"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 88,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "model = adapter.load_model(\"\", config)"
+        },
+        {
+          "cell": 0,
+          "line": 149,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "doc.write_text(\"\\n\".join(lines) + \"\\n\", encoding=\"utf-8\")"
+        },
+        {
+          "cell": 0,
+          "line": 176,
+          "literals": [
+            "profiling"
+          ],
+          "operations": [],
+          "source": "out_dir = Path(args.drive_root).resolve() / \"profiling\""
+        },
+        {
+          "cell": 0,
+          "line": 178,
+          "literals": [
+            "throughput.json"
+          ],
+          "operations": [
+            "write"
+          ],
+          "source": "(out_dir / \"throughput.json\").write_text("
+        },
+        {
+          "cell": 0,
+          "line": 179,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(measurements, indent=2), encoding=\"utf-8\""
+        },
+        {
+          "cell": 0,
+          "line": 191,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "print(json.dumps(budget, indent=2))"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "pathlib",
+        "src.config.benchmark_tracks",
+        "src.models.registry",
+        "src.training.profiling",
+        "sys",
+        "torch",
+        "typing"
+      ],
+      "path": "scripts/measure_throughput.py",
+      "sha256": "379b2f2292c73dd8d959501bf32e49d84d55f95c23a22f51620e2034b601fcda"
     },
     {
       "artifact_references": [
@@ -3887,7 +4097,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 22,
+          "line": 23,
           "literals": [
             "latest_result_manifest.json",
             "manifests"
@@ -3897,7 +4107,7 @@
         },
         {
           "cell": 0,
-          "line": 26,
+          "line": 27,
           "literals": [],
           "operations": [
             "discover"
@@ -3906,7 +4116,7 @@
         },
         {
           "cell": 0,
-          "line": 34,
+          "line": 35,
           "literals": [],
           "operations": [
             "read"
@@ -3915,7 +4125,25 @@
         },
         {
           "cell": 0,
-          "line": 55,
+          "line": 49,
+          "literals": [
+            "bundle_manifest.json"
+          ],
+          "operations": [],
+          "source": "bundle_manifest_path = bundle_path / \"bundle_manifest.json\""
+        },
+        {
+          "cell": 0,
+          "line": 51,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "json.loads(bundle_manifest_path.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 66,
           "literals": [],
           "operations": [
             "discover"
@@ -3924,7 +4152,7 @@
         },
         {
           "cell": 0,
-          "line": 58,
+          "line": 69,
           "literals": [
             ".db"
           ],
@@ -3933,7 +4161,7 @@
         },
         {
           "cell": 0,
-          "line": 63,
+          "line": 74,
           "literals": [],
           "operations": [
             "read"
@@ -3942,7 +4170,7 @@
         },
         {
           "cell": 0,
-          "line": 70,
+          "line": 81,
           "literals": [
             "reports/*.html",
             "reports/*.md"
@@ -3954,7 +4182,7 @@
         },
         {
           "cell": 0,
-          "line": 71,
+          "line": 82,
           "literals": [],
           "operations": [
             "read"
@@ -3963,7 +4191,7 @@
         },
         {
           "cell": 0,
-          "line": 73,
+          "line": 84,
           "literals": [],
           "operations": [
             "read"
@@ -3982,7 +4210,7 @@
         "sys"
       ],
       "path": "scripts/validate_results.py",
-      "sha256": "7d8ea9262e4b1f1e6d6545f455bb18b254239349e74b8ad456c00172717b7a47"
+      "sha256": "713a5a3e47e9c017514e3f94549339d18d28fce17832fe5eccacda9e7d0d92fc"
     },
     {
       "artifact_references": [
@@ -4725,7 +4953,7 @@
         "typing"
       ],
       "path": "scripts/verify_model_environments.py",
-      "sha256": "e6310dc895af972a57e2e758e14107588aad789578ece5a4e95a128eb35e1ce2"
+      "sha256": "4192f1465d9fb678a9d751a54190700cb0c231918662f6f14bbac751dda64b2a"
     },
     {
       "artifact_references": [
@@ -5204,7 +5432,7 @@
         },
         {
           "cell": 0,
-          "line": 54,
+          "line": 153,
           "literals": [
             "benchmark.yaml"
           ],
@@ -5212,6 +5440,24 @@
             "read"
           ],
           "source": "read_yaml(Path(repo_root) / \"configs\" / track / \"benchmark.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 206,
+          "literals": [
+            "model.yaml"
+          ],
+          "operations": [],
+          "source": "model_config_path = Path(repo_root) / \"configs\" / model_id / \"model.yaml\""
+        },
+        {
+          "cell": 0,
+          "line": 208,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "reject_frozen_protocol_overrides(read_yaml(model_config_path))"
         }
       ],
       "imports": [
@@ -5221,7 +5467,7 @@
         "typing"
       ],
       "path": "src/config/benchmark_tracks.py",
-      "sha256": "fc35e0bc01c58f466ea4d85cdd1cdde7cbf1b117f30a6de33a459979a460bd56"
+      "sha256": "2be9241f11c114ac1f58b6d1e204ba750bdcf22e5e6fc0792211b44f05f1a4f8"
     },
     {
       "artifact_references": [
@@ -5236,7 +5482,7 @@
         },
         {
           "cell": 0,
-          "line": 97,
+          "line": 96,
           "literals": [],
           "operations": [
             "write"
@@ -5245,7 +5491,7 @@
         },
         {
           "cell": 0,
-          "line": 121,
+          "line": 120,
           "literals": [
             "{model_id}_{dataset_track}.yaml"
           ],
@@ -5254,7 +5500,7 @@
         },
         {
           "cell": 0,
-          "line": 128,
+          "line": 127,
           "literals": [],
           "operations": [
             "read"
@@ -5271,7 +5517,7 @@
         "typing"
       ],
       "path": "src/config/experiment.py",
-      "sha256": "34bdc074860c89550220df433bd37a1c9e243ec0d7e7c7e733e092fa14a61238"
+      "sha256": "98d8d008f600e875cee7d0f89aeb219924dadcd3107e46bb1d23e5d527294dbb"
     },
     {
       "artifact_references": [
@@ -6918,7 +7164,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 24,
+          "line": 30,
           "literals": [],
           "operations": [
             "read",
@@ -6928,7 +7174,7 @@
         },
         {
           "cell": 0,
-          "line": 34,
+          "line": 48,
           "literals": [],
           "operations": [
             "write"
@@ -6937,7 +7183,7 @@
         },
         {
           "cell": 0,
-          "line": 76,
+          "line": 92,
           "literals": [
             "best_config.yaml"
           ],
@@ -6946,7 +7192,7 @@
         },
         {
           "cell": 0,
-          "line": 83,
+          "line": 99,
           "literals": [
             "best_config.yaml"
           ],
@@ -6955,7 +7201,7 @@
         },
         {
           "cell": 0,
-          "line": 93,
+          "line": 109,
           "literals": [],
           "operations": [
             "read"
@@ -6964,7 +7210,7 @@
         },
         {
           "cell": 0,
-          "line": 165,
+          "line": 187,
           "literals": [
             "instances_train.json"
           ],
@@ -6973,7 +7219,7 @@
         },
         {
           "cell": 0,
-          "line": 166,
+          "line": 188,
           "literals": [
             "instances_val.json"
           ],
@@ -6982,7 +7228,7 @@
         },
         {
           "cell": 0,
-          "line": 200,
+          "line": 222,
           "literals": [
             "*/resume_contract.json"
           ],
@@ -6993,7 +7239,7 @@
         },
         {
           "cell": 0,
-          "line": 204,
+          "line": 226,
           "literals": [],
           "operations": [
             "read"
@@ -7002,7 +7248,7 @@
         },
         {
           "cell": 0,
-          "line": 207,
+          "line": 229,
           "literals": [
             "run_manifest.json"
           ],
@@ -7011,7 +7257,7 @@
         },
         {
           "cell": 0,
-          "line": 209,
+          "line": 231,
           "literals": [],
           "operations": [
             "read"
@@ -7020,7 +7266,7 @@
         },
         {
           "cell": 0,
-          "line": 212,
+          "line": 234,
           "literals": [
             "last.pth"
           ],
@@ -7029,7 +7275,25 @@
         },
         {
           "cell": 0,
-          "line": 247,
+          "line": 258,
+          "literals": [
+            "final_train_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"final_train_split\": \"final_train_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 259,
+          "literals": [
+            "model_selection_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"model_selection_split\": \"model_selection_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 279,
           "literals": [
             "run_manifest.json"
           ],
@@ -7040,7 +7304,88 @@
         },
         {
           "cell": 0,
-          "line": 287,
+          "line": 292,
+          "literals": [
+            "instances_train.json"
+          ],
+          "operations": [],
+          "source": "train = annotation_root / \"instances_train.json\""
+        },
+        {
+          "cell": 0,
+          "line": 293,
+          "literals": [
+            "instances_val.json"
+          ],
+          "operations": [],
+          "source": "validation = annotation_root / \"instances_val.json\""
+        },
+        {
+          "cell": 0,
+          "line": 297,
+          "literals": [
+            "final_train_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"final_train_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 298,
+          "literals": [
+            "model_selection_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"model_selection_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 299,
+          "literals": [
+            "search_train_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"search_train_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 300,
+          "literals": [
+            "search_validation_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"search_validation_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 301,
+          "literals": [
+            "official_full_train.json"
+          ],
+          "operations": [],
+          "source": "\"official_full_train.json\","
+        },
+        {
+          "cell": 0,
+          "line": 302,
+          "literals": [
+            "official_validation.json"
+          ],
+          "operations": [],
+          "source": "\"official_validation.json\","
+        },
+        {
+          "cell": 0,
+          "line": 303,
+          "literals": [
+            "split_summary.json"
+          ],
+          "operations": [],
+          "source": "\"split_summary.json\","
+        },
+        {
+          "cell": 0,
+          "line": 372,
           "literals": [
             "run_manifest.json"
           ],
@@ -7051,7 +7396,7 @@
         },
         {
           "cell": 0,
-          "line": 292,
+          "line": 377,
           "literals": [
             "resume_contract.json"
           ],
@@ -7062,21 +7407,21 @@
         },
         {
           "cell": 0,
-          "line": 306,
+          "line": 391,
           "literals": [
-            "instances_train.json"
+            "final_train_seed42.json"
           ],
           "operations": [],
-          "source": "annotation_root / \"instances_train.json\""
+          "source": "self.manifest_dir / \"final_train_seed42.json\""
         },
         {
           "cell": 0,
-          "line": 309,
+          "line": 394,
           "literals": [
-            "instances_val.json"
+            "model_selection_seed42.json"
           ],
           "operations": [],
-          "source": "annotation_root / \"instances_val.json\""
+          "source": "self.manifest_dir / \"model_selection_seed42.json\""
         }
       ],
       "imports": [
@@ -7085,6 +7430,7 @@
         "json",
         "os",
         "pathlib",
+        "src.config.benchmark_tracks",
         "src.evaluation.policy",
         "src.hpo.rtdetr_v2",
         "src.hpo.workflow",
@@ -7093,13 +7439,14 @@
         "src.paths",
         "src.reproducibility",
         "src.training.checkpointing",
+        "src.training.lr_search",
         "src.training.trainer",
         "src.utils.serialization",
         "src.workflows.adapter_gate",
         "typing"
       ],
       "path": "src/hpo/final_workflow.py",
-      "sha256": "0e13c6572b89f1f5619f635ff3042315631e16f6564a7febc020542fbe9e3a24"
+      "sha256": "ff073d744c80e33e85b3e500fbc0bb0417057129114b78c37517c3735aa4d00e"
     },
     {
       "artifact_references": [
@@ -7502,7 +7849,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 25,
+          "line": 26,
           "literals": [],
           "operations": [
             "read",
@@ -7512,7 +7859,7 @@
         },
         {
           "cell": 0,
-          "line": 51,
+          "line": 55,
           "literals": [],
           "operations": [
             "write"
@@ -7521,7 +7868,7 @@
         },
         {
           "cell": 0,
-          "line": 62,
+          "line": 66,
           "literals": [],
           "operations": [
             "discover"
@@ -7530,7 +7877,7 @@
         },
         {
           "cell": 0,
-          "line": 70,
+          "line": 73,
           "literals": [
             "requirements*.txt"
           ],
@@ -7541,7 +7888,7 @@
         },
         {
           "cell": 0,
-          "line": 201,
+          "line": 205,
           "literals": [
             "study.db",
             "study_smoke.db"
@@ -7551,7 +7898,7 @@
         },
         {
           "cell": 0,
-          "line": 208,
+          "line": 212,
           "literals": [
             "instances_train.json"
           ],
@@ -7560,7 +7907,7 @@
         },
         {
           "cell": 0,
-          "line": 213,
+          "line": 217,
           "literals": [
             "instances_val.json"
           ],
@@ -7569,7 +7916,7 @@
         },
         {
           "cell": 0,
-          "line": 216,
+          "line": 220,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7578,7 +7925,7 @@
         },
         {
           "cell": 0,
-          "line": 217,
+          "line": 221,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7587,7 +7934,25 @@
         },
         {
           "cell": 0,
-          "line": 218,
+          "line": 222,
+          "literals": [
+            "model_selection_seed42.json"
+          ],
+          "operations": [],
+          "source": "self.manifest_dir / \"model_selection_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 223,
+          "literals": [
+            "final_train_seed42.json"
+          ],
+          "operations": [],
+          "source": "self.manifest_dir / \"final_train_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 224,
           "literals": [
             "official_full_train.json"
           ],
@@ -7596,7 +7961,7 @@
         },
         {
           "cell": 0,
-          "line": 219,
+          "line": 225,
           "literals": [
             "official_validation.json"
           ],
@@ -7605,7 +7970,7 @@
         },
         {
           "cell": 0,
-          "line": 220,
+          "line": 226,
           "literals": [
             "split_summary.json"
           ],
@@ -7614,7 +7979,7 @@
         },
         {
           "cell": 0,
-          "line": 228,
+          "line": 234,
           "literals": [
             "split_summary.json"
           ],
@@ -7625,7 +7990,7 @@
         },
         {
           "cell": 0,
-          "line": 299,
+          "line": 309,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -7634,7 +7999,7 @@
         },
         {
           "cell": 0,
-          "line": 302,
+          "line": 312,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -7643,7 +8008,7 @@
         },
         {
           "cell": 0,
-          "line": 417,
+          "line": 427,
           "literals": [
             "trial_record.json"
           ],
@@ -7654,7 +8019,7 @@
         },
         {
           "cell": 0,
-          "line": 419,
+          "line": 429,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7663,7 +8028,7 @@
         },
         {
           "cell": 0,
-          "line": 420,
+          "line": 430,
           "literals": [
             "runtime_environment.json"
           ],
@@ -7672,7 +8037,7 @@
         },
         {
           "cell": 0,
-          "line": 421,
+          "line": 431,
           "literals": [
             "optional_output_warnings.json"
           ],
@@ -7681,7 +8046,7 @@
         },
         {
           "cell": 0,
-          "line": 425,
+          "line": 435,
           "literals": [],
           "operations": [
             "read",
@@ -7691,7 +8056,7 @@
         },
         {
           "cell": 0,
-          "line": 426,
+          "line": 436,
           "literals": [
             "final_metrics.json"
           ],
@@ -7700,7 +8065,7 @@
         },
         {
           "cell": 0,
-          "line": 428,
+          "line": 438,
           "literals": [],
           "operations": [
             "read"
@@ -7709,7 +8074,7 @@
         },
         {
           "cell": 0,
-          "line": 435,
+          "line": 445,
           "literals": [
             "final_metrics.json"
           ],
@@ -7720,7 +8085,7 @@
         },
         {
           "cell": 0,
-          "line": 550,
+          "line": 560,
           "literals": [
             "final_metrics.json"
           ],
@@ -7729,7 +8094,7 @@
         },
         {
           "cell": 0,
-          "line": 618,
+          "line": 628,
           "literals": [],
           "operations": [
             "write"
@@ -7738,7 +8103,7 @@
         },
         {
           "cell": 0,
-          "line": 619,
+          "line": 629,
           "literals": [
             "{phase}_trials.csv"
           ],
@@ -7747,7 +8112,7 @@
         },
         {
           "cell": 0,
-          "line": 647,
+          "line": 657,
           "literals": [
             "search_space.json"
           ],
@@ -7758,7 +8123,7 @@
         },
         {
           "cell": 0,
-          "line": 648,
+          "line": 658,
           "literals": [
             "best_config.json"
           ],
@@ -7769,7 +8134,7 @@
         },
         {
           "cell": 0,
-          "line": 649,
+          "line": 659,
           "literals": [
             "best_config.yaml"
           ],
@@ -7780,7 +8145,7 @@
         },
         {
           "cell": 0,
-          "line": 654,
+          "line": 664,
           "literals": [
             "applied_overrides.json"
           ],
@@ -7789,7 +8154,7 @@
         },
         {
           "cell": 0,
-          "line": 658,
+          "line": 668,
           "literals": [],
           "operations": [
             "read"
@@ -7798,7 +8163,7 @@
         },
         {
           "cell": 0,
-          "line": 660,
+          "line": 670,
           "literals": [],
           "operations": [
             "write"
@@ -7807,7 +8172,7 @@
         },
         {
           "cell": 0,
-          "line": 661,
+          "line": 671,
           "literals": [
             "parameter_application_report.json"
           ],
@@ -7816,7 +8181,7 @@
         },
         {
           "cell": 0,
-          "line": 675,
+          "line": 685,
           "literals": [
             "best_config.yaml"
           ],
@@ -7825,7 +8190,7 @@
         },
         {
           "cell": 0,
-          "line": 681,
+          "line": 691,
           "literals": [
             "search_summary.json"
           ],
@@ -7846,6 +8211,7 @@
         "pandas",
         "pathlib",
         "shutil",
+        "src.config.benchmark_tracks",
         "src.evaluation.policy",
         "src.hpo.search_spaces",
         "src.models.registry",
@@ -7862,7 +8228,7 @@
         "typing"
       ],
       "path": "src/hpo/workflow.py",
-      "sha256": "ca91e64e20a0ad50dca0623c820ce548d343cf7d1e4a9dfe930c4f89e0da9759"
+      "sha256": "ab361149aaf02398d3e5fab8ae4646542aec261e280088ed5ef376f1f2bb2639"
     },
     {
       "artifact_references": [
@@ -8037,7 +8403,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 10,
+          "line": 9,
           "literals": [],
           "operations": [
             "read"
@@ -8046,7 +8412,7 @@
         },
         {
           "cell": 0,
-          "line": 13,
+          "line": 12,
           "literals": [
             "configs/faster_rcnn_resnet50/model.yaml"
           ],
@@ -8055,7 +8421,7 @@
         },
         {
           "cell": 0,
-          "line": 14,
+          "line": 13,
           "literals": [
             "configs/faster_rcnn_swin_t/model.yaml"
           ],
@@ -8064,7 +8430,7 @@
         },
         {
           "cell": 0,
-          "line": 15,
+          "line": 14,
           "literals": [
             "configs/faster_rcnn_vmamba_t/model.yaml"
           ],
@@ -8073,7 +8439,7 @@
         },
         {
           "cell": 0,
-          "line": 16,
+          "line": 15,
           "literals": [
             "configs/rtdetrv2_l/model.yaml"
           ],
@@ -8082,16 +8448,7 @@
         },
         {
           "cell": 0,
-          "line": 17,
-          "literals": [
-            "configs/yolox_s/model.yaml"
-          ],
-          "operations": [],
-          "source": "\"yolox_s\":\"configs/yolox_s/model.yaml\","
-        },
-        {
-          "cell": 0,
-          "line": 22,
+          "line": 20,
           "literals": [],
           "operations": [
             "read"
@@ -8106,12 +8463,11 @@
         "src.models.base_adapter",
         "src.models.mmdetection_adapter",
         "src.models.rtdetr_adapter",
-        "src.models.yolox_adapter",
         "src.utils.serialization",
         "typing"
       ],
       "path": "src/models/registry.py",
-      "sha256": "b28f86ef16208f1179612e5445a2cd386e7c6b0d4b57c8658a2ca76c5e68601f"
+      "sha256": "8424e1144dd6f71b6d002ed1f109bffb3da69f3b9f2f0f054b04ef070a59e759"
     },
     {
       "artifact_references": [
@@ -8198,7 +8554,7 @@
         "typing"
       ],
       "path": "src/models/rtdetrv2/factory.py",
-      "sha256": "60be7106c400fd907966b32ebfa526ae67f33ac63ba196aa1ac50ab4c09161d9"
+      "sha256": "e3d5700f043b6b73cf24fd1f0ee3a1c3c65e2cdcbe276cc63eb7143ffe6e502b"
     },
     {
       "artifact_references": [
@@ -8316,27 +8672,6 @@
       ],
       "path": "src/models/vmamba_frcnn/factory.py",
       "sha256": "d9bd4caa3dce5d80ba9928c974b6dd3754055398a2933a98e8d91320874a48e8"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 0,
-          "line": 10,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "def load_model(self,checkpoint_path:str|Path,config:dict[str,Any])->Any:"
-        }
-      ],
-      "imports": [
-        "__future__",
-        "pathlib",
-        "src.models.base_adapter",
-        "typing"
-      ],
-      "path": "src/models/yolox_adapter.py",
-      "sha256": "3e4c5c418e8f1242a37a5f1ffaa853ab5941d75da59406d6eb86c02641639aa1"
     },
     {
       "artifact_references": [
@@ -8946,7 +9281,7 @@
         },
         {
           "cell": 0,
-          "line": 78,
+          "line": 95,
           "literals": [
             ".csv",
             ".html",
@@ -8960,7 +9295,7 @@
         },
         {
           "cell": 0,
-          "line": 79,
+          "line": 96,
           "literals": [
             ".txt"
           ],
@@ -8969,7 +9304,7 @@
         },
         {
           "cell": 0,
-          "line": 82,
+          "line": 99,
           "literals": [
             ".ckpt",
             ".onnx",
@@ -8981,7 +9316,7 @@
         },
         {
           "cell": 0,
-          "line": 83,
+          "line": 100,
           "literals": [
             ".db"
           ],
@@ -8990,7 +9325,7 @@
         },
         {
           "cell": 0,
-          "line": 86,
+          "line": 103,
           "literals": [
             "datasets",
             "predictions"
@@ -9000,7 +9335,7 @@
         },
         {
           "cell": 0,
-          "line": 87,
+          "line": 104,
           "literals": [
             "checkpoints"
           ],
@@ -9009,7 +9344,7 @@
         },
         {
           "cell": 0,
-          "line": 219,
+          "line": 236,
           "literals": [
             "bundle_manifest.json"
           ],
@@ -9018,7 +9353,7 @@
         },
         {
           "cell": 0,
-          "line": 223,
+          "line": 240,
           "literals": [],
           "operations": [
             "read"
@@ -9027,7 +9362,7 @@
         },
         {
           "cell": 0,
-          "line": 277,
+          "line": 294,
           "literals": [],
           "operations": [
             "discover"
@@ -9036,7 +9371,7 @@
         },
         {
           "cell": 0,
-          "line": 289,
+          "line": 306,
           "literals": [],
           "operations": [
             "read"
@@ -9045,7 +9380,7 @@
         },
         {
           "cell": 0,
-          "line": 301,
+          "line": 318,
           "literals": [
             ".json"
           ],
@@ -9054,7 +9389,7 @@
         },
         {
           "cell": 0,
-          "line": 302,
+          "line": 319,
           "literals": [],
           "operations": [
             "read"
@@ -9063,7 +9398,7 @@
         },
         {
           "cell": 0,
-          "line": 303,
+          "line": 320,
           "literals": [
             ".yaml",
             ".yml"
@@ -9073,7 +9408,7 @@
         },
         {
           "cell": 0,
-          "line": 304,
+          "line": 321,
           "literals": [],
           "operations": [
             "read"
@@ -9082,7 +9417,7 @@
         },
         {
           "cell": 0,
-          "line": 305,
+          "line": 322,
           "literals": [
             ".csv"
           ],
@@ -9091,7 +9426,7 @@
         },
         {
           "cell": 0,
-          "line": 321,
+          "line": 338,
           "literals": [
             "configs/selected_lr.yaml"
           ],
@@ -9100,7 +9435,7 @@
         },
         {
           "cell": 0,
-          "line": 322,
+          "line": 339,
           "literals": [
             "configs/final_resolved_config.yaml"
           ],
@@ -9109,7 +9444,7 @@
         },
         {
           "cell": 0,
-          "line": 354,
+          "line": 371,
           "literals": [
             "metrics/final_metrics.json"
           ],
@@ -9118,7 +9453,7 @@
         },
         {
           "cell": 0,
-          "line": 362,
+          "line": 379,
           "literals": [
             "metrics/per_class_metrics.csv"
           ],
@@ -9127,7 +9462,7 @@
         },
         {
           "cell": 0,
-          "line": 369,
+          "line": 386,
           "literals": [
             "metrics/profiling_summary.json"
           ],
@@ -9136,7 +9471,7 @@
         },
         {
           "cell": 0,
-          "line": 378,
+          "line": 395,
           "literals": [
             "search/candidates.csv"
           ],
@@ -9145,7 +9480,7 @@
         },
         {
           "cell": 0,
-          "line": 379,
+          "line": 396,
           "literals": [
             "search/promotion_history.csv"
           ],
@@ -9154,7 +9489,7 @@
         },
         {
           "cell": 0,
-          "line": 384,
+          "line": 401,
           "literals": [
             "provenance/dataset_hashes.json"
           ],
@@ -9163,7 +9498,7 @@
         },
         {
           "cell": 0,
-          "line": 437,
+          "line": 454,
           "literals": [],
           "operations": [
             "write"
@@ -9172,7 +9507,7 @@
         },
         {
           "cell": 0,
-          "line": 487,
+          "line": 504,
           "literals": [],
           "operations": [
             "discover"
@@ -9181,7 +9516,7 @@
         },
         {
           "cell": 0,
-          "line": 501,
+          "line": 518,
           "literals": [],
           "operations": [
             "read"
@@ -9190,7 +9525,7 @@
         },
         {
           "cell": 0,
-          "line": 513,
+          "line": 530,
           "literals": [
             ".json"
           ],
@@ -9199,7 +9534,7 @@
         },
         {
           "cell": 0,
-          "line": 514,
+          "line": 531,
           "literals": [],
           "operations": [
             "read"
@@ -9208,7 +9543,7 @@
         },
         {
           "cell": 0,
-          "line": 515,
+          "line": 532,
           "literals": [
             ".yaml",
             ".yml"
@@ -9218,7 +9553,7 @@
         },
         {
           "cell": 0,
-          "line": 516,
+          "line": 533,
           "literals": [],
           "operations": [
             "read"
@@ -9227,7 +9562,7 @@
         },
         {
           "cell": 0,
-          "line": 519,
+          "line": 536,
           "literals": [
             "comparison.json"
           ],
@@ -9236,7 +9571,7 @@
         },
         {
           "cell": 0,
-          "line": 521,
+          "line": 538,
           "literals": [],
           "operations": [
             "read"
@@ -9245,7 +9580,7 @@
         },
         {
           "cell": 0,
-          "line": 550,
+          "line": 567,
           "literals": [
             ".csv",
             ".html",
@@ -9259,7 +9594,7 @@
         },
         {
           "cell": 0,
-          "line": 551,
+          "line": 568,
           "literals": [],
           "operations": [
             "read"
@@ -9268,7 +9603,7 @@
         },
         {
           "cell": 0,
-          "line": 552,
+          "line": 569,
           "literals": [
             ".json"
           ],
@@ -9277,7 +9612,7 @@
         },
         {
           "cell": 0,
-          "line": 553,
+          "line": 570,
           "literals": [],
           "operations": [
             "read",
@@ -9287,7 +9622,7 @@
         },
         {
           "cell": 0,
-          "line": 554,
+          "line": 571,
           "literals": [],
           "operations": [
             "write"
@@ -9296,7 +9631,7 @@
         },
         {
           "cell": 0,
-          "line": 560,
+          "line": 577,
           "literals": [],
           "operations": [
             "write"
@@ -9305,7 +9640,7 @@
         },
         {
           "cell": 0,
-          "line": 570,
+          "line": 587,
           "literals": [
             "result_bundles"
           ],
@@ -9314,7 +9649,25 @@
         },
         {
           "cell": 0,
-          "line": 577,
+          "line": 588,
+          "literals": [
+            "bundle_manifest.json"
+          ],
+          "operations": [],
+          "source": "manifest_path = bundle / \"bundle_manifest.json\""
+        },
+        {
+          "cell": 0,
+          "line": 589,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "if manifest_path.is_file() and is_dry_run_bundle(read_json(manifest_path)):"
+        },
+        {
+          "cell": 0,
+          "line": 600,
           "literals": [],
           "operations": [
             "discover"
@@ -9323,7 +9676,7 @@
         },
         {
           "cell": 0,
-          "line": 598,
+          "line": 621,
           "literals": [
             "latest_result_manifest.json",
             "manifests"
@@ -9333,7 +9686,7 @@
         },
         {
           "cell": 0,
-          "line": 613,
+          "line": 636,
           "literals": [
             "bundle_manifest.json"
           ],
@@ -9344,7 +9697,7 @@
         },
         {
           "cell": 0,
-          "line": 614,
+          "line": 637,
           "literals": [],
           "operations": [
             "write"
@@ -9353,7 +9706,7 @@
         },
         {
           "cell": 0,
-          "line": 655,
+          "line": 678,
           "literals": [
             "M results/manifests/latest_result_manifest.json"
           ],
@@ -9362,7 +9715,7 @@
         },
         {
           "cell": 0,
-          "line": 662,
+          "line": 685,
           "literals": [
             "bundle_manifest.json"
           ],
@@ -9373,7 +9726,7 @@
         },
         {
           "cell": 0,
-          "line": 663,
+          "line": 686,
           "literals": [
             "checkpoint_registry.json",
             "experiment_registry"
@@ -9383,7 +9736,7 @@
         },
         {
           "cell": 0,
-          "line": 666,
+          "line": 689,
           "literals": [],
           "operations": [
             "read"
@@ -9392,7 +9745,7 @@
         },
         {
           "cell": 0,
-          "line": 716,
+          "line": 739,
           "literals": [
             "datasets"
           ],
@@ -9401,7 +9754,7 @@
         },
         {
           "cell": 0,
-          "line": 721,
+          "line": 744,
           "literals": [
             "instances_val.json"
           ],
@@ -9410,7 +9763,7 @@
         },
         {
           "cell": 0,
-          "line": 730,
+          "line": 753,
           "literals": [],
           "operations": [
             "write"
@@ -9419,7 +9772,7 @@
         },
         {
           "cell": 0,
-          "line": 755,
+          "line": 778,
           "literals": [
             "{model_id}_2class_search_summary.json"
           ],
@@ -9428,7 +9781,7 @@
         },
         {
           "cell": 0,
-          "line": 772,
+          "line": 795,
           "literals": [
             "*__metrics.json"
           ],
@@ -9439,7 +9792,7 @@
         },
         {
           "cell": 0,
-          "line": 773,
+          "line": 796,
           "literals": [],
           "operations": [
             "read"
@@ -9448,7 +9801,7 @@
         },
         {
           "cell": 0,
-          "line": 791,
+          "line": 814,
           "literals": [],
           "operations": [
             "discover"
@@ -9457,7 +9810,7 @@
         },
         {
           "cell": 0,
-          "line": 800,
+          "line": 823,
           "literals": [
             "training_config.yaml"
           ],
@@ -9466,7 +9819,7 @@
         },
         {
           "cell": 0,
-          "line": 804,
+          "line": 827,
           "literals": [],
           "operations": [
             "read"
@@ -9475,7 +9828,7 @@
         },
         {
           "cell": 0,
-          "line": 916,
+          "line": 939,
           "literals": [
             "resolved_config.yaml"
           ],
@@ -9484,7 +9837,7 @@
         },
         {
           "cell": 0,
-          "line": 923,
+          "line": 946,
           "literals": [
             "environment.json"
           ],
@@ -9493,7 +9846,7 @@
         },
         {
           "cell": 0,
-          "line": 924,
+          "line": 947,
           "literals": [
             "split_summary.json"
           ],
@@ -9502,7 +9855,7 @@
         },
         {
           "cell": 0,
-          "line": 929,
+          "line": 952,
           "literals": [],
           "operations": [
             "read"
@@ -9511,7 +9864,7 @@
         },
         {
           "cell": 0,
-          "line": 931,
+          "line": 954,
           "literals": [],
           "operations": [
             "read"
@@ -9520,7 +9873,7 @@
         },
         {
           "cell": 0,
-          "line": 946,
+          "line": 969,
           "literals": [
             "instances_val.json"
           ],
@@ -9529,7 +9882,7 @@
         },
         {
           "cell": 0,
-          "line": 949,
+          "line": 972,
           "literals": [
             "split_summary.json"
           ],
@@ -9540,7 +9893,7 @@
         },
         {
           "cell": 0,
-          "line": 952,
+          "line": 975,
           "literals": [
             "official_full_train.json"
           ],
@@ -9549,7 +9902,7 @@
         },
         {
           "cell": 0,
-          "line": 953,
+          "line": 976,
           "literals": [
             "official_validation.json"
           ],
@@ -9558,7 +9911,7 @@
         },
         {
           "cell": 0,
-          "line": 964,
+          "line": 987,
           "literals": [],
           "operations": [
             "read"
@@ -9567,7 +9920,7 @@
         },
         {
           "cell": 0,
-          "line": 965,
+          "line": 988,
           "literals": [],
           "operations": [
             "read"
@@ -9576,7 +9929,7 @@
         },
         {
           "cell": 0,
-          "line": 966,
+          "line": 989,
           "literals": [
             "official_full_train.json"
           ],
@@ -9587,7 +9940,7 @@
         },
         {
           "cell": 0,
-          "line": 967,
+          "line": 990,
           "literals": [
             "official_validation.json"
           ],
@@ -9598,7 +9951,7 @@
         },
         {
           "cell": 0,
-          "line": 1007,
+          "line": 1030,
           "literals": [],
           "operations": [
             "read"
@@ -9607,7 +9960,7 @@
         },
         {
           "cell": 0,
-          "line": 1008,
+          "line": 1031,
           "literals": [
             "selected_lr.yaml"
           ],
@@ -9618,7 +9971,7 @@
         },
         {
           "cell": 0,
-          "line": 1009,
+          "line": 1032,
           "literals": [],
           "operations": [
             "write"
@@ -9627,7 +9980,7 @@
         },
         {
           "cell": 0,
-          "line": 1010,
+          "line": 1033,
           "literals": [
             "final_resolved_config.yaml"
           ],
@@ -9636,7 +9989,7 @@
         },
         {
           "cell": 0,
-          "line": 1013,
+          "line": 1036,
           "literals": [
             "candidates.csv"
           ],
@@ -9647,7 +10000,7 @@
         },
         {
           "cell": 0,
-          "line": 1014,
+          "line": 1037,
           "literals": [],
           "operations": [
             "write"
@@ -9656,7 +10009,7 @@
         },
         {
           "cell": 0,
-          "line": 1015,
+          "line": 1038,
           "literals": [
             "promotion_history.csv"
           ],
@@ -9665,7 +10018,7 @@
         },
         {
           "cell": 0,
-          "line": 1018,
+          "line": 1041,
           "literals": [
             "search_summary.json"
           ],
@@ -9676,7 +10029,7 @@
         },
         {
           "cell": 0,
-          "line": 1025,
+          "line": 1048,
           "literals": [
             "final_metrics.json"
           ],
@@ -9687,7 +10040,7 @@
         },
         {
           "cell": 0,
-          "line": 1026,
+          "line": 1049,
           "literals": [],
           "operations": [
             "write"
@@ -9696,7 +10049,7 @@
         },
         {
           "cell": 0,
-          "line": 1027,
+          "line": 1050,
           "literals": [
             "per_class_metrics.csv"
           ],
@@ -9705,7 +10058,7 @@
         },
         {
           "cell": 0,
-          "line": 1035,
+          "line": 1058,
           "literals": [],
           "operations": [
             "write"
@@ -9714,7 +10067,7 @@
         },
         {
           "cell": 0,
-          "line": 1036,
+          "line": 1059,
           "literals": [
             "profiling_summary.json"
           ],
@@ -9723,7 +10076,7 @@
         },
         {
           "cell": 0,
-          "line": 1047,
+          "line": 1070,
           "literals": [
             "environment.json"
           ],
@@ -9734,7 +10087,7 @@
         },
         {
           "cell": 0,
-          "line": 1048,
+          "line": 1071,
           "literals": [
             "environment_summary.json"
           ],
@@ -9745,7 +10098,7 @@
         },
         {
           "cell": 0,
-          "line": 1049,
+          "line": 1072,
           "literals": [],
           "operations": [
             "write"
@@ -9754,7 +10107,7 @@
         },
         {
           "cell": 0,
-          "line": 1050,
+          "line": 1073,
           "literals": [
             "dataset_hashes.json"
           ],
@@ -9763,7 +10116,7 @@
         },
         {
           "cell": 0,
-          "line": 1068,
+          "line": 1091,
           "literals": [
             "git_commit.txt"
           ],
@@ -9774,7 +10127,7 @@
         },
         {
           "cell": 0,
-          "line": 1096,
+          "line": 1119,
           "literals": [
             "reports"
           ],
@@ -9785,7 +10138,7 @@
         },
         {
           "cell": 0,
-          "line": 1097,
+          "line": 1120,
           "literals": [],
           "operations": [
             "write"
@@ -9794,7 +10147,7 @@
         },
         {
           "cell": 0,
-          "line": 1101,
+          "line": 1124,
           "literals": [
             "*.png"
           ],
@@ -9805,7 +10158,7 @@
         },
         {
           "cell": 0,
-          "line": 1105,
+          "line": 1128,
           "literals": [
             "reports"
           ],
@@ -9814,7 +10167,7 @@
         },
         {
           "cell": 0,
-          "line": 1131,
+          "line": 1154,
           "literals": [
             "reports/figures/{path.name}"
           ],
@@ -9823,7 +10176,7 @@
         },
         {
           "cell": 0,
-          "line": 1132,
+          "line": 1155,
           "literals": [
             "reports"
           ],
@@ -9834,7 +10187,7 @@
         },
         {
           "cell": 0,
-          "line": 1138,
+          "line": 1161,
           "literals": [],
           "operations": [
             "write"
@@ -9843,7 +10196,7 @@
         },
         {
           "cell": 0,
-          "line": 1140,
+          "line": 1163,
           "literals": [
             "bundle_manifest.json"
           ],
@@ -9871,7 +10224,7 @@
         "typing"
       ],
       "path": "src/result_export.py",
-      "sha256": "89de39c5e1c51e4093fb6e5384c55989432dbd610c1395b0a172605dda2ffa93"
+      "sha256": "6577ffc72b0aee308fb07dab4864cf8a591175bc4f4f595d80897c296f5522d1"
     },
     {
       "artifact_references": [
@@ -10368,7 +10721,7 @@
         },
         {
           "cell": 0,
-          "line": 151,
+          "line": 154,
           "literals": [
             "checkpoints"
           ],
@@ -10377,7 +10730,7 @@
         },
         {
           "cell": 0,
-          "line": 202,
+          "line": 205,
           "literals": [
             "model.yaml"
           ],
@@ -10386,7 +10739,7 @@
         },
         {
           "cell": 0,
-          "line": 203,
+          "line": 206,
           "literals": [],
           "operations": [
             "read"
@@ -10395,7 +10748,7 @@
         },
         {
           "cell": 0,
-          "line": 244,
+          "line": 247,
           "literals": [
             "pretrained"
           ],
@@ -10404,7 +10757,7 @@
         },
         {
           "cell": 0,
-          "line": 444,
+          "line": 448,
           "literals": [],
           "operations": [
             "read"
@@ -10413,7 +10766,7 @@
         },
         {
           "cell": 0,
-          "line": 445,
+          "line": 449,
           "literals": [],
           "operations": [
             "read"
@@ -10422,7 +10775,7 @@
         },
         {
           "cell": 0,
-          "line": 487,
+          "line": 505,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -10431,7 +10784,7 @@
         },
         {
           "cell": 0,
-          "line": 490,
+          "line": 508,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -10440,7 +10793,25 @@
         },
         {
           "cell": 0,
-          "line": 495,
+          "line": 513,
+          "literals": [
+            "model_selection_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"model_selection_seed42.json\": _subset_coco("
+        },
+        {
+          "cell": 0,
+          "line": 519,
+          "literals": [
+            "final_train_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"final_train_seed42.json\": _subset_coco("
+        },
+        {
+          "cell": 0,
+          "line": 525,
           "literals": [
             "official_full_train.json"
           ],
@@ -10449,7 +10820,7 @@
         },
         {
           "cell": 0,
-          "line": 499,
+          "line": 529,
           "literals": [
             "official_validation.json"
           ],
@@ -10458,7 +10829,7 @@
         },
         {
           "cell": 0,
-          "line": 510,
+          "line": 540,
           "literals": [],
           "operations": [
             "write"
@@ -10467,7 +10838,7 @@
         },
         {
           "cell": 0,
-          "line": 536,
+          "line": 567,
           "literals": [
             "split_summary.json"
           ],
@@ -10478,7 +10849,7 @@
         },
         {
           "cell": 0,
-          "line": 547,
+          "line": 578,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -10489,7 +10860,7 @@
         },
         {
           "cell": 0,
-          "line": 548,
+          "line": 579,
           "literals": [],
           "operations": [
             "read"
@@ -10498,7 +10869,7 @@
         },
         {
           "cell": 0,
-          "line": 549,
+          "line": 580,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -10509,7 +10880,47 @@
         },
         {
           "cell": 0,
-          "line": 551,
+          "line": 582,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "model_selection = json.loads("
+        },
+        {
+          "cell": 0,
+          "line": 583,
+          "literals": [
+            "model_selection_seed42.json"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "(root / \"model_selection_seed42.json\").read_text(encoding=\"utf-8\")"
+        },
+        {
+          "cell": 0,
+          "line": 585,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "final_train = json.loads("
+        },
+        {
+          "cell": 0,
+          "line": 586,
+          "literals": [
+            "final_train_seed42.json"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "(root / \"final_train_seed42.json\").read_text(encoding=\"utf-8\")"
+        },
+        {
+          "cell": 0,
+          "line": 588,
           "literals": [
             "official_full_train.json"
           ],
@@ -10520,7 +10931,7 @@
         },
         {
           "cell": 0,
-          "line": 552,
+          "line": 589,
           "literals": [],
           "operations": [
             "read"
@@ -10529,7 +10940,7 @@
         },
         {
           "cell": 0,
-          "line": 553,
+          "line": 590,
           "literals": [
             "official_validation.json"
           ],
@@ -10540,7 +10951,7 @@
         },
         {
           "cell": 0,
-          "line": 621,
+          "line": 683,
           "literals": [
             "split_summary.json"
           ],
@@ -10549,7 +10960,7 @@
         },
         {
           "cell": 0,
-          "line": 625,
+          "line": 687,
           "literals": [],
           "operations": [
             "read"
@@ -10558,7 +10969,7 @@
         },
         {
           "cell": 0,
-          "line": 632,
+          "line": 694,
           "literals": [],
           "operations": [
             "read"
@@ -10567,7 +10978,7 @@
         },
         {
           "cell": 0,
-          "line": 646,
+          "line": 708,
           "literals": [
             "official_full_train.json"
           ],
@@ -10578,7 +10989,7 @@
         },
         {
           "cell": 0,
-          "line": 647,
+          "line": 709,
           "literals": [],
           "operations": [
             "read"
@@ -10587,7 +10998,7 @@
         },
         {
           "cell": 0,
-          "line": 648,
+          "line": 710,
           "literals": [
             "official_validation.json"
           ],
@@ -10598,7 +11009,7 @@
         },
         {
           "cell": 0,
-          "line": 652,
+          "line": 714,
           "literals": [
             "split_summary.json"
           ],
@@ -10607,7 +11018,7 @@
         },
         {
           "cell": 0,
-          "line": 654,
+          "line": 716,
           "literals": [],
           "operations": [
             "read"
@@ -10616,7 +11027,7 @@
         },
         {
           "cell": 0,
-          "line": 655,
+          "line": 717,
           "literals": [],
           "operations": [
             "read"
@@ -10625,7 +11036,7 @@
         },
         {
           "cell": 0,
-          "line": 659,
+          "line": 721,
           "literals": [],
           "operations": [
             "read"
@@ -10634,7 +11045,7 @@
         },
         {
           "cell": 0,
-          "line": 660,
+          "line": 722,
           "literals": [],
           "operations": [
             "read"
@@ -10643,7 +11054,7 @@
         },
         {
           "cell": 0,
-          "line": 670,
+          "line": 732,
           "literals": [],
           "operations": [
             "read"
@@ -10652,7 +11063,7 @@
         },
         {
           "cell": 0,
-          "line": 671,
+          "line": 733,
           "literals": [
             "split_summary.json"
           ],
@@ -10663,7 +11074,70 @@
         },
         {
           "cell": 0,
-          "line": 901,
+          "line": 780,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "load = lambda name: json.loads((root / name).read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "cell": 0,
+          "line": 784,
+          "literals": [
+            "final_train_seed42.json"
+          ],
+          "operations": [],
+          "source": "final_train = load(\"final_train_seed42.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 785,
+          "literals": [
+            "model_selection_seed42.json"
+          ],
+          "operations": [],
+          "source": "model_selection = load(\"model_selection_seed42.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 786,
+          "literals": [
+            "search_train_seed42.json"
+          ],
+          "operations": [],
+          "source": "search_train = load(\"search_train_seed42.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 787,
+          "literals": [
+            "search_validation_seed42.json"
+          ],
+          "operations": [],
+          "source": "search_validation = load(\"search_validation_seed42.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 788,
+          "literals": [
+            "official_full_train.json"
+          ],
+          "operations": [],
+          "source": "official_train = load(\"official_full_train.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 789,
+          "literals": [
+            "official_validation.json"
+          ],
+          "operations": [],
+          "source": "official_validation = load(\"official_validation.json\")"
+        },
+        {
+          "cell": 0,
+          "line": 1003,
           "literals": [],
           "operations": [
             "write"
@@ -10672,7 +11146,7 @@
         },
         {
           "cell": 0,
-          "line": 927,
+          "line": 1029,
           "literals": [],
           "operations": [
             "write"
@@ -10681,7 +11155,7 @@
         },
         {
           "cell": 0,
-          "line": 931,
+          "line": 1033,
           "literals": [],
           "operations": [
             "write"
@@ -10690,7 +11164,7 @@
         },
         {
           "cell": 0,
-          "line": 965,
+          "line": 1067,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -10699,7 +11173,7 @@
         },
         {
           "cell": 0,
-          "line": 967,
+          "line": 1069,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -10708,7 +11182,7 @@
         },
         {
           "cell": 0,
-          "line": 969,
+          "line": 1071,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -10717,7 +11191,7 @@
         },
         {
           "cell": 0,
-          "line": 971,
+          "line": 1073,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -10726,7 +11200,7 @@
         },
         {
           "cell": 0,
-          "line": 991,
+          "line": 1093,
           "literals": [
             "official_full_train.json"
           ],
@@ -10735,7 +11209,7 @@
         },
         {
           "cell": 0,
-          "line": 992,
+          "line": 1094,
           "literals": [
             "official_validation.json"
           ],
@@ -10744,7 +11218,7 @@
         },
         {
           "cell": 0,
-          "line": 1009,
+          "line": 1111,
           "literals": [],
           "operations": [
             "write"
@@ -10771,7 +11245,7 @@
         "typing"
       ],
       "path": "src/training/lr_search.py",
-      "sha256": "c84a9c0f8ae31df8b8056b7ff0d84616f12a06ce869543f87890738f7c879346"
+      "sha256": "fb5b8f024f7f4a8f99d838564af953eb38fafebed97c6456f868afb0e9be47f0"
     },
     {
       "artifact_references": [
@@ -12092,7 +12566,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 12,
+          "line": 14,
           "literals": [],
           "operations": [
             "read"
@@ -12101,7 +12575,7 @@
         },
         {
           "cell": 0,
-          "line": 34,
+          "line": 36,
           "literals": [
             "requirements*.txt"
           ],
@@ -12112,17 +12586,28 @@
         },
         {
           "cell": 0,
-          "line": 59,
+          "line": 61,
           "literals": [],
           "operations": [
             "read"
           ],
           "source": "read_json(runtime_path)"
+        },
+        {
+          "cell": 0,
+          "line": 293,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "json.dumps(record, sort_keys=True, separators=(\",\", \":\")).encode(\"utf-8\")"
         }
       ],
       "imports": [
         "__future__",
         "hashlib",
+        "json",
+        "math",
         "os",
         "pathlib",
         "platform",
@@ -12134,7 +12619,7 @@
         "typing"
       ],
       "path": "src/workflows/adapter_gate.py",
-      "sha256": "088a2df2cc07fd587584181de7813529c7951aa68d757690de0f70ddd1894c96"
+      "sha256": "2d03a6af23087ad1b5ab7fecf56b37fa873873b9370436911321c5bda0bfb6ca"
     },
     {
       "artifact_references": [
@@ -12217,7 +12702,7 @@
         },
         {
           "cell": 0,
-          "line": 128,
+          "line": 129,
           "literals": [],
           "operations": [
             "write"
@@ -12226,7 +12711,7 @@
         },
         {
           "cell": 0,
-          "line": 129,
+          "line": 130,
           "literals": [
             "comparison.json"
           ],
@@ -12237,7 +12722,7 @@
         },
         {
           "cell": 0,
-          "line": 137,
+          "line": 138,
           "literals": [
             "accuracy_latency.png"
           ],
@@ -12246,7 +12731,7 @@
         },
         {
           "cell": 0,
-          "line": 138,
+          "line": 139,
           "literals": [
             "accuracy_memory.png"
           ],
@@ -12269,7 +12754,7 @@
         "typing"
       ],
       "path": "src/workflows/comparison.py",
-      "sha256": "b226bbd15064e28ead1bd0ce6799515c3ed411e055b17336bd145b15dcc701a5"
+      "sha256": "5089d457a737fbc67717d24cbd0f0115ea592777c38b9700368d90adf3d9a822"
     },
     {
       "artifact_references": [
@@ -12393,7 +12878,7 @@
         "typing"
       ],
       "path": "src/workflows/environment.py",
-      "sha256": "62bee5394cfe81f5eb564648b378bc6cf9266f6fc22833ce6144ffcb5fa208e5"
+      "sha256": "186fe902625c40a01293afb45071efb02a5108dd328b360fd1345eb264403aaf"
     },
     {
       "artifact_references": [
@@ -12409,7 +12894,7 @@
         },
         {
           "cell": 0,
-          "line": 48,
+          "line": 52,
           "literals": [],
           "operations": [
             "discover"
@@ -12418,7 +12903,7 @@
         },
         {
           "cell": 0,
-          "line": 105,
+          "line": 114,
           "literals": [
             "{run['run_id']}__res{IMAGE_SIZE}__metrics.json"
           ],
@@ -12427,7 +12912,7 @@
         },
         {
           "cell": 0,
-          "line": 117,
+          "line": 126,
           "literals": [],
           "operations": [
             "read"
@@ -12436,7 +12921,7 @@
         },
         {
           "cell": 0,
-          "line": 173,
+          "line": 182,
           "literals": [
             "comparison.json"
           ],
@@ -12447,7 +12932,7 @@
         },
         {
           "cell": 0,
-          "line": 174,
+          "line": 183,
           "literals": [
             "comparison.json"
           ],
@@ -12469,7 +12954,7 @@
         "typing"
       ],
       "path": "src/workflows/hpo_comparison.py",
-      "sha256": "70b5960c96565812fa9d9735270f1fc7d3f1e29090814d18bc1069dcf88f9a36"
+      "sha256": "ffcaf61c548ad8640a0f34531028f425803c5b062fe34e00aadf61af402ff977"
     },
     {
       "artifact_references": [
@@ -12935,7 +13420,7 @@
         },
         {
           "cell": 0,
-          "line": 73,
+          "line": 80,
           "literals": [
             "instances_train.json"
           ],
@@ -12944,7 +13429,7 @@
         },
         {
           "cell": 0,
-          "line": 74,
+          "line": 81,
           "literals": [
             "instances_val.json"
           ],
@@ -12953,7 +13438,7 @@
         },
         {
           "cell": 0,
-          "line": 85,
+          "line": 92,
           "literals": [],
           "operations": [
             "read"
@@ -12962,7 +13447,7 @@
         },
         {
           "cell": 0,
-          "line": 95,
+          "line": 102,
           "literals": [],
           "operations": [
             "read"
@@ -12971,7 +13456,7 @@
         },
         {
           "cell": 0,
-          "line": 134,
+          "line": 141,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -12980,7 +13465,7 @@
         },
         {
           "cell": 0,
-          "line": 135,
+          "line": 142,
           "literals": [],
           "operations": [
             "read"
@@ -12989,7 +13474,7 @@
         },
         {
           "cell": 0,
-          "line": 142,
+          "line": 149,
           "literals": [
             "{run_id}__profile.json"
           ],
@@ -12998,7 +13483,7 @@
         },
         {
           "cell": 0,
-          "line": 149,
+          "line": 156,
           "literals": [
             "final_results.json"
           ],
@@ -13007,7 +13492,7 @@
         },
         {
           "cell": 0,
-          "line": 179,
+          "line": 186,
           "literals": [
             "instances_train.json"
           ],
@@ -13016,7 +13501,7 @@
         },
         {
           "cell": 0,
-          "line": 181,
+          "line": 188,
           "literals": [
             "instances_val.json"
           ],
@@ -13025,7 +13510,7 @@
         },
         {
           "cell": 0,
-          "line": 187,
+          "line": 194,
           "literals": [
             "search_state.json"
           ],
@@ -13034,7 +13519,7 @@
         },
         {
           "cell": 0,
-          "line": 211,
+          "line": 218,
           "literals": [],
           "operations": [
             "read"
@@ -13043,7 +13528,7 @@
         },
         {
           "cell": 0,
-          "line": 220,
+          "line": 227,
           "literals": [],
           "operations": [
             "write"
@@ -13052,7 +13537,7 @@
         },
         {
           "cell": 0,
-          "line": 234,
+          "line": 241,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -13061,7 +13546,7 @@
         },
         {
           "cell": 0,
-          "line": 235,
+          "line": 242,
           "literals": [],
           "operations": [
             "read"
@@ -13070,7 +13555,7 @@
         },
         {
           "cell": 0,
-          "line": 247,
+          "line": 254,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -13079,7 +13564,7 @@
         },
         {
           "cell": 0,
-          "line": 248,
+          "line": 255,
           "literals": [
             "train.json"
           ],
@@ -13088,7 +13573,7 @@
         },
         {
           "cell": 0,
-          "line": 251,
+          "line": 258,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -13097,7 +13582,7 @@
         },
         {
           "cell": 0,
-          "line": 252,
+          "line": 259,
           "literals": [
             "val.json"
           ],
@@ -13106,7 +13591,7 @@
         },
         {
           "cell": 0,
-          "line": 283,
+          "line": 290,
           "literals": [
             "last.pth"
           ],
@@ -13115,7 +13600,7 @@
         },
         {
           "cell": 0,
-          "line": 285,
+          "line": 292,
           "literals": [
             "Adapter smoke did not save last.pth"
           ],
@@ -13124,7 +13609,7 @@
         },
         {
           "cell": 0,
-          "line": 293,
+          "line": 300,
           "literals": [],
           "operations": [
             "read"
@@ -13133,7 +13618,7 @@
         },
         {
           "cell": 0,
-          "line": 312,
+          "line": 319,
           "literals": [],
           "operations": [
             "write"
@@ -13142,7 +13627,7 @@
         },
         {
           "cell": 0,
-          "line": 331,
+          "line": 338,
           "literals": [],
           "operations": [
             "write"
@@ -13151,7 +13636,7 @@
         },
         {
           "cell": 0,
-          "line": 339,
+          "line": 346,
           "literals": [],
           "operations": [
             "write"
@@ -13160,7 +13645,7 @@
         },
         {
           "cell": 0,
-          "line": 428,
+          "line": 444,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -13169,7 +13654,7 @@
         },
         {
           "cell": 0,
-          "line": 436,
+          "line": 452,
           "literals": [],
           "operations": [
             "write"
@@ -13178,7 +13663,7 @@
         },
         {
           "cell": 0,
-          "line": 474,
+          "line": 490,
           "literals": [
             "search_state.json"
           ],
@@ -13187,7 +13672,7 @@
         },
         {
           "cell": 0,
-          "line": 477,
+          "line": 493,
           "literals": [],
           "operations": [
             "read"
@@ -13196,7 +13681,7 @@
         },
         {
           "cell": 0,
-          "line": 488,
+          "line": 504,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -13205,7 +13690,7 @@
         },
         {
           "cell": 0,
-          "line": 490,
+          "line": 506,
           "literals": [],
           "operations": [
             "read"
@@ -13214,7 +13699,7 @@
         },
         {
           "cell": 0,
-          "line": 493,
+          "line": 509,
           "literals": [],
           "operations": [
             "write"
@@ -13223,7 +13708,7 @@
         },
         {
           "cell": 0,
-          "line": 537,
+          "line": 553,
           "literals": [
             "adapter_smoke.json"
           ],
@@ -13232,7 +13717,7 @@
         },
         {
           "cell": 0,
-          "line": 539,
+          "line": 555,
           "literals": [],
           "operations": [
             "read"
@@ -13241,7 +13726,7 @@
         },
         {
           "cell": 0,
-          "line": 542,
+          "line": 558,
           "literals": [],
           "operations": [
             "write"
@@ -13250,7 +13735,7 @@
         },
         {
           "cell": 0,
-          "line": 572,
+          "line": 588,
           "literals": [
             "instances_val.json"
           ],
@@ -13259,7 +13744,7 @@
         },
         {
           "cell": 0,
-          "line": 596,
+          "line": 612,
           "literals": [],
           "operations": [
             "read"
@@ -13268,7 +13753,7 @@
         },
         {
           "cell": 0,
-          "line": 598,
+          "line": 614,
           "literals": [
             "{state['final_run_id']}__res*__metrics.json"
           ],
@@ -13303,7 +13788,7 @@
         "typing"
       ],
       "path": "src/workflows/model_day.py",
-      "sha256": "5a5734645608adcafb439a4a0c965bdb5a517758627a2c192e14cffc52e534df"
+      "sha256": "0b623cbef8962057ac7571b168af684731266b423b6faa1a9b13dc7a1208399d"
     },
     {
       "artifact_references": [
@@ -13512,7 +13997,7 @@
         },
         {
           "cell": 0,
-          "line": 61,
+          "line": 83,
           "literals": [
             "comparison.json"
           ],
@@ -13521,7 +14006,7 @@
         },
         {
           "cell": 0,
-          "line": 62,
+          "line": 84,
           "literals": [],
           "operations": [
             "write"
@@ -13530,7 +14015,7 @@
         },
         {
           "cell": 0,
-          "line": 63,
+          "line": 85,
           "literals": [
             "comparison.csv"
           ],
@@ -13547,7 +14032,7 @@
         "typing"
       ],
       "path": "src/workflows/versioned_comparison.py",
-      "sha256": "be240a72bf7944ac7f2b40909ddf7f089bc338ea57ee45ef040ea49324733c27"
+      "sha256": "abf4c23854fe2226cd068aec63d6de0eba4cff9ece8fb997b901b63bbd498357"
     }
   ],
   "repository_contract": "legacy-artifacts-v1",

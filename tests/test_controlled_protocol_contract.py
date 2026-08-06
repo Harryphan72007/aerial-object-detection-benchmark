@@ -30,7 +30,8 @@ CONTROLLED_MODELS = (
     "rtdetrv2_l",
 )
 
-# Fields that must be byte-identical across every controlled-track model.
+# Every resolved protocol field must be byte-identical across all controlled
+# models — including the epoch budget (PR-03 removed the RT-DETR exemption).
 SHARED_FIELDS = (
     "protocol_id",
     "image_size",
@@ -41,6 +42,8 @@ SHARED_FIELDS = (
     "search_seed",
     "phase_trials",
     "phase_a_epochs",
+    "phase_b_epochs",
+    "final_train_epochs",
     "final_seeds",
 )
 
@@ -56,6 +59,36 @@ def test_frozen_protocol_is_identical_across_all_controlled_models() -> None:
     for model_id in CONTROLLED_MODELS:
         shared = {field: resolved[model_id][field] for field in SHARED_FIELDS}
         assert shared == reference, model_id
+
+
+def test_epoch_budget_is_identical_across_all_models() -> None:
+    """PR-03: no architecture receives a different epoch budget."""
+    for phase_field in ("phase_a_epochs", "phase_b_epochs", "final_train_epochs"):
+        values = {
+            resolve_controlled_protocol(ROOT, model_id)[phase_field]
+            for model_id in CONTROLLED_MODELS
+        }
+        assert len(values) == 1, (phase_field, values)
+
+
+def test_protocol_forbids_per_model_epoch_overrides() -> None:
+    """The exemption cannot be reintroduced through configuration."""
+    from src.config.benchmark_tracks import _validate_protocol_block, load_protocol
+
+    protocol = dict(load_protocol(ROOT, "controlled"))
+    protocol["model_epoch_overrides"] = {"rtdetrv2_l": {"final_train_epochs": 25}}
+    with pytest.raises(ValueError, match="forbids per-model epoch overrides"):
+        _validate_protocol_block(protocol, set(CONTROLLED_MODELS))
+
+
+def test_no_model_id_conditional_in_epoch_resolution_source() -> None:
+    """Guard against a model-ID branch creeping back into epoch resolution."""
+    workflow = (ROOT / "src" / "hpo" / "workflow.py").read_text(encoding="utf-8")
+    final = (ROOT / "src" / "hpo" / "final_workflow.py").read_text(encoding="utf-8")
+    # The removed exemptions were `25 if self.model_id == "rtdetrv2_l"` and
+    # `3 if phase == "phase_a" else 5`. Neither literal branch may return.
+    assert "25 if" not in final
+    assert 'else 5' not in workflow
 
 
 def test_effective_batch_is_consistent_with_batch_and_accumulation() -> None:

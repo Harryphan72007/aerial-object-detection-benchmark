@@ -55,14 +55,18 @@ PROTOCOL_FROZEN_FIELDS = frozenset(
         "seed",
     }
 )
-_PROTOCOL_EPOCH_OVERRIDE_FIELDS = frozenset({"phase_b_epochs", "final_train_epochs"})
 
 
 def _validate_protocol_block(
     value: Mapping[str, Any], model_ids: set[str]
 ) -> dict[str, Any]:
+    del model_ids  # every model shares one budget; no per-model epoch overrides
     protocol = dict(value)
-    overrides = protocol.pop("model_epoch_overrides", {})
+    if "model_epoch_overrides" in protocol:
+        raise ValueError(
+            "controlled track forbids per-model epoch overrides; every model "
+            "must share an identical epoch budget"
+        )
     missing = sorted(PROTOCOL_REQUIRED_FIELDS - set(protocol))
     unknown = sorted(set(protocol) - PROTOCOL_REQUIRED_FIELDS)
     if missing:
@@ -80,20 +84,7 @@ def _validate_protocol_block(
     seeds = protocol["final_seeds"]
     if not isinstance(seeds, list) or not seeds:
         raise ValueError("protocol final_seeds must be a non-empty list")
-    if not isinstance(overrides, Mapping):
-        raise ValueError("protocol model_epoch_overrides must be a mapping")
-    for model_id, override in overrides.items():
-        if model_id not in model_ids:
-            raise ValueError(
-                f"model_epoch_overrides names unknown model {model_id!r}"
-            )
-        unexpected = sorted(set(override) - _PROTOCOL_EPOCH_OVERRIDE_FIELDS)
-        if unexpected:
-            raise ValueError(
-                f"model_epoch_overrides[{model_id!r}] may only override "
-                f"{sorted(_PROTOCOL_EPOCH_OVERRIDE_FIELDS)}, got {unexpected}"
-            )
-    return {**protocol, "model_epoch_overrides": dict(overrides)}
+    return dict(protocol)
 
 
 def validate_track_config(value: Mapping[str, Any]) -> dict[str, Any]:
@@ -181,10 +172,11 @@ def resolve_controlled_protocol(
 ) -> dict[str, Any]:
     """Resolve the controlled protocol for one model.
 
-    The base protocol is identical for every model; only ``phase_b_epochs`` and
-    ``final_train_epochs`` may differ through an explicit, recorded
-    ``model_epoch_overrides`` entry. The per-model ``model.yaml`` is checked to
-    ensure it does not silently redefine a frozen field.
+    The protocol is identical for every controlled-track model — the whole point
+    of the track. There are no per-model epoch deviations; the only per-model
+    degree of freedom is the tuned learning rate, which is not part of this
+    protocol. The per-model ``model.yaml`` is checked to ensure it does not
+    silently redefine a frozen field.
     """
     config = load_track_config(repo_root, "controlled")
     if model_id not in set(config["model_ids"]):
@@ -199,13 +191,8 @@ def resolve_controlled_protocol(
 
     resolved = {field: protocol[field] for field in PROTOCOL_REQUIRED_FIELDS}
     resolved["final_seeds"] = tuple(int(seed) for seed in protocol["final_seeds"])
-    override = dict(protocol.get("model_epoch_overrides", {})).get(model_id, {})
-    resolved["phase_b_epochs"] = int(
-        override.get("phase_b_epochs", protocol["phase_b_epochs"])
-    )
-    resolved["final_train_epochs"] = int(
-        override.get("final_train_epochs", protocol["final_train_epochs"])
-    )
+    resolved["phase_b_epochs"] = int(protocol["phase_b_epochs"])
+    resolved["final_train_epochs"] = int(protocol["final_train_epochs"])
     return resolved
 
 

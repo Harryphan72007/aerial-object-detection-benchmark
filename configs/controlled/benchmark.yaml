@@ -34,10 +34,7 @@ protocol:
   phase_b_epochs: 3
   final_train_epochs: 8
   final_seeds: [17, 42, 3407]
-  # Model-specific epoch deviations from the frozen budget above. Recorded here
-  # explicitly so the confound is visible rather than buried in code. PR-03
-  # removes this block once the controlled track is fully uniform.
-  model_epoch_overrides:
-    rtdetrv2_l:
-      phase_b_epochs: 5
-      final_train_epochs: 25
+  # No per-model epoch deviations. The controlled track gives every architecture
+  # an identical epoch budget; a differing budget would be exactly the confound
+  # this track exists to eliminate. Any model-specific schedule length belongs in
+  # the performance track, documented and justified, not here.

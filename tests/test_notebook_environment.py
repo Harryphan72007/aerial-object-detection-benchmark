@@ -210,6 +210,27 @@ def test_active_model_and_epoch_contracts_remain_bounded() -> None:
         assert flag in "".join(notebook["cells"][1]["source"])
 
 
+def test_readme_model_table_matches_controlled_model_ids() -> None:
+    """PR-12: the README model table is exactly the controlled-track models."""
+    import re
+
+    from src.config.benchmark_tracks import load_track_config
+
+    lines = (ROOT / "README.md").read_text(encoding="utf-8").splitlines()
+    header = next(
+        i for i, line in enumerate(lines) if line.startswith("| `MODEL_ID`")
+    )
+    table_ids: set[str] = set()
+    for line in lines[header + 2 :]:  # skip the header separator row
+        if not line.startswith("|"):
+            break
+        match = re.match(r"\|\s*`([^`]+)`", line)
+        if match:
+            table_ids.add(match.group(1))
+    configured = set(load_track_config(ROOT, "controlled")["model_ids"])
+    assert table_ids == configured
+
+
 def test_rtdetrv2_quarantine_is_lifted_in_the_readme() -> None:
     """PR-04: RT-DETRv2 is a first-class four-family model, not quarantined."""
     readme = (ROOT / "README.md").read_text(encoding="utf-8")

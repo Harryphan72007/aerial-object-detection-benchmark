@@ -127,6 +127,12 @@ class NotebookEnvironment:
     hpo_scratch_root: Path
     dependencies_installed: bool = False
     dependency_decision: str = ""
+    # Carried as real state rather than reported as a literal by ``as_dict``.
+    # ``setup_notebook_environment`` raises ``KernelRestartRequired`` instead of
+    # returning when a restart is pending, so a *returned* environment always
+    # records False - but any future caller that constructs one differently has
+    # to state the value, and cannot silently report a stale False.
+    restart_required: bool = False
 
     @property
     def hosted(self) -> bool:
@@ -143,7 +149,7 @@ class NotebookEnvironment:
             "hpo_scratch_root": str(self.hpo_scratch_root),
             "dependencies_installed": self.dependencies_installed,
             "dependency_decision": self.dependency_decision,
-            "restart_required": False,
+            "restart_required": self.restart_required,
         }
 
 
@@ -383,4 +389,6 @@ def setup_notebook_environment(
         hpo_scratch_root=hpo_scratch,
         dependencies_installed=should_install,
         dependency_decision=decision,
+        # Reaching this point means the restart check above did not fire.
+        restart_required=False,
     )

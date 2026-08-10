@@ -238,6 +238,21 @@ def automatic_install_allowed(
     return platform in set(allowed_platforms)
 
 
+def render_install_script(packages: Sequence[str]) -> str:
+    """Render the install commands as copy-pasteable shell lines.
+
+    One command per line: ``apt-get update`` and ``apt-get install`` are separate
+    invocations, so joining them into a single line produces
+    ``apt-get update -qq apt-get install ...``, which apt rejects with
+    ``E: Invalid operation``. The operator reaching this text has already been
+    blocked once; the instructions must run as written.
+    """
+    commands = apt_install_commands(list(packages))
+    if not commands:
+        return "  (no toolkit packages are configured for this runtime)"
+    return "\n".join(f"  sudo {' '.join(command)}" for command in commands)
+
+
 def remediation_message(
     *,
     torch_cuda: str,
@@ -246,15 +261,12 @@ def remediation_message(
     search_paths: Sequence[str | Path],
 ) -> str:
     """Exact commands for an operator whose host cannot be fixed automatically."""
-    rendered = " ".join(
-        " ".join(command) for command in apt_install_commands(list(packages))
-    )
     return (
         f"VMamba's selective_scan extension must be compiled with CUDA "
         f"{required_version} to match the pinned PyTorch CUDA {torch_cuda} build.\n"
         "On a Debian/Ubuntu host (Colab and Kaggle included), install the minimal "
-        "toolkit:\n"
-        f"  sudo {rendered}\n"
+        "toolkit by running these commands in order:\n"
+        f"{render_install_script(packages)}\n"
         "Then rerun the provisioning cell. If the toolkit lives elsewhere, point "
         f"the provisioner at it with {CUDA_HOME_OVERRIDE}=/path/to/cuda-"
         f"{required_version}.\n"

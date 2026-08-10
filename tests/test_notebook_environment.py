@@ -92,13 +92,19 @@ def test_setup_exports_one_path_contract_without_installing(tmp_path: Path) -> N
     )
 
 
-def test_explicit_requirements_are_installed_for_local_notebooks(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def _fake_repository(tmp_path: Path) -> Path:
     repository = tmp_path / "repo"
     (repository / "src").mkdir(parents=True)
     (repository / "src" / "__init__.py").write_text("", encoding="utf-8")
     (repository / "pyproject.toml").write_text("[project]\nname='test'\n", encoding="utf-8")
+    return repository
+
+
+def test_local_notebooks_never_install_hosted_pins_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A local run must not silently downgrade the developer's interpreter."""
+    repository = _fake_repository(tmp_path)
     captured: list[tuple[Path, str | Path | None]] = []
     monkeypatch.setattr(
         notebook_env,
@@ -106,16 +112,146 @@ def test_explicit_requirements_are_installed_for_local_notebooks(
         lambda root, requirements: captured.append((root, requirements)),
     )
 
-    notebook_env.setup_notebook_environment(
+    resolved = notebook_env.setup_notebook_environment(
         repository,
         platform="local",
         requirements_file="requirements-dataset-colab.txt",
         environ={},
     )
 
-    assert captured == [
-        (repository.resolve(), "requirements-dataset-colab.txt")
-    ]
+    assert captured == []
+    assert resolved.dependencies_installed is False
+    assert "never installs hosted pins" in resolved.dependency_decision
+
+
+def test_local_installation_requires_an_explicit_opt_in(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = _fake_repository(tmp_path)
+    (repository / "requirements-dataset-colab.txt").write_text(
+        "numpy==1.26.4\n", encoding="utf-8"
+    )
+    captured: list[tuple[Path, str | Path | None]] = []
+    monkeypatch.setattr(
+        notebook_env,
+        "_install_shared_dependencies",
+        lambda root, requirements: captured.append((root, requirements)),
+    )
+    monkeypatch.setattr(notebook_env, "restart_required_packages", lambda pins: [])
+
+    notebook_env.setup_notebook_environment(
+        repository,
+        platform="local",
+        requirements_file="requirements-dataset-colab.txt",
+        environ={notebook_env.LOCAL_INSTALL_OPT_IN: "1"},
+    )
+
+    assert captured == [(repository.resolve(), "requirements-dataset-colab.txt")]
+
+
+@pytest.mark.parametrize("platform", ["colab", "kaggle"])
+def test_hosted_runtimes_still_install_their_pins(
+    platform: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = _fake_repository(tmp_path)
+    captured: list[tuple[Path, str | Path | None]] = []
+    monkeypatch.setattr(
+        notebook_env,
+        "_install_shared_dependencies",
+        lambda root, requirements: captured.append((root, requirements)),
+    )
+    monkeypatch.setattr(notebook_env, "_mount_google_drive", lambda *_a, **_k: None)
+
+    notebook_env.setup_notebook_environment(
+        repository,
+        platform=platform,
+        requirements_file=None,
+        environ={
+            "VISDRONE_DRIVE_ROOT": str(tmp_path / "artifacts"),
+            "VISDRONE_LOCAL_CACHE_ROOT": str(tmp_path / "cache"),
+            "VISDRONE_MODEL_ENV_ROOT": str(tmp_path / "envs"),
+            "VISDRONE_HPO_SCRATCH_ROOT": str(tmp_path / "scratch"),
+        },
+    )
+
+    assert captured == [(repository.resolve(), None)]
+
+
+def test_no_restart_when_versions_already_match() -> None:
+    assert (
+        notebook_env.restart_required_packages(
+            {"numpy": "1.26.4"},
+            installed={"numpy": "1.26.4"},
+            imported_modules=["numpy"],
+        )
+        == []
+    )
+
+
+def test_no_restart_when_the_changed_package_was_never_imported() -> None:
+    assert (
+        notebook_env.restart_required_packages(
+            {"numpy": "1.26.4"},
+            installed={"numpy": "2.1.0"},
+            imported_modules=["json"],
+        )
+        == []
+    )
+
+
+def test_restart_required_when_an_imported_binary_dependency_is_replaced() -> None:
+    changes = notebook_env.restart_required_packages(
+        {"numpy": "1.26.4", "requests": "2.32.0"},
+        installed={"numpy": "2.1.0", "requests": "2.0.0"},
+        imported_modules=["numpy", "requests"],
+    )
+
+    assert [change["package"] for change in changes] == ["numpy"]
+    assert changes[0]["installed"] == "2.1.0"
+    assert changes[0]["required"] == "1.26.4"
+
+
+def test_setup_stops_with_a_restart_instruction_instead_of_continuing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = _fake_repository(tmp_path)
+    (repository / "pins.txt").write_text("numpy==1.26.4\n", encoding="utf-8")
+    monkeypatch.setattr(notebook_env, "_install_shared_dependencies", lambda *_a: None)
+    monkeypatch.setattr(
+        notebook_env,
+        "restart_required_packages",
+        lambda pins: [
+            {
+                "package": "numpy",
+                "installed": "2.1.0",
+                "required": "1.26.4",
+                "imported_module": "numpy",
+            }
+        ],
+    )
+    mounted: list[bool] = []
+    monkeypatch.setattr(
+        notebook_env, "_mount_google_drive", lambda *_a, **_k: mounted.append(True)
+    )
+
+    with pytest.raises(notebook_env.KernelRestartRequired, match="RESTART REQUIRED"):
+        notebook_env.setup_notebook_environment(
+            repository,
+            platform="colab",
+            requirements_file="pins.txt",
+            environ={},
+        )
+
+    assert mounted == []
+
+
+def test_requirements_pins_are_parsed_without_executing_pip() -> None:
+    pins = notebook_env.parse_pinned_requirements(
+        "# comment\nnumpy==1.26.4\ntorch==2.1.0+cu118 ; sys_platform == 'linux'\n"
+        "--extra-index-url https://example.invalid\nrequests>=2\n"
+    )
+
+    assert pins == {"numpy": "1.26.4", "torch": "2.1.0+cu118"}
 
 
 def test_shared_editable_install_disables_networked_build_isolation(
@@ -175,8 +311,10 @@ def test_all_canonical_notebooks_share_the_cross_platform_setup() -> None:
             for cell in notebook["cells"]
             if cell["cell_type"] == "code"
         )
-        assert "setup_notebook_environment" in source, path.name
-        assert "IN_KAGGLE" in source, path.name
+        assert "bootstrap_notebook" in source, path.name
+        # The Git bootstrap lives in src/notebook_bootstrap.py, not in notebooks.
+        assert "rev-parse" not in source, path.name
+        assert '(REPO_PATH / ".git")' not in source, path.name
 
 
 def test_active_model_and_epoch_contracts_remain_bounded() -> None:
@@ -241,20 +379,12 @@ def test_rtdetrv2_quarantine_is_lifted_in_the_readme() -> None:
     assert "23_finetune_rtdetrv2.ipynb" in readme
 
 
-def test_non_rtdetr_canonical_notebooks_preserve_the_selected_git_ref() -> None:
-    selected = (
-        "00_prepare_visdrone.ipynb",
-        "10_hpo_resnet50.ipynb",
-        "11_hpo_swin_t.ipynb",
-        "12_hpo_vmamba_t.ipynb",
-        "20_finetune_resnet50.ipynb",
-        "21_finetune_swin_t.ipynb",
-        "22_finetune_vmamba_t.ipynb",
-    )
-    for name in selected:
-        source = (ROOT / "notebooks" / name).read_text(encoding="utf-8")
-        assert '"pull", "--ff-only"' not in source
-        assert "rev-parse" in source
+def test_canonical_notebooks_preserve_the_selected_git_ref() -> None:
+    """No notebook fast-forwards the checkout it was pointed at."""
+    for path in sorted((ROOT / "notebooks").glob("*.ipynb")):
+        source = path.read_text(encoding="utf-8")
+        assert '"pull", "--ff-only"' not in source, path.name
+        assert "bootstrap_notebook" in source, path.name
     for name in (
         "20_finetune_resnet50.ipynb",
         "21_finetune_swin_t.ipynb",
@@ -262,3 +392,37 @@ def test_non_rtdetr_canonical_notebooks_preserve_the_selected_git_ref() -> None:
     ):
         source = (ROOT / "notebooks" / name).read_text(encoding="utf-8")
         assert "requirements-dataset-colab.txt" in source
+
+
+def test_final_notebooks_expose_full_matrix_without_editing_code() -> None:
+    """PR-06's opt-in matrix must be a parameter, not an internal argument."""
+    for name in (
+        "20_finetune_resnet50.ipynb",
+        "21_finetune_swin_t.ipynb",
+        "22_finetune_vmamba_t.ipynb",
+        "23_finetune_rtdetrv2.ipynb",
+    ):
+        notebook = json.loads((ROOT / "notebooks" / name).read_text(encoding="utf-8"))
+        parameters = "".join(notebook["cells"][1]["source"])
+        source = "\n".join(
+            "".join(cell.get("source", []))
+            for cell in notebook["cells"]
+            if cell["cell_type"] == "code"
+        )
+        assert "FULL_MATRIX = False" in parameters, name
+        assert "full_matrix=FULL_MATRIX" in source, name
+
+
+def test_model_notebooks_guard_the_selected_dataset_track() -> None:
+    for name in (
+        "10_hpo_resnet50.ipynb",
+        "11_hpo_swin_t.ipynb",
+        "12_hpo_vmamba_t.ipynb",
+        "13_hpo_rtdetrv2.ipynb",
+        "20_finetune_resnet50.ipynb",
+        "21_finetune_swin_t.ipynb",
+        "22_finetune_vmamba_t.ipynb",
+        "23_finetune_rtdetrv2.ipynb",
+    ):
+        source = (ROOT / "notebooks" / name).read_text(encoding="utf-8")
+        assert "require_prepared_dataset_track" in source, name

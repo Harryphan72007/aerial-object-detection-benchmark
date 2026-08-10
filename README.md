@@ -75,11 +75,15 @@ configuration contract matches.
 ## Start in Colab, Kaggle, or local Jupyter
 
 1. Run [`00_prepare_visdrone.ipynb`](notebooks/00_prepare_visdrone.ipynb).
-2. Run one model’s HPO and final pair below (the `two_stage_random_hpo_v1`
+2. Pass the GPU adapter smoke gate for the model on the target GPU:
+   `python -m scripts.gpu_adapter_smoke --drive-root <artifact_root> --dataset-track 2class`.
+   HPO and final training refuse to start without its READY record. See the
+   [hosted GPU runbook](docs/release/HOSTED_GPU_RUNBOOK.md).
+3. Run one model’s HPO and final pair below (the `two_stage_random_hpo_v1`
    workflow). The older `lr_controlled_v1` workflow (notebooks 01–03) is retired
    — its entry point raises if a new run is started.
-3. Change only the small parameter cell and run all cells.
-4. After interruption, reopen the same notebook and run all cells again.
+4. Change only the small parameter cell and run all cells.
+5. After interruption, reopen the same notebook and run all cells again.
 
 These are thin, package-backed notebooks and are the only supported entry points. The
 same files detect Colab, Kaggle, or local Jupyter automatically. The dataset setup
@@ -95,7 +99,7 @@ Artifacts are discovered automatically under Google Drive in Colab,
 users never copy a checkpoint path, run ID, study name, or configuration between
 notebooks.
 
-| Model | HPO | Baseline + tuned final runs |
+| Model | HPO | Final runs (tuned/seed 42 by default; `FULL_MATRIX = True` for baseline+tuned × 3 seeds) |
 |---|---|---|
 | ResNet-50 | [`10_hpo_resnet50.ipynb`](notebooks/10_hpo_resnet50.ipynb) | [`20_finetune_resnet50.ipynb`](notebooks/20_finetune_resnet50.ipynb) |
 | Swin-T | [`11_hpo_swin_t.ipynb`](notebooks/11_hpo_swin_t.ipynb) | [`21_finetune_swin_t.ipynb`](notebooks/21_finetune_swin_t.ipynb) |

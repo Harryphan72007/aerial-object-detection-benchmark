@@ -4,8 +4,11 @@ Track A (`2class`) maps pedestrian+people to PERSON and the eight vehicle-like
 classes to VEHICLE. Track B (`10class`) preserves the original ten VisDrone
 classes. The tracks are stored, discovered, evaluated, and reported separately.
 
-`lr_controlled_v1` preserves the existing seed-42, 640-pixel,
-effective-batch-8, LR-only successive-halving workflow.
+`lr_controlled_v1` (the seed-42, 640-pixel, effective-batch-8, LR-only
+successive-halving workflow of notebooks 01-03) is **retired**. Its entry
+point raises rather than starting a new run; it is described here only so
+historical artifacts remain interpretable. `two_stage_random_hpo_v1` is the
+only live protocol.
 
 `two_stage_random_hpo_v1` uses search seed 42, primary mAP50-95 and APtiny
 tie-break. Learning rate is the only suggested parameter. Phase A runs five

@@ -22,19 +22,38 @@ Python/PyTorch/CUDA/GPU, dependency-lock hash, and schema version.
 A compatible `READY` gate is reused. A failed gate retries after source or
 environment change without deleting any search or final checkpoint.
 
-VMamba additionally requires the selective-scan extension and
-`$DRIVE_ROOT/pretrained/vmamba_tiny_e292.pth`. Missing requirements produce an
-exact blocker; no substitute model is used and scratch training is disabled.
+VMamba additionally requires the selective-scan extension and the pinned
+`$DRIVE_ROOT/pretrained/vmamba_tiny_e292.pth`. The checkpoint is verified against
+the SHA-256 declared in `configs/runtime_environments.yaml`, not merely checked
+for existence, and is downloaded to a temporary name and moved into place only
+after verification. Missing or corrupt requirements produce an exact blocker; no
+substitute model is used and scratch training is disabled.
 
-On a GPU runtime, the required integration gate is notebook 01 with
-`RUN_MODE="environment"`, `START_EXPENSIVE_STAGE=True`, and `SMOKE_TEST=True` for
-each of `faster_rcnn_resnet50`, `faster_rcnn_swin_t`, and
-`faster_rcnn_vmamba_t`. It must construct the real model, run a small training
-batch and validation, then atomically save and reload the checkpoint before HPO.
+Because `selective_scan_cuda_oflex` is a Torch CUDA extension, it needs an nvcc
+whose CUDA major version matches PyTorch's `cu118` build. Provisioning resolves
+one (`VISDRONE_CUDA_HOME` → `/usr/local/cuda-11.8` → other configured paths →
+`PATH`), installs the minimal pinned toolkit packages on Colab/Kaggle if none is
+present, selects a GCC 11-or-older host compiler, and exports the selection into
+the build subprocess only — the host's global CUDA installation is never
+modified. The chosen toolchain is recorded in the environment manifest. See
+[`release/HOSTED_GPU_RUNBOOK.md`](release/HOSTED_GPU_RUNBOOK.md).
 
-The isolated design normally needs no kernel restart. If Colab itself requests
-one after shared HPO dependency installation, restart once and rerun all cells;
-persistent artifact state is unchanged.
+On a GPU runtime, the required integration gate is
+`python -m scripts.gpu_adapter_smoke` for each controlled-track model; see
+[`release/GPU_VALIDATION_CHECKLIST.md`](release/GPU_VALIDATION_CHECKLIST.md). It
+constructs the real model, verifies the pretrained load, runs one forward and
+backward pass, and completes a checkpoint roundtrip before HPO or final training
+is allowed to start. (The older instruction to use notebook 01 with
+`RUN_MODE="environment"` is obsolete: that protocol is retired and its entry
+point raises.)
+
+The isolated design normally needs no kernel restart, because model packages are
+installed into a separate interpreter. If the *shared* notebook dependencies
+replace a compiled package this kernel has already imported, the bootstrap stops
+with `RESTART REQUIRED` and names the package; restart once and rerun all cells.
+Persistent artifact state is unchanged. Local (non-hosted) execution never
+installs hosted pins into the active interpreter unless
+`VISDRONE_ALLOW_LOCAL_DEPENDENCY_INSTALL=1` is set.
 
 ## Local immutable framework checkouts
 

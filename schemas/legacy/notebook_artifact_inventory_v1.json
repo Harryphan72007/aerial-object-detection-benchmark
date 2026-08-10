@@ -81,7 +81,7 @@
         },
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
@@ -90,7 +90,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -214,13 +214,13 @@
       ],
       "nbformat": 4,
       "path": "notebooks/00_prepare_visdrone.ipynb",
-      "sha256": "67905c85ef8deaccc101f3882b00007fc11069f140d1daf43df253a261e5959e"
+      "sha256": "6344dae48d24b45290be8cd541a60dd61c1fc8f8df267b429f270a352897704c"
     },
     {
       "artifact_references": [
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
@@ -229,7 +229,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -418,6 +418,7 @@
       ],
       "code_cell_count": 5,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
@@ -437,7 +438,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "5a28b55d8a2a090cc1b418fe56046c9b91a8b47edba6e987f721de4500022826"
+      "sha256": "41c038e495304b35dee101ceb521b47b042b636989abfc6d7eceb1f09be5d60e"
     },
     {
       "artifact_references": [
@@ -452,7 +453,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -557,6 +558,7 @@
       ],
       "code_cell_count": 4,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
@@ -567,13 +569,13 @@
       ],
       "nbformat": 4,
       "path": "notebooks/02_publish_results.ipynb",
-      "sha256": "04de1ac1aeb115132aa3b671be51e09a33d0c3e80227596f6dc0602f488b0c90"
+      "sha256": "6ca5bfd4cb130e136b460c60067ee59d72dec0992a708c812df5ad73e3021bb0"
     },
     {
       "artifact_references": [
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -630,6 +632,7 @@
       "code_cell_count": 4,
       "imports": [
         "IPython.display",
+        "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
@@ -641,20 +644,20 @@
       ],
       "nbformat": 4,
       "path": "notebooks/03_compare_all_models.ipynb",
-      "sha256": "5ad1bdc00c81f4d4f8c23ea59c0bdd64c66d7312b4bd66e0a0c6872b8a070184"
+      "sha256": "9ebe7ecf1e41be5e1c4a04d8431d57da95e5dc0047d3605d01e8c5c365ecb758"
     },
     {
       "artifact_references": [
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 2,
-          "line": 70,
+          "line": 71,
           "literals": [],
           "operations": [
             "read"
@@ -663,7 +666,7 @@
         },
         {
           "cell": 2,
-          "line": 71,
+          "line": 72,
           "literals": [
             "tiling_v1.yaml"
           ],
@@ -674,7 +677,7 @@
         },
         {
           "cell": 2,
-          "line": 72,
+          "line": 73,
           "literals": [
             "sliced_inference_v1.yaml"
           ],
@@ -685,14 +688,14 @@
         },
         {
           "cell": 2,
-          "line": 73,
+          "line": 74,
           "literals": [],
           "operations": [],
           "source": "result = {\"preview\": not START_TILING, \"tile_version\": TILE_VERSION, \"config\": config, \"sliced_inference\": sliced_config}"
         },
         {
           "cell": 2,
-          "line": 74,
+          "line": 75,
           "literals": [],
           "operations": [],
           "source": "result"
@@ -700,6 +703,7 @@
       ],
       "code_cell_count": 2,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.notebook_bootstrap",
@@ -709,7 +713,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/07_performance_tiling.ipynb",
-      "sha256": "33a538783eafd3caef89e4aae17b8909eecb7f224edcedc0aedf121032c5bdc0"
+      "sha256": "c965f18a5ce36cd373cf1e0738382223c08247bcc0ddb7f021d1acb331e78d38"
     },
     {
       "artifact_references": [
@@ -722,7 +726,7 @@
         },
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-hpo-colab.txt"
           ],
@@ -731,7 +735,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -783,6 +787,7 @@
       ],
       "code_cell_count": 3,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.hpo.workflow",
@@ -794,7 +799,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/10_hpo_resnet50.ipynb",
-      "sha256": "620d849a39c9a4050b4376cd260ffa85604a22a9b4370ec5920ed840714a3c05"
+      "sha256": "6fe09bb12c7d8b7c802fc517589434af326453fe1f0bc780fe268881c2e24f38"
     },
     {
       "artifact_references": [
@@ -807,7 +812,7 @@
         },
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-hpo-colab.txt"
           ],
@@ -816,7 +821,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -868,6 +873,7 @@
       ],
       "code_cell_count": 3,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.hpo.workflow",
@@ -879,7 +885,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/11_hpo_swin_t.ipynb",
-      "sha256": "4d6e24c43f980f31e9de120eba5c31423399efa8c1886f26c6f58dee9b96cec2"
+      "sha256": "e3c6085e3acadb093fabfb87c8d6307c86efe3c15a401e47d8adfc6e2d2ebc90"
     },
     {
       "artifact_references": [
@@ -892,7 +898,7 @@
         },
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-hpo-colab.txt"
           ],
@@ -901,7 +907,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -953,6 +959,7 @@
       ],
       "code_cell_count": 3,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.hpo.workflow",
@@ -964,7 +971,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/12_hpo_vmamba_t.ipynb",
-      "sha256": "14062f4add16f428741591f19cb971e53f68a5430aab0e8db4db376aba9313c5"
+      "sha256": "4980cffaf2a694da6c9806db2c1c56896a74cd4953cb18ffca6fafef0a6e93a7"
     },
     {
       "artifact_references": [
@@ -977,7 +984,7 @@
         },
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-hpo-colab.txt"
           ],
@@ -986,7 +993,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -1038,6 +1045,7 @@
       ],
       "code_cell_count": 3,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.hpo.rtdetr_v2",
@@ -1049,7 +1057,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "9d1805fd656d951360045eea5b5f4c649a67ef0d3399bfa7e37c11f6ad1edabf"
+      "sha256": "d35729e9e6b046bd91bde4d3e521e157a258301e837b8eeb653e20b29075deac"
     },
     {
       "artifact_references": [
@@ -1069,7 +1077,7 @@
         },
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
@@ -1078,7 +1086,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -1128,6 +1136,7 @@
       ],
       "code_cell_count": 3,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.hpo.final_workflow",
@@ -1139,7 +1148,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/20_finetune_resnet50.ipynb",
-      "sha256": "339d0753dd0a8657df6faa8eaecc4e7dc987577d18d3a32fd6ba55d21aa3839f"
+      "sha256": "a193fb588f9ee27073cee60819ceb49a245805859d0b3fa1cac7361a21f1eb13"
     },
     {
       "artifact_references": [
@@ -1159,7 +1168,7 @@
         },
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
@@ -1168,7 +1177,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -1218,6 +1227,7 @@
       ],
       "code_cell_count": 3,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.hpo.final_workflow",
@@ -1230,7 +1240,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "e11715a7c05677e9e70ec0f7cd4ee2b47ba6d349d896f3aee2fcc08b60d96c23"
+      "sha256": "110b86336e5d5aca920b3d0cb730966c6c705cdc3fdb6872968208255d87ffe9"
     },
     {
       "artifact_references": [
@@ -1250,7 +1260,7 @@
         },
         {
           "cell": 2,
-          "line": 57,
+          "line": 58,
           "literals": [
             "requirements-dataset-colab.txt"
           ],
@@ -1259,7 +1269,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -1309,6 +1319,7 @@
       ],
       "code_cell_count": 3,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.hpo.final_workflow",
@@ -1321,7 +1332,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "00fc7299328c51563cdc2e2ba884f9540dc3876ae34c03a2f21c44ff26ad3429"
+      "sha256": "8c094f6681542cadb9645b40f761eab9d25202c88782f7aae3e5263337549e80"
     },
     {
       "artifact_references": [
@@ -1341,7 +1352,7 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
@@ -1391,6 +1402,7 @@
       ],
       "code_cell_count": 3,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.hpo.final_workflow",
@@ -1403,7 +1415,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "0b533e6cfa40c4c71c4f699aa2450c5ed4b0bb90bb88cb23a63072c5b19c07ce"
+      "sha256": "0070337805ab1b6c94d90b13e7c4be68aaf4eb71dcbe6c8ed588d89127c4b209"
     },
     {
       "artifact_references": [
@@ -1416,28 +1428,28 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 2,
-          "line": 72,
+          "line": 73,
           "literals": [],
           "operations": [],
           "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
         },
         {
           "cell": 2,
-          "line": 74,
+          "line": 75,
           "literals": [],
           "operations": [],
           "source": "from src.evaluation.versioned import evaluate_prediction_artifact"
         },
         {
           "cell": 2,
-          "line": 77,
+          "line": 78,
           "literals": [
             "Legacy evaluator accepts controlled artifacts only"
           ],
@@ -1446,7 +1458,7 @@
         },
         {
           "cell": 2,
-          "line": 79,
+          "line": 80,
           "literals": [],
           "operations": [],
           "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
@@ -1454,6 +1466,7 @@
       ],
       "code_cell_count": 2,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
@@ -1466,7 +1479,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "ec03f1cfbdf89b23e60d49fb95880f6f5e54dc7acd7757b2e3c4149c6e4bfdfe"
+      "sha256": "9a9047a951bf02e7732d0c0de00d3063b5a6956f7c65479d15dc1fe1a3c6e830"
     },
     {
       "artifact_references": [
@@ -1488,14 +1501,14 @@
         },
         {
           "cell": 2,
-          "line": 63,
+          "line": 64,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 2,
-          "line": 73,
+          "line": 74,
           "literals": [
             "Legacy publisher accepts controlled artifacts only"
           ],
@@ -1505,6 +1518,7 @@
       ],
       "code_cell_count": 2,
       "imports": [
+        "json",
         "os",
         "pathlib",
         "src.config.benchmark_tracks",
@@ -1514,7 +1528,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/31_publish_results.ipynb",
-      "sha256": "3c486983dc36587be8e3e7acde014fbb50f66b6d0b50ad8f46741977900368da"
+      "sha256": "c832903287dfe6d1fa5afae55ee157f32069c8e2e27083d900c0577e799012cb"
     },
     {
       "artifact_references": [
@@ -3768,7 +3782,7 @@
         },
         {
           "cell": 0,
-          "line": 55,
+          "line": 60,
           "literals": [
             "{Path(name).stem}.json"
           ],
@@ -3777,7 +3791,7 @@
         },
         {
           "cell": 0,
-          "line": 73,
+          "line": 80,
           "literals": [],
           "operations": [
             "read"
@@ -3786,7 +3800,7 @@
         },
         {
           "cell": 0,
-          "line": 85,
+          "line": 92,
           "literals": [],
           "operations": [
             "write"
@@ -3795,7 +3809,7 @@
         },
         {
           "cell": 0,
-          "line": 86,
+          "line": 93,
           "literals": [],
           "operations": [
             "write"
@@ -3804,7 +3818,7 @@
         },
         {
           "cell": 0,
-          "line": 140,
+          "line": 147,
           "literals": [],
           "operations": [
             "write"
@@ -3827,7 +3841,7 @@
         "time"
       ],
       "path": "scripts/run_notebook_smoke.py",
-      "sha256": "5666c8c0146bc68c76895612ac15d04796511abc00243c7985cfc4af43c8ccbe"
+      "sha256": "adece22cfeae214fe55c0da30c3981640f1536d84a5a5b10b02ec0fe7ca9414d"
     },
     {
       "artifact_references": [

@@ -206,17 +206,60 @@ def run_checked(
     return completed
 
 
+class EnvironmentNotProvisionedError(RuntimeError):
+    """The isolated model runtime this command requires does not exist yet."""
+
+
 def model_python_executable() -> str:
-    return os.environ.get(MODEL_PYTHON_ENV, sys.executable)
+    """Return the isolated model runtime's interpreter, or fail closed.
+
+    Silently falling back to ``sys.executable`` would launch model training in
+    the notebook kernel, which has none of the pinned framework stacks; the
+    resulting import errors point at the wrong problem. Callers that genuinely
+    want the current interpreter must say so via :func:`host_python_executable`.
+    """
+    configured = os.environ.get(MODEL_PYTHON_ENV)
+    if not configured:
+        raise EnvironmentNotProvisionedError(
+            "No isolated model environment is selected, so this command cannot "
+            "run.\n"
+            f"Expected {MODEL_PYTHON_ENV} to point at a provisioned runtime "
+            "interpreter (for example <model-runtime-root>/openmmlab-<hash>/bin/python).\n"
+            "Provision it first by running the model's HPO or final-training "
+            "notebook cell, which calls "
+            "src.workflows.environment.ensure_model_environment(MODEL_ID, "
+            "REPO_PATH, DRIVE_ROOT)."
+        )
+    executable = Path(configured)
+    if not executable.is_file():
+        raise EnvironmentNotProvisionedError(
+            f"{MODEL_PYTHON_ENV} points at a missing interpreter: {executable}.\n"
+            "The model environment was removed or was never finished. Rerun the "
+            "provisioning cell (ensure_model_environment) to rebuild it."
+        )
+    return str(executable)
 
 
-def python_module_command(module: str, *arguments: object) -> list[str]:
+def host_python_executable() -> str:
+    """Return the current interpreter for repository-management entry points.
+
+    Only for commands that are meant to run in the host/notebook kernel, such as
+    repository validation and evaluation utilities that use no framework stack.
+    """
+    return sys.executable
+
+
+def python_module_command(
+    module: str, *arguments: object, host_interpreter: bool = False
+) -> list[str]:
     """Return a Python module command and reject filepath-style entry points."""
     if not module or module.endswith(".py") or "/" in module or "\\" in module:
         raise ValueError(
             f"Repository Python entry points must use dotted module names, got {module!r}"
         )
-    executable = model_python_executable()
+    executable = (
+        host_python_executable() if host_interpreter else model_python_executable()
+    )
     return [executable, "-m", module, *(str(value) for value in arguments)]
 
 

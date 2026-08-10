@@ -6,7 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from src.subprocess_utils import python_module_command
+from src.subprocess_utils import (
+    MODEL_PYTHON_ENV,
+    EnvironmentNotProvisionedError,
+    python_module_command,
+)
 from src.training.trainer import TrainingOrchestrator
 from src.workflows import model_day
 
@@ -46,7 +50,12 @@ def _write_backend_contract(run_dir: Path, model_id: str) -> None:
     )
 
 
-def test_rtdetr_backend_is_launched_as_repository_module(tmp_path: Path) -> None:
+def test_rtdetr_backend_is_launched_as_repository_module(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # The backend always runs in the isolated model runtime; here the host
+    # interpreter stands in for one that has been provisioned.
+    monkeypatch.setenv(MODEL_PYTHON_ENV, sys.executable)
     orchestrator = object.__new__(TrainingOrchestrator)
     orchestrator.repo_root = tmp_path
     run_dir = tmp_path / "run"
@@ -109,6 +118,7 @@ def test_mmdetection_backend_is_launched_as_repository_module(
     upstream_config.parent.mkdir(parents=True)
     upstream_config.write_text("", encoding="utf-8")
     monkeypatch.setenv("TEST_MMDET_ROOT", str(upstream_root))
+    monkeypatch.setenv(MODEL_PYTHON_ENV, sys.executable)
     _write_backend_contract(run_dir, "example")
 
     launched: dict[str, object] = {}
@@ -165,7 +175,7 @@ def test_backend_module_entrypoint_can_import_project(
     module: str, expected_flag: str
 ) -> None:
     repo_root = Path(__file__).resolve().parents[1]
-    command = python_module_command(module, "--help")
+    command = python_module_command(module, "--help", host_interpreter=True)
 
     completed = subprocess.run(
         command,
@@ -183,6 +193,7 @@ def test_backend_module_entrypoint_can_import_project(
 def test_model_day_downstream_stage_is_launched_as_module(
     module: str, tmp_path: Path, monkeypatch
 ) -> None:
+    monkeypatch.setenv(MODEL_PYTHON_ENV, sys.executable)
     launched: dict[str, object] = {}
 
     def capture(
@@ -220,3 +231,25 @@ def test_model_day_downstream_stage_is_launched_as_module(
 def test_repository_module_command_rejects_filepaths(invalid: str) -> None:
     with pytest.raises(ValueError, match="dotted module names"):
         python_module_command(invalid)
+
+
+def test_module_command_fails_closed_without_a_provisioned_runtime(monkeypatch) -> None:
+    """A missing model environment must never fall back to this interpreter."""
+    monkeypatch.delenv(MODEL_PYTHON_ENV, raising=False)
+
+    with pytest.raises(EnvironmentNotProvisionedError, match="ensure_model_environment"):
+        python_module_command("scripts.run_mmdetection")
+
+    # Repository-management entry points may still opt into the host explicitly.
+    assert python_module_command("scripts.evaluate", host_interpreter=True)[0] == (
+        sys.executable
+    )
+
+
+def test_module_command_rejects_a_selected_but_missing_interpreter(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv(MODEL_PYTHON_ENV, str(tmp_path / "bin" / "python"))
+
+    with pytest.raises(EnvironmentNotProvisionedError, match="missing interpreter"):
+        python_module_command("scripts.run_rtdetr_training")

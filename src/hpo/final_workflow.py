@@ -28,7 +28,8 @@ from src.training.lr_search import (
 )
 from src.training.trainer import TrainingOrchestrator
 from src.utils.serialization import read_json, read_yaml, sha256_file, write_json
-from src.workflows.adapter_gate import adapter_fingerprint
+from src.workflows.adapter_gate import adapter_fingerprint, require_ready_adapter_gate
+from src.workflows.dataset_setup import require_prepared_dataset_track
 
 # Base controlled-protocol values, read from configs/controlled/benchmark.yaml
 # (the single source of truth). Per-model resolution (e.g. the RT-DETR epoch
@@ -62,6 +63,7 @@ class FinalExperimentWorkflow:
         dataset_track: str,
         *,
         orchestrator: TrainingOrchestrator | None = None,
+        require_adapter_gate: bool = True,
     ):
         if dataset_track not in {"2class", "10class"}:
             raise ValueError(f"unsupported dataset track: {dataset_track}")
@@ -69,6 +71,9 @@ class FinalExperimentWorkflow:
         self.paths = ProjectPaths.from_value(drive_root).create()
         self.model_id = model_id
         self.dataset_track = dataset_track
+        # Unit tests that drive a fake orchestrator set this to False. A real
+        # final run always proves the adapter on this GPU first.
+        self.require_adapter_gate = bool(require_adapter_gate)
         self.protocol = resolve_controlled_protocol(self.repo_root, model_id)
         self.protocol_id = (
             RTDETR_HPO_PROTOCOL_ID if model_id == "rtdetrv2_l" else HPO_PROTOCOL_ID
@@ -319,6 +324,18 @@ class FinalExperimentWorkflow:
             )
         assert_selection_split_held_out(self.manifest_dir)
 
+    def assert_adapter_gate(self) -> dict[str, Any] | None:
+        """Refuse to start final training without a matching READY smoke record."""
+        if not self.require_adapter_gate:
+            return None
+        return require_ready_adapter_gate(
+            self.repo_root,
+            self.paths.root,
+            self.model_id,
+            dataset_track=self.dataset_track,
+            image_size=int(self.protocol["image_size"]),
+        )
+
     def _matrix(self, full_matrix: bool) -> tuple[tuple[str, ...], tuple[int, ...]]:
         if full_matrix:
             return (
@@ -338,6 +355,9 @@ class FinalExperimentWorkflow:
         accumulation: int = 8,
         full_matrix: bool = False,
     ) -> dict[str, Any]:
+        # Checked before anything reads the dataset, so a track that was never
+        # prepared fails with an instruction instead of a stray FileNotFoundError.
+        require_prepared_dataset_track(self.paths.root, self.dataset_track)
         preview = self.inspect()
         if not start_expensive_stage:
             return {
@@ -347,6 +367,7 @@ class FinalExperimentWorkflow:
                     "Set START_FINETUNING=True after reviewing this contract."
                 ),
             }
+        self.assert_adapter_gate()
         tuned = self._load_tuned_parameters()
         self._ensure_selection_manifests()
         recipes, seeds = self._matrix(full_matrix)

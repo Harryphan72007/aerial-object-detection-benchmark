@@ -661,7 +661,16 @@ def main() -> None:
             break
 
     selected_epoch = best.best_map_epoch or int(history.rows[-1]["epoch"])
-    selected_metric = best.best_map if np.isfinite(best.best_map) else 0.0
+    # A non-finite best metric means validation never produced a usable score.
+    # Recording 0.0 would turn that failure into a valid HPO objective, so the
+    # run fails here instead.
+    if not np.isfinite(best.best_map) or not np.isfinite(best.best_aptiny):
+        raise RuntimeError(
+            "RT-DETRv2 training finished without a finite validation objective "
+            f"pair: mAP={best.best_map}, APtiny={best.best_aptiny}. Inspect the "
+            f"validation history in {run_dir / 'metrics_history.csv'}."
+        )
+    selected_metric = float(best.best_map)
     if best_model_state_dict is None:
         best_model_state_dict = {
             key: value.detach().cpu().clone()
@@ -709,10 +718,8 @@ def main() -> None:
         "trainable_parameters": trainable,
         "frozen_parameters": total - trainable,
         "estimated_model_size_bytes_fp32": total * 4,
-        "best_validation_map": best.best_map if np.isfinite(best.best_map) else 0.0,
-        "best_validation_aptiny": (
-            best.best_aptiny if np.isfinite(best.best_aptiny) else 0.0
-        ),
+        "best_validation_map": float(best.best_map),
+        "best_validation_aptiny": float(best.best_aptiny),
         "best_epoch": best.best_map_epoch,
         "best_aptiny_epoch": best.best_aptiny_epoch,
         "time_to_best_map_seconds": time_to_best_map,

@@ -56,6 +56,8 @@ def test_repository_modules_use_selected_runtime_python(
     tmp_path: Path, monkeypatch
 ) -> None:
     selected = tmp_path / "bin" / "python"
+    selected.parent.mkdir(parents=True)
+    selected.write_text("", encoding="utf-8")
     monkeypatch.setenv(MODEL_PYTHON_ENV, str(selected))
     assert python_module_command("scripts.evaluate", "--help") == [
         str(selected),

@@ -144,10 +144,13 @@ for model_id in (
     print(model_id, runtime["python_executable"], runtime["probe_path"])
 ```
 
-For the adapter forward/backward gates, run notebook 01 separately for each model
-with `RUN_MODE="environment"`, `START_EXPENSIVE_STAGE=True`, and `SMOKE_TEST=True`.
-That gate constructs the selected model, trains/backpropagates/steps one small batch,
-validates, atomically saves, reloads, and records its fingerprint. Specifically:
+For the adapter forward/backward gates, run
+`python -m scripts.gpu_adapter_smoke --drive-root <artifact_root> --dataset-track 2class`.
+(The notebook-01 `RUN_MODE="environment"` gate described in earlier revisions of
+this note is obsolete: that protocol is retired and its entry point raises.)
+The gate constructs the selected model, verifies its pretrained load, runs one
+forward/backward pass, checks the head class count and feature contract,
+completes a checkpoint roundtrip, and records its fingerprint. Specifically:
 
 - ResNet: confirm `mmcv.ops.nms`, construct the detector, and complete the gate.
 - Swin: confirm the pinned config/image size and complete one forward/backward gate.

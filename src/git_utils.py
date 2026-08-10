@@ -9,6 +9,22 @@ class DirtyRepositoryError(RuntimeError):
     """Raised when an update would risk overwriting local changes."""
 
 
+def is_git_checkout(path: str | Path) -> bool:
+    """Recognize a normal clone *and* a linked worktree.
+
+    ``(path / ".git").is_dir()`` is false inside a linked worktree, where
+    ``.git`` is a file pointing at the shared repository, so every caller must
+    ask Git itself.
+    """
+    probe = subprocess.run(
+        ["git", "-C", str(Path(path)), "rev-parse", "--is-inside-work-tree"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return probe.returncode == 0 and probe.stdout.strip().lower() == "true"
+
+
 def run_git(repo_root: str | Path, *args: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(repo_root), *args],

@@ -175,18 +175,22 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
         "20_finetune_resnet50.ipynb": {
             "DATASET_TRACK",
             "START_FINETUNING",
+            "FULL_MATRIX",
         },
         "21_finetune_swin_t.ipynb": {
             "DATASET_TRACK",
             "START_FINETUNING",
+            "FULL_MATRIX",
         },
         "22_finetune_vmamba_t.ipynb": {
             "DATASET_TRACK",
             "START_FINETUNING",
+            "FULL_MATRIX",
         },
         "23_finetune_rtdetrv2.ipynb": {
             "DATASET_TRACK",
             "START_FINETUNING",
+            "FULL_MATRIX",
         },
             "30_evaluate_all_models.ipynb": {
                 "DATASET_TRACK",

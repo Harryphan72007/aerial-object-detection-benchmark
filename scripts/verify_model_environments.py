@@ -18,6 +18,11 @@ from typing import Any, Callable
 from src.utils.environment import collect_environment
 from src.utils.serialization import write_json
 from src.workflows.isolated_environment import resolved_runtime_spec
+from src.workflows.pretrained_checkpoints import (
+    CheckpointVerificationError,
+    load_pretrained_spec,
+    verify_checkpoint,
+)
 
 DEFAULT_MODELS = {
     "openmmlab": "faster_rcnn_resnet50",
@@ -241,11 +246,14 @@ def _vmamba_probe(
     pretrained = Path(
         args.pretrained_checkpoint or os.environ.get("VMAMBA_T_PRETRAINED", "")
     )
-    if not pretrained.is_file() or pretrained.stat().st_size == 0:
-        raise ProbeFailure(
-            "vmamba_pretrained_checkpoint",
-            f"required VMamba pretrained checkpoint is missing or empty: {pretrained}",
+    # Size alone accepts a truncated download or the wrong architecture's
+    # weights, both of which then fail as a silent partial load.
+    try:
+        checkpoint_record = verify_checkpoint(
+            pretrained, load_pretrained_spec(spec["pretrained"])
         )
+    except CheckpointVerificationError as error:
+        raise ProbeFailure("vmamba_pretrained_checkpoint", str(error)) from error
     construction: dict[str, Any] = {"requested": bool(args.construct_model)}
     if args.construct_model:
         os.environ["VMAMBA_ROOT"] = str(vmamba_root)
@@ -286,7 +294,8 @@ def _vmamba_probe(
         "registration_module": str(registration.__file__),
         "selective_scan": "selective_scan_cuda_oflex",
         "pretrained_checkpoint": str(pretrained.resolve()),
-        "pretrained_size": pretrained.stat().st_size,
+        "pretrained_size": checkpoint_record["size_bytes"],
+        "pretrained_sha256": checkpoint_record["sha256"],
         "construction": construction,
     }
 

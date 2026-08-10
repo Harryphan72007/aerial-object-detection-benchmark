@@ -13,6 +13,42 @@ from src.training.lr_workflow import LRControlledBenchmark
 from src.utils.serialization import write_json
 
 
+class DatasetTrackNotPreparedError(RuntimeError):
+    """The selected dataset track has not been built by notebook 00."""
+
+
+def require_prepared_dataset_track(
+    drive_root: str | Path, dataset_track: str
+) -> dict[str, str]:
+    """Fail before an expensive stage when the selected track does not exist.
+
+    The 10-class track is opt-in, so selecting it without having prepared it is
+    the common mistake. Catching it here turns a late, generic FileNotFoundError
+    deep inside training into an actionable instruction.
+    """
+    ProjectPaths.validate_track(dataset_track)
+    paths = ProjectPaths.from_value(drive_root)
+    annotations = paths.coco(dataset_track) / "annotations"
+    required = {
+        "train": annotations / "instances_train.json",
+        "validation": annotations / "instances_val.json",
+    }
+    missing = [str(path) for path in required.values() if not path.is_file()]
+    if missing:
+        remedy = (
+            "Rerun notebooks/00_prepare_visdrone.ipynb with "
+            "PREPARE_10CLASS_TRACK = True."
+            if dataset_track == "10class"
+            else "Rerun notebooks/00_prepare_visdrone.ipynb and wait for "
+            "DATA CONTRACT VERIFIED: YES."
+        )
+        raise DatasetTrackNotPreparedError(
+            f"The {dataset_track} dataset track is not prepared under {paths.root}.\n"
+            "Missing:\n- " + "\n- ".join(missing) + f"\n{remedy}"
+        )
+    return {name: str(path) for name, path in required.items()}
+
+
 def _lr_manifests_current(paths: ProjectPaths) -> bool:
     annotations = paths.coco("2class") / "annotations"
     try:

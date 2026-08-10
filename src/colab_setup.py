@@ -8,7 +8,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from src.git_utils import DirtyRepositoryError, ensure_clean_for_update
+from src.git_utils import (
+    DirtyRepositoryError,
+    ensure_clean_for_update,
+    is_git_checkout,
+)
 
 
 def mount_drive() -> None:
@@ -38,7 +42,7 @@ def clone_or_update_repository(
             ["git", "clone", "--branch", branch, repository_url, str(path)], check=True
         )
         return
-    if not (path / ".git").exists():
+    if not is_git_checkout(path):
         raise RuntimeError(
             f"Refusing to clone into an existing non-Git directory: {path}. "
             "Choose an empty path or move the local files first."
@@ -53,7 +57,7 @@ def checkout_repository_ref(
 ) -> dict[str, str | bool]:
     """Fetch and select a branch, tag, or commit without resetting a clone."""
     path = Path(repository_path)
-    if not (path / ".git").exists():
+    if not is_git_checkout(path):
         raise RuntimeError(f"Not a Git checkout: {path}")
     if reference_type not in {"branch", "tag", "commit"}:
         raise ValueError("reference_type must be branch, tag, or commit")
@@ -129,7 +133,7 @@ def clone_or_checkout_repository(
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["git", "clone", repository_url, str(path)], check=True)
-    elif not (path / ".git").exists():
+    elif not is_git_checkout(path):
         raise RuntimeError(
             f"Refusing to use an existing non-Git directory: {path}"
         )

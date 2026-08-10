@@ -48,12 +48,19 @@ def main() -> None:
     smoke_root = root / ".notebook-smoke"
     if args.notebook is None:
         results: list[dict[str, object]] = []
+        # A failing notebook aborts this loop, so a previous run's report must
+        # not survive to be mistaken for this run's result.
+        stale = root / args.output
+        if stale.is_file():
+            stale.unlink()
         for name in PRIMARY_NOTEBOOKS:
             part = (
                 smoke_root
                 / "parts"
                 / f"{Path(name).stem}.json"
             )
+            if part.is_file():
+                part.unlink()
             subprocess.run(
                 [
                     sys.executable,

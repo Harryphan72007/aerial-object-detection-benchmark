@@ -68,7 +68,7 @@ def test_bootstrap_notebook_is_cross_platform_clean_and_never_starts_training() 
             assert cell.execution_count is None
             assert cell.outputs == []
     assert "checkout_repository_ref" in code
-    assert "setup_notebook_environment" in code
+    assert "bootstrap_notebook" in code
     assert "IN_KAGGLE" in code
     assert "run_diagnostics" in code
     assert "trainer" not in code.lower()

@@ -80,12 +80,20 @@ gate.
 
 ## Remaining experiments
 
-1. Run the required data and adapter smoke gates on a supported Colab GPU.
+1. Run notebook 00, then the GPU adapter smoke gate
+   (`python -m scripts.gpu_adapter_smoke`) for each model on the target GPU. HPO
+   and final training refuse to start without its READY record; see
+   [the hosted GPU runbook](release/HOSTED_GPU_RUNBOOK.md).
 2. Resume/complete five finite Phase A and five finite Phase B LR trials for each
    model and selected dataset track.
-3. Run baseline and tuned final recipes at seeds 17, 42, and 3407.
+3. Run the default final matrix: the **tuned** recipe at seed **42**
+   (`FULL_MATRIX = False`). The `baseline`+`tuned` × seeds 17/42/3407 matrix is an
+   explicit opt-in (`FULL_MATRIX = True`) and is reported separately as the
+   variance estimate the single-seed headline lacks.
 4. Evaluate compatible final checkpoints, profile them, and generate the
    track-specific comparison report.
+5. Measure `t_iter` with `scripts/measure_throughput.py` before quoting any
+   GPU-hour figure.
 
 ## Expected artifact locations
 
@@ -116,7 +124,15 @@ Only an interrupted run with the same model, track, seed, image size, effective
 batch size, LR/configuration hash, and scheduler contract may resume from
 `last.pth`.
 
+Final training reads `final_train_seed42.json` — official train minus the 5%
+model-selection holdout — not the complete official train split. The holdout
+exists so the canonical `best.pth` is never selected on official validation.
+
 Model environments now use a `READY`-only transactional reuse contract with exact
 RT-DETR/OpenMMLab/VMamba probes. A failed child verifier records its stage,
 stdout/stderr, Python, command and probe path; preview mode does not install the
 family runtime. See `docs/reference/environment_provisioning_audit.md`.
+
+A missing isolated environment is a hard failure: `model_python_executable()` no
+longer falls back to `sys.executable`, so model training can never start in the
+notebook kernel and produce misleading import errors.

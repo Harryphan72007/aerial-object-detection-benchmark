@@ -426,3 +426,31 @@ def test_model_notebooks_guard_the_selected_dataset_track() -> None:
     ):
         source = (ROOT / "notebooks" / name).read_text(encoding="utf-8")
         assert "require_prepared_dataset_track" in source, name
+
+
+def test_as_dict_reports_the_recorded_restart_decision() -> None:
+    """``restart_required`` must come from state, never be a literal.
+
+    ``setup_notebook_environment`` raises rather than returning while a restart
+    is pending, so a returned environment records False. Reporting a hardcoded
+    False instead would keep printing "no restart needed" for any future caller
+    that constructs the environment differently.
+    """
+    fields = {
+        "platform": "colab",
+        "repository_root": Path("/repo"),
+        "artifact_root": Path("/artifacts"),
+        "local_cache_root": Path("/cache"),
+        "model_runtime_root": Path("/runtimes"),
+        "hpo_scratch_root": Path("/scratch"),
+    }
+    assert (
+        notebook_env.NotebookEnvironment(**fields).as_dict()["restart_required"]
+        is False
+    )
+    assert (
+        notebook_env.NotebookEnvironment(
+            **fields, restart_required=True
+        ).as_dict()["restart_required"]
+        is True
+    )

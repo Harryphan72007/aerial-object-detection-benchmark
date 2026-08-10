@@ -240,7 +240,14 @@ def test_final_workflow_default_matrix_is_one_recipe_one_seed(tmp_path):
     _best_config(tmp_path)
     fake = FakeOrchestrator()
     workflow = FinalExperimentWorkflow(
-        ROOT, tmp_path, MODEL_ID, "2class", orchestrator=fake
+        ROOT,
+        tmp_path,
+        MODEL_ID,
+        "2class",
+        orchestrator=fake,
+        # A fake orchestrator never touches a GPU, so the real smoke gate is
+        # not applicable here; the gate's own regression tests cover it.
+        require_adapter_gate=False,
     )
     _prepare_official_dataset(workflow)
     result = workflow.run(start_expensive_stage=True)
@@ -256,7 +263,14 @@ def test_final_workflow_full_matrix_override_runs_two_recipes_three_seeds(tmp_pa
     _best_config(tmp_path)
     fake = FakeOrchestrator()
     workflow = FinalExperimentWorkflow(
-        ROOT, tmp_path, MODEL_ID, "2class", orchestrator=fake
+        ROOT,
+        tmp_path,
+        MODEL_ID,
+        "2class",
+        orchestrator=fake,
+        # A fake orchestrator never touches a GPU, so the real smoke gate is
+        # not applicable here; the gate's own regression tests cover it.
+        require_adapter_gate=False,
     )
     _prepare_official_dataset(workflow)
     result = workflow.run(start_expensive_stage=True, full_matrix=True)
@@ -287,7 +301,14 @@ def test_resume_contract_rejects_configuration_drift(tmp_path):
     _best_config(tmp_path)
     fake = FakeOrchestrator()
     workflow = FinalExperimentWorkflow(
-        ROOT, tmp_path, MODEL_ID, "2class", orchestrator=fake
+        ROOT,
+        tmp_path,
+        MODEL_ID,
+        "2class",
+        orchestrator=fake,
+        # A fake orchestrator never touches a GPU, so the real smoke gate is
+        # not applicable here; the gate's own regression tests cover it.
+        require_adapter_gate=False,
     )
     contract = workflow._contract(42, "tuned", {"learning_rate": 1e-5}, 1, 8)
     run_dir = tmp_path / "checkpoints" / "final" / MODEL_ID / "old"
@@ -318,7 +339,7 @@ def test_non_rtdetr_hpo_refuses_legacy_or_missing_objective_pairs() -> None:
             {"best_validation_map": 0.0, "best_validation_aptiny": 0.0},
             "faster_rcnn_resnet50",
         )
-    with pytest.raises(RuntimeError, match="required HPO objectives"):
+    with pytest.raises(RuntimeError, match="usable HPO objectives"):
         validated_objective_pair(
             {"best_validation_map": 0.2}, "faster_rcnn_resnet50"
         )

@@ -24,7 +24,8 @@ from src.training.lr_search import (
 )
 from src.training.trainer import TrainingOrchestrator
 from src.utils.serialization import read_json, write_json, write_yaml
-from src.workflows.adapter_gate import adapter_fingerprint
+from src.workflows.adapter_gate import adapter_fingerprint, require_ready_adapter_gate
+from src.workflows.dataset_setup import require_prepared_dataset_track
 
 from src.hpo.search_spaces import broad_search_space, refined_search_space
 
@@ -84,28 +85,67 @@ def source_tree_fingerprint(repo_root: str | Path) -> str:
     return digest.hexdigest()
 
 
-def validated_objective_pair(
-    manifest: dict[str, Any], model_id: str
-) -> tuple[float, float]:
-    """Read one trustworthy validation objective pair from a training manifest."""
+REQUIRED_OBJECTIVES = ("best_validation_map", "best_validation_aptiny")
 
-    required = ("best_validation_map", "best_validation_aptiny")
-    if model_id == "rtdetrv2_l":
-        return tuple(float(manifest.get(key, 0.0)) for key in required)  # type: ignore[return-value]
-    missing = [key for key in required if key not in manifest]
-    if missing:
-        raise RuntimeError(
-            "training did not produce the required HPO objectives: " f"{missing}"
+
+class InvalidObjectiveError(RuntimeError):
+    """A trial produced no trustworthy objective pair and must not COMPLETE."""
+
+
+def validated_objective_pair(
+    manifest: dict[str, Any],
+    model_id: str,
+    *,
+    trial_number: int | None = None,
+    manifest_path: str | Path | None = None,
+) -> tuple[float, float]:
+    """Read one trustworthy validation objective pair from a training manifest.
+
+    One policy for every model family. A missing, null, non-numeric, NaN, Inf, or
+    all-zero objective is a failed evaluation, never a score of zero: substituting
+    a default would turn a broken run into a valid Optuna ``COMPLETE`` trial and
+    silently poison the search.
+    """
+
+    context = (
+        f"trial={trial_number if trial_number is not None else 'unknown'}, "
+        f"model_id={model_id}, "
+        f"manifest={manifest_path if manifest_path is not None else 'in-memory'}"
+    )
+    invalid: list[str] = []
+    values: list[float] = []
+    for key in REQUIRED_OBJECTIVES:
+        if key not in manifest:
+            invalid.append(f"{key}: missing")
+            continue
+        raw = manifest[key]
+        if raw is None:
+            invalid.append(f"{key}: null")
+            continue
+        if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+            invalid.append(f"{key}: non-numeric ({raw!r})")
+            continue
+        value = float(raw)
+        if math.isnan(value):
+            invalid.append(f"{key}: NaN")
+            continue
+        if math.isinf(value):
+            invalid.append(f"{key}: infinite")
+            continue
+        values.append(value)
+    if invalid:
+        raise InvalidObjectiveError(
+            f"training did not produce usable HPO objectives ({context}): "
+            + "; ".join(invalid)
         )
-    values = tuple(float(manifest[key]) for key in required)
-    if not all(math.isfinite(value) for value in values):
-        raise RuntimeError(f"training produced non-finite HPO objectives: {values}")
-    if values == (0.0, 0.0):
-        raise RuntimeError(
-            "refusing the legacy all-zero HPO objective pair; archive the old "
-            "study and rerun with the repaired validation contract"
+    pair = (values[0], values[1])
+    if pair == (0.0, 0.0):
+        raise InvalidObjectiveError(
+            "refusing the all-zero HPO objective pair, which the evaluation "
+            f"contract cannot produce from a successful trial ({context}); "
+            "archive any legacy study and rerun with the repaired contract"
         )
-    return values  # type: ignore[return-value]
+    return pair
 
 
 def _sample(trial: Any, space: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -124,6 +164,10 @@ def _sample(trial: Any, space: dict[str, dict[str, Any]]) -> dict[str, Any]:
 
 
 def _failure_kind(error: BaseException) -> str | None:
+    # An unusable objective is never a prunable candidate, even when its message
+    # names NaN or Inf: the trial must FAIL so the defect is visible.
+    if isinstance(error, InvalidObjectiveError):
+        return None
     message = str(error).lower()
     if any(marker in message for marker in OOM_MARKERS):
         return "out_of_memory"
@@ -154,6 +198,7 @@ class TwoStageRandomHPO:
         *,
         trial_runner: TrialRunner | None = None,
         protocol_id: str = HPO_PROTOCOL_ID,
+        require_adapter_gate: bool = True,
     ):
         if dataset_track not in {"2class", "10class"}:
             raise ValueError(f"unsupported dataset track: {dataset_track}")
@@ -162,6 +207,9 @@ class TwoStageRandomHPO:
         self.model_id = model_id
         self.dataset_track = dataset_track
         self.protocol_id = str(protocol_id)
+        # Unit tests that drive a fake trial runner set this to False. A real
+        # search always proves the adapter on this GPU first.
+        self.require_adapter_gate = bool(require_adapter_gate)
         self.protocol = resolve_controlled_protocol(self.repo_root, model_id)
         self.smoke_test = os.environ.get("SMOKE_TEST", "").lower() in {
             "1",
@@ -326,7 +374,12 @@ class TwoStageRandomHPO:
             protocol_id=self.protocol_id,
             baseline_or_tuned="search_trial",
         )
-        return validated_objective_pair(manifest, self.model_id)
+        return validated_objective_pair(
+            manifest,
+            self.model_id,
+            trial_number=trial_number,
+            manifest_path=run_dir / "final_metrics.json",
+        )
 
     def _study(self, metadata: dict[str, Any]):
         import optuna
@@ -589,6 +642,18 @@ class TwoStageRandomHPO:
             reverse=True,
         )[:3]
 
+    def assert_adapter_gate(self) -> dict[str, Any] | None:
+        """Refuse to start a search without a matching READY smoke record."""
+        if not self.require_adapter_gate:
+            return None
+        return require_ready_adapter_gate(
+            self.repo_root,
+            self.paths.root,
+            self.model_id,
+            dataset_track=self.dataset_track,
+            image_size=int(self.protocol["image_size"]),
+        )
+
     def _after_trial(self, study: Any) -> None:
         """Hook for storage policies that run after each persisted trial."""
 
@@ -692,6 +757,9 @@ class TwoStageRandomHPO:
         return summary
 
     def run(self, *, start_expensive_stage: bool = False) -> dict[str, Any]:
+        # Checked before anything reads the dataset, so a track that was never
+        # prepared fails with an instruction instead of a stray FileNotFoundError.
+        require_prepared_dataset_track(self.paths.root, self.dataset_track)
         split_summary = self.prepare_manifests()
         broad = self._broad_search_space()
         metadata = self._metadata(split_summary, broad)
@@ -709,6 +777,7 @@ class TwoStageRandomHPO:
                 "preview": True,
                 "message": "Set START_HPO=True after reviewing this contract.",
             }
+        self.assert_adapter_gate()
         study = self._study(metadata)
         self._run_phase(study, "phase_a", broad)
         strongest = self._strongest_phase_a(study)

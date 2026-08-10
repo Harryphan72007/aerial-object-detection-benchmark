@@ -19,6 +19,7 @@ from src.optional_outputs import load_optional_warnings
 from src.paths import ProjectPaths
 from src.reproducibility import framework_versions, seed_everything
 from src.subprocess_utils import (
+    EnvironmentNotProvisionedError,
     build_model_subprocess_environment,
     model_python_executable,
     python_module_command,
@@ -185,9 +186,15 @@ class TrainingOrchestrator:
                 [model_python_executable(), "-m", "pip", "freeze"], text=True
             )
             (run_dir / "pip_freeze.txt").write_text(frozen, encoding="utf-8")
-        except Exception:
+        except (
+            EnvironmentNotProvisionedError,
+            OSError,
+            subprocess.SubprocessError,
+        ) as error:
+            # Provenance capture is best-effort; the backend launch below fails
+            # loudly on the same missing environment, so record why and continue.
             (run_dir / "pip_freeze.txt").write_text(
-                "unavailable\n", encoding="utf-8"
+                f"unavailable: {type(error).__name__}: {error}\n", encoding="utf-8"
             )
         write_json(
             run_dir / "label_mapping.json",

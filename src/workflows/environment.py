@@ -9,12 +9,19 @@ from pathlib import Path
 from typing import Any
 
 from src.notebook_environment import (
+    LOCAL_INSTALL_OPT_IN,
     default_model_runtime_root,
     detect_notebook_platform,
+    parse_pinned_requirements,
+    restart_required_packages,
 )
-from src.notebook_utils import in_colab, in_hosted_notebook
+from src.notebook_utils import in_hosted_notebook
 from src.subprocess_utils import run_checked
 from src.workflows.contract import require_primary_model
+from src.workflows.pretrained_checkpoints import (
+    ensure_pretrained_checkpoint,
+    family_pretrained_spec,
+)
 from src.workflows.isolated_environment import (
     _clone_pinned as _clone_framework_pinned,
     _framework_checkout_path,
@@ -41,6 +48,44 @@ def _version(name: str) -> str | None:
         return importlib.metadata.version(name)
     except importlib.metadata.PackageNotFoundError:
         return None
+
+
+def _local_install_allowed() -> bool:
+    """Installing family pins into the active interpreter needs an opt-in.
+
+    Outside a hosted runtime the active interpreter is the developer's own
+    environment; rewriting it from a notebook is destructive.
+    """
+    return os.environ.get(LOCAL_INSTALL_OPT_IN, "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
+def _restart_state(repo: Path, requirements: str, changed: bool) -> dict[str, Any]:
+    """Report whether this kernel now holds stale compiled modules."""
+    if not changed:
+        return {
+            "restart_required": False,
+            "restart_reason": "no package in this interpreter changed",
+        }
+    requirement_path = repo / requirements
+    pins = (
+        parse_pinned_requirements(requirement_path.read_text(encoding="utf-8"))
+        if requirement_path.is_file()
+        else {}
+    )
+    pending = restart_required_packages(pins)
+    return {
+        "restart_required": bool(pending),
+        "restart_reason": (
+            "already-imported compiled packages were replaced: "
+            + ", ".join(change["package"] for change in pending)
+            if pending
+            else "no already-imported compiled package changed"
+        ),
+    }
 
 
 def _run(command: list[str], *, cwd: Path | None = None) -> None:
@@ -98,7 +143,16 @@ def ensure_model_environment(
             root,
             runtime_base=runtime_base,
         )
-        result = {**runtime, "restart_required": False}
+        result = {
+            **runtime,
+            # The isolated runtime installs into its own interpreter, so this
+            # kernel's loaded modules are untouched by construction.
+            "restart_required": False,
+            "restart_reason": (
+                "isolated runtime: packages are installed into "
+                f"{runtime.get('python_executable')}, never into this kernel"
+            ),
+        }
         if family == "rtdetr":
             result["checkpoint"] = RTDETR_CHECKPOINT
         if os.environ.get("MMDET_ROOT"):
@@ -113,13 +167,14 @@ def ensure_model_environment(
             )
         return result
 
+    allow_local_install = install_missing and _local_install_allowed()
     if family == "rtdetr":
         missing = [
             name
             for name, expected in (("transformers", "4.52.4"), ("accelerate", "1.7.0"))
             if _version(name) != expected
         ]
-        if missing and install_missing:
+        if missing and allow_local_install:
             _run(
                 [
                     sys.executable,
@@ -131,6 +186,14 @@ def ensure_model_environment(
                 ]
             )
             changed = True
+        elif missing:
+            raise RuntimeError(
+                "This is not a hosted runtime, so the RT-DETR pins are not "
+                f"installed into {sys.executable}. Missing/mismatched: {missing}. "
+                "Create a matching environment yourself (see "
+                "requirements-rtdetr-colab.txt), or set "
+                f"{LOCAL_INSTALL_OPT_IN}=1 to accept changing this interpreter."
+            )
         hardware = _require_gpu()
         try:
             from transformers import AutoConfig
@@ -144,7 +207,7 @@ def ensure_model_environment(
             "family": family,
             "checkpoint": getattr(resolved, "_name_or_path", RTDETR_CHECKPOINT),
             "packages_changed": changed,
-            "restart_required": changed and in_colab(),
+            **_restart_state(repo, "requirements-rtdetr-colab.txt", changed),
             **hardware,
         }
 
@@ -181,7 +244,15 @@ def ensure_model_environment(
         "mmdet": "3.3.0",
     }
     missing = [name for name, value in expected.items() if _version(name) != value]
-    if missing and install_missing:
+    if missing and not allow_local_install:
+        raise RuntimeError(
+            "This is not a hosted runtime, so the OpenMMLab pins are not "
+            f"installed into {sys.executable}. Missing/mismatched: {missing}. "
+            "Create a matching environment yourself (see "
+            "requirements-openmmlab-py310-cu118.txt), or set "
+            f"{LOCAL_INSTALL_OPT_IN}=1 to accept changing this interpreter."
+        )
+    if missing and allow_local_install:
         if "mmcv" in missing:
             _run(
                 [
@@ -236,7 +307,7 @@ def ensure_model_environment(
         "family": family,
         "MMDET_ROOT": str(mmdet_root),
         "packages_changed": changed,
-        "restart_required": changed and in_colab(),
+        **_restart_state(repo, "requirements-openmmlab-py310-cu118.txt", changed),
         **_require_gpu(),
     }
     if family == "vmamba":
@@ -252,7 +323,10 @@ def ensure_model_environment(
             VMAMBA_REVISION,
         )
         os.environ["VMAMBA_ROOT"] = str(vmamba_root)
-        if importlib.util.find_spec("selective_scan_cuda_oflex") is None and install_missing:
+        if (
+            importlib.util.find_spec("selective_scan_cuda_oflex") is None
+            and allow_local_install
+        ):
             _run(
                 [
                     sys.executable,
@@ -265,17 +339,18 @@ def ensure_model_environment(
             )
         if importlib.util.find_spec("selective_scan_cuda_oflex") is None:
             raise RuntimeError("VMamba selective_scan_cuda_oflex could not be imported")
-        pretrained = root / "pretrained" / "vmamba_tiny_e292.pth"
-        if not pretrained.is_file() or pretrained.stat().st_size == 0:
-            raise FileNotFoundError(
-                "VMamba will not train from scratch. Place the canonical pretrained "
-                f"checkpoint at {pretrained}"
-            )
+        spec = family_pretrained_spec(repo, "vmamba")
+        if spec is None:
+            raise RuntimeError("configs/runtime_environments.yaml declares no VMamba checkpoint")
+        pretrained = root / "pretrained" / spec.filename
+        # Verified against the pinned SHA-256; VMamba will not train from scratch.
+        verification = ensure_pretrained_checkpoint(spec, pretrained)
         os.environ["VMAMBA_T_PRETRAINED"] = str(pretrained)
         result.update(
             {
                 "VMAMBA_ROOT": str(vmamba_root),
                 "VMAMBA_T_PRETRAINED": str(pretrained),
+                "pretrained_checkpoint": verification,
                 "selective_scan": "READY",
             }
         )

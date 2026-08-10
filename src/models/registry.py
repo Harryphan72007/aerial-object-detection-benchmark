@@ -26,7 +26,7 @@ def load_model_config(model_id:str,repo_root:str|Path=".")->dict[str,Any]:
             cfg["resolved_framework_config"]=str(Path(external)/str(cfg["framework_config"]))
     return cfg
 
-def create_adapter(model_id:str,device:str|None=None)->DetectionModelAdapter:
-    if model_id.startswith("faster_rcnn_"): return MMDetectionAdapter(model_id,device or "cuda:0")
-    if model_id=="rtdetrv2_l": return RTDetrV2Adapter(model_id,device)
+def create_adapter(model_id:str,device:str|None=None,repo_root:str|Path=".")->DetectionModelAdapter:
+    if model_id.startswith("faster_rcnn_"): return MMDetectionAdapter(model_id,device or "cuda:0",repo_root)
+    if model_id=="rtdetrv2_l": return RTDetrV2Adapter(model_id,device,repo_root)
     raise KeyError(model_id)

@@ -12,6 +12,7 @@ import scripts.verify_model_environments as verifier
 import src.workflows.isolated_environment as isolated
 from scripts.validate_notebooks import validate_notebook
 from src.subprocess_utils import CheckedSubprocessError, run_checked
+from src.workflows.pretrained_checkpoints import CheckpointVerificationError
 from src.utils.serialization import read_json, write_json
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -437,7 +438,8 @@ def test_missing_vmamba_pretrained_fails_before_hpo(
     paths["vmamba_config"].parent.mkdir(parents=True, exist_ok=True)
     paths["vmamba_config"].write_text("# config", encoding="utf-8")
     monkeypatch.setattr(isolated, "_clone_pinned", lambda *_args, **_kwargs: None)
-    with pytest.raises(FileNotFoundError, match="before HPO"):
+    monkeypatch.setenv("VISDRONE_ALLOW_CHECKPOINT_DOWNLOAD", "0")
+    with pytest.raises(CheckpointVerificationError, match="is missing"):
         isolated._prepare_family(
             ROOT, drive, Path("python"), spec, framework_root=framework_root
         )

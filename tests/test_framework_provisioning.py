@@ -311,7 +311,17 @@ def test_vmamba_extension_build_uses_disposable_environment_copy(
     monkeypatch.setattr(
         isolated,
         "_preflight_vmamba_toolchain",
-        lambda *_args, **_kwargs: {"status": "compatible"},
+        lambda *_args, **_kwargs: {
+            "report": {"nvcc_version": "11.8"},
+            "toolkit": isolated.CudaToolkit(
+                home=Path("/usr/local/cuda-11.8"),
+                nvcc=Path("/usr/local/cuda-11.8/bin/nvcc"),
+                version="11.8",
+            ),
+            "compiler": isolated.HostCompiler(
+                cxx=Path("/usr/bin/g++-11"), cc=Path("/usr/bin/gcc-11"), version="11.4.0"
+            ),
+        },
     )
     monkeypatch.setattr(
         isolated, "_run", lambda command, **_kwargs: commands.append(command)
@@ -323,9 +333,11 @@ def test_vmamba_extension_build_uses_disposable_environment_copy(
         spec,
         framework_root=framework_root,
     )
-    assert len(commands) == 1
+    # One compilation, then one import validation of the compiled extension.
+    assert len(commands) == 2
     rendered = [Path(value) for value in commands[0] if "selective_scan-" in value]
     assert len(rendered) == 1
     assert tmp_path / "environment" in rendered[0].parents
     assert paths["vmamba_root"] not in rendered[0].parents
     assert not rendered[0].exists()
+    assert "selective_scan_cuda_oflex" in commands[1][-1]

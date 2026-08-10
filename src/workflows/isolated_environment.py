@@ -6,7 +6,6 @@ import hashlib
 import importlib.metadata
 import json
 import os
-import re
 import shutil
 import stat
 import subprocess
@@ -17,7 +16,7 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterator, Mapping
+from typing import Any, Iterator, Mapping, Sequence
 
 try:
     import psutil
@@ -32,6 +31,22 @@ from src.subprocess_utils import (
 )
 from src.reproducibility import git_commit
 from src.utils.serialization import read_json, read_yaml, write_json
+from src.workflows.cuda_toolchain import (
+    CudaToolchainError,
+    CudaToolkit,
+    HostCompiler,
+    apt_install_commands,
+    automatic_install_allowed,
+    build_environment,
+    parse_cuda_version,
+    remediation_message,
+    select_cuda_toolkit,
+    select_host_compiler,
+)
+from src.workflows.pretrained_checkpoints import (
+    ensure_pretrained_checkpoint,
+    load_pretrained_spec,
+)
 
 MODEL_PYTHON_ENV = "VISDRONE_MODEL_PYTHON"
 RUNTIME_MANIFEST_ENV = "VISDRONE_RUNTIME_MANIFEST"
@@ -67,6 +82,7 @@ def _resolved_spec(repo_root: Path, model_id: str) -> dict[str, Any]:
             *config["vmamba"]["sources"],
         ]
         spec["pretrained"] = config["vmamba"]["pretrained"]
+        spec["cuda_toolkit"] = config["vmamba"]["cuda_toolkit"]
         model_config = read_yaml(repo_root / "configs/faster_rcnn_vmamba_t/model.yaml")
         spec["framework_config"] = model_config["framework_config"]
     else:
@@ -811,90 +827,140 @@ def _family_paths(
     return values
 
 
-def _preflight_vmamba_toolchain(python: Path) -> dict[str, str]:
-    """Reject host toolchains that cannot compile the pinned Torch CUDA extension."""
-
-    torch_probe = subprocess.run(
-        [str(python), "-c", "import torch; print(torch.version.cuda or '')"],
+def _isolated_torch_report(python: Path) -> dict[str, str]:
+    """Read the isolated runtime's own Torch/CUDA identity, not the kernel's."""
+    probe = subprocess.run(
+        [
+            str(python),
+            "-c",
+            "import torch; print(torch.__version__); print(torch.version.cuda or '')",
+        ],
         check=False,
         capture_output=True,
         text=True,
     )
-    if torch_probe.returncode:
+    if probe.returncode:
         raise EnvironmentProvisioningError(
             "VMamba CUDA preflight could not import Torch in the isolated runtime: "
-            + (torch_probe.stderr.strip() or "unknown error")
+            + (probe.stderr.strip() or "unknown error")
         )
-    torch_cuda = torch_probe.stdout.strip()
-    cuda_home = os.environ.get("CUDA_HOME") or os.environ.get("CUDA_PATH")
-    nvcc = (
-        Path(cuda_home) / "bin" / ("nvcc.exe" if os.name == "nt" else "nvcc")
-        if cuda_home
-        else Path(shutil.which("nvcc") or "")
+    lines = [line.strip() for line in probe.stdout.splitlines() if line.strip()]
+    if len(lines) < 2 or not lines[1]:
+        raise EnvironmentProvisioningError(
+            f"The isolated runtime's PyTorch reports no CUDA build: {lines}"
+        )
+    return {"torch_version": lines[0], "torch_cuda": lines[1]}
+
+
+def _host_cuda_version() -> str | None:
+    """Whatever ``nvcc`` the host exposes by default, for the diagnostic log."""
+    located = shutil.which("nvcc")
+    if not located:
+        return None
+    probe = subprocess.run(
+        [located, "--version"], check=False, capture_output=True, text=True
     )
-    if not str(nvcc) or not nvcc.is_file():
+    return parse_cuda_version(f"{probe.stdout}\n{probe.stderr}")
+
+
+def _install_cuda_toolkit(packages: Sequence[str]) -> None:
+    """Install the minimal pinned toolkit packages on a disposable host."""
+    for command in apt_install_commands(list(packages)):
+        _run(
+            list(command),
+            environment_name="vmamba",
+            stage="cuda_toolkit_installation",
+            python_executable=Path(sys.executable),
+        )
+
+
+def _preflight_vmamba_toolchain(
+    python: Path, toolkit_spec: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Select a toolchain that can compile the pinned Torch CUDA extension.
+
+    The CUDA major version must match PyTorch's; relaxing that check only moves
+    the failure into nvcc. So this resolves a compatible toolkit instead - from
+    the host if one exists, otherwise by installing the minimal package set on a
+    disposable hosted runtime - and blocks with exact commands if neither works.
+    """
+    torch_report = _isolated_torch_report(python)
+    torch_cuda = torch_report["torch_cuda"]
+    required_version = str(toolkit_spec["required_version"])
+    search_paths = list(toolkit_spec.get("search_paths", []))
+    platform = detect_notebook_platform()
+    host_cuda = _host_cuda_version()
+    print(f"PyTorch version: {torch_report['torch_version']}")
+    print(f"PyTorch CUDA version: {torch_cuda}")
+    print(f"Host CUDA toolkit version: {host_cuda or 'not found'}")
+    try:
+        toolkit = select_cuda_toolkit(
+            torch_cuda=torch_cuda, search_paths=search_paths
+        )
+    except CudaToolchainError as first_error:
+        packages = list(toolkit_spec.get("apt_packages", []))
+        allowed = automatic_install_allowed(
+            platform, toolkit_spec.get("automatic_install_platforms", [])
+        )
+        if not (allowed and packages and os.name != "nt"):
+            raise EnvironmentProvisioningError(
+                f"{first_error}\n\n"
+                + remediation_message(
+                    torch_cuda=torch_cuda,
+                    required_version=required_version,
+                    packages=packages,
+                    search_paths=search_paths,
+                )
+            ) from first_error
+        print(
+            f"Installing the CUDA {required_version} build toolkit for {platform}: "
+            f"{packages}"
+        )
+        try:
+            _install_cuda_toolkit(packages)
+            toolkit = select_cuda_toolkit(
+                torch_cuda=torch_cuda, search_paths=search_paths
+            )
+        except (CheckedSubprocessError, CudaToolchainError) as error:
+            raise EnvironmentProvisioningError(
+                f"Automatic CUDA toolkit installation did not produce a usable "
+                f"toolchain: {error}\n\n"
+                + remediation_message(
+                    torch_cuda=torch_cuda,
+                    required_version=required_version,
+                    packages=packages,
+                    search_paths=search_paths,
+                )
+            ) from error
+    try:
+        compiler = select_host_compiler(
+            candidates=list(toolkit_spec.get("compiler_candidates", ["g++"])),
+            maximum_major=int(toolkit_spec.get("maximum_host_compiler_major", 11)),
+        )
+    except CudaToolchainError as error:
         raise EnvironmentProvisioningError(
-            "VMamba requires a host CUDA compiler; CUDA_HOME/nvcc was not found"
-        )
-    nvcc_probe = subprocess.run(
-        [str(nvcc), "--version"], check=False, capture_output=True, text=True
-    )
-    nvcc_output = f"{nvcc_probe.stdout}\n{nvcc_probe.stderr}"
-    match = re.search(r"release\s+(\d+)\.(\d+)", nvcc_output)
-    if nvcc_probe.returncode or match is None:
-        raise EnvironmentProvisioningError(
-            "VMamba could not determine the host CUDA version from nvcc --version"
-        )
-    host_cuda = f"{match.group(1)}.{match.group(2)}"
-    if torch_cuda and host_cuda.split(".", 1)[0] != torch_cuda.split(".", 1)[0]:
-        raise EnvironmentProvisioningError(
-            "VMamba CUDA major-version mismatch: "
-            f"Torch was built for CUDA {torch_cuda}, but nvcc is CUDA {host_cuda}. "
-            "Install a matching toolkit or use a verified prebuilt extension."
-        )
-    compiler = (shutil.which("cl") or "") if os.name == "nt" else (shutil.which("g++") or "")
-    compiler_version = "unknown"
-    if os.name == "nt":
-        if not compiler:
-            raise EnvironmentProvisioningError(
-                "VMamba requires the MSVC cl compiler in PATH"
+            f"{error}\n\n"
+            + remediation_message(
+                torch_cuda=torch_cuda,
+                required_version=required_version,
+                packages=list(toolkit_spec.get("apt_packages", [])),
+                search_paths=search_paths,
             )
-        compiler_probe = subprocess.run(
-            [compiler], check=False, capture_output=True, text=True
-        )
-        compiler_output = f"{compiler_probe.stdout}\n{compiler_probe.stderr}"
-        compiler_match = re.search(r"Version\s+([0-9.]+)", compiler_output)
-        if compiler_match is None:
-            raise EnvironmentProvisioningError(
-                "VMamba could not determine the MSVC compiler version"
-            )
-        compiler_version = compiler_match.group(1)
-    else:
-        if not compiler:
-            raise EnvironmentProvisioningError(
-                "VMamba requires g++ to compile selective_scan_cuda_oflex"
-            )
-        compiler_probe = subprocess.run(
-            [compiler, "-dumpfullversion", "-dumpversion"],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        compiler_version = compiler_probe.stdout.strip()
-        if compiler_probe.returncode or not compiler_version:
-            raise EnvironmentProvisioningError("VMamba could not determine the g++ version")
-        if host_cuda.startswith("11.8") and int(compiler_version.split(".", 1)[0]) > 11:
-            raise EnvironmentProvisioningError(
-                "CUDA 11.8 requires a supported host compiler; use GCC/G++ 11 or older "
-                f"instead of {compiler_version}"
-            )
-    return {
-        "torch_cuda": torch_cuda,
-        "nvcc": str(nvcc),
+        ) from error
+    report = {
+        **torch_report,
         "host_cuda": host_cuda,
-        "compiler": str(compiler),
-        "compiler_version": compiler_version,
+        "required_cuda_version": required_version,
+        "platform": platform,
+        **toolkit.as_dict(),
+        **compiler.as_dict(),
     }
+    print(f"Selected CUDA_HOME: {report['cuda_home']}")
+    print(f"nvcc path: {report['nvcc']}")
+    print(f"nvcc version: {report['nvcc_version']}")
+    print(f"Host C++ compiler: {report['cxx']} ({report['compiler_version']})")
+    print(f"Host C compiler: {report['cc']}")
+    return {"report": report, "toolkit": toolkit, "compiler": compiler}
 
 
 def _prepare_family(
@@ -933,15 +999,20 @@ def _prepare_family(
             raise FileNotFoundError(
                 f"VMamba detector configuration is missing: {paths['vmamba_config']}"
             )
-        pretrained = paths["pretrained"]
-        if not pretrained.is_file() or pretrained.stat().st_size == 0:
-            raise FileNotFoundError(
-                "VMamba pretrained checkpoint validation failed before HPO: "
-                f"expected a non-empty file at {pretrained}. Training from scratch "
-                "is intentionally disabled."
-            )
+        # Training from scratch is intentionally disabled, so the checkpoint is
+        # verified against its pinned SHA-256 - not merely "exists and non-empty".
+        checkpoint = ensure_pretrained_checkpoint(
+            load_pretrained_spec(spec["pretrained"]), paths["pretrained"]
+        )
+        print(
+            f"VMamba pretrained checkpoint: {checkpoint['action']} "
+            f"{checkpoint['path']} (sha256 {checkpoint['sha256'][:12]}..., "
+            f"{checkpoint['size_bytes']} bytes)"
+        )
+        spec["pretrained_verification"] = checkpoint
         if install_kernel:
-            _preflight_vmamba_toolchain(python)
+            toolchain = _preflight_vmamba_toolchain(python, spec["cuda_toolkit"])
+            spec["cuda_toolchain"] = toolchain["report"]
             extension_source = paths["vmamba_root"] / "kernels" / "selective_scan"
             build_source = (
                 _environment_root_for_python(python)
@@ -963,12 +1034,31 @@ def _prepare_family(
                         "--no-build-isolation",
                     ),
                     environment_name=family,
+                    # The selected toolkit is exported into this build only; the
+                    # host's global CUDA installation is never modified.
+                    env=build_environment(
+                        build_model_subprocess_environment(),
+                        toolchain["toolkit"],
+                        toolchain["compiler"],
+                    ),
                     stage="selective_scan_compilation",
                     python_executable=python,
                 )
             finally:
                 if build_source.exists():
                     shutil.rmtree(build_source)
+            _run(
+                [
+                    str(python),
+                    "-c",
+                    "import selective_scan_cuda_oflex as extension; "
+                    "assert callable(extension.fwd) and callable(extension.bwd); "
+                    "print('selective_scan build status: READY')",
+                ],
+                environment_name=family,
+                stage="selective_scan_import_validation",
+                python_executable=python,
+            )
     return paths
 
 
@@ -1299,6 +1389,9 @@ def provision_isolated_environment(
                 "runtime_hash": runtime_hash,
                 "framework_root": str(framework_root),
                 "framework_checkouts": _framework_checkout_records(paths, spec),
+                "pretrained_checkpoint": spec.get(
+                    "pretrained_verification", existing.get("pretrained_checkpoint")
+                ),
             }
             write_json(marker, manifest)
             write_json(manifest_path, manifest)
@@ -1389,6 +1482,8 @@ def provision_isolated_environment(
                 "environment": probe.get("hardware", probe),
                 "verification": probe,
                 "sources": spec["sources"],
+                "cuda_toolchain": spec.get("cuda_toolchain"),
+                "pretrained_checkpoint": spec.get("pretrained_verification"),
                 "framework_root": str(framework_root),
                 "framework_checkouts": _framework_checkout_records(paths, spec),
                 "framework_provisioning_version": FRAMEWORK_PROVISIONING_VERSION,

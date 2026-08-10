@@ -43,7 +43,54 @@ vmamba:
       url: https://github.com/MzeroMiko/VMamba.git
       revision: 2ed52ead062a51a64521ed3871d52914bf532876
       license: MIT
+  # selective_scan_cuda_oflex is a Torch CUDA extension, and
+  # torch.utils.cpp_extension refuses a toolkit whose CUDA major version differs
+  # from the one PyTorch was built with. The torch 2.1.0+cu118 pin above is
+  # itself forced by the only published MMCV 2.1.0 wheels (cu118/torch2.1), so a
+  # CUDA 11.x nvcc is a genuine requirement, not a preference.
+  cuda_toolkit:
+    required_version: "11.8"
+    search_paths:
+      - /usr/local/cuda-11.8
+      - /usr/local/cuda-11
+      - /opt/cuda-11.8
+    # CUDA 11.8 does not support GCC 12 or newer, which is the default compiler
+    # on current hosted images.
+    maximum_host_compiler_major: 11
+    compiler_candidates:
+      - g++-11
+      - g++-10
+      - g++-9
+      - g++
+    # Minimal package set for building a Torch CUDA extension; the full
+    # cuda-toolkit-11-8 metapackage is several GB and is not needed.
+    apt_packages:
+      - cuda-nvcc-11-8
+      - cuda-cudart-dev-11-8
+      - cuda-cccl-11-8
+      - libcusparse-dev-11-8
+      - libcublas-dev-11-8
+      - g++-11
+    automatic_install_platforms:
+      - colab
+      - kaggle
   pretrained:
     filename: vmamba_tiny_e292.pth
     required: true
     train_from_scratch: false
+    model: vmamba_t
+    # The pinned detector config
+    # detection/configs/vssm/mask_rcnn_vssm_fpn_coco_tiny.py names
+    # vssmtiny_dp01_ckpt_epoch_292.pth and declares the matching v0 backbone
+    # (dims=96, depths=(2,2,9,2), ssm_ratio=2.0, mlp_ratio=0.0,
+    # downsample_version=v1, patchembed_version=v1). The VMamba v2 tiny
+    # checkpoints (vssm1_tiny_0230s) are a different architecture and must not
+    # be substituted. This project stores it under its own stable filename.
+    upstream_filename: vssmtiny_dp01_ckpt_epoch_292.pth
+    source_url: https://github.com/MzeroMiko/VMamba/releases/download/%23v0cls/vssmtiny_dp01_ckpt_epoch_292.pth
+    sha256: dbc0cc4f5ec0e45db5fba7c939d2c7d9b617e891ac10766912a8d604c37c5e47
+    size_bytes: 91649482
+    license: MIT
+    rationale: >-
+      Official VMamba "#v0cls" release asset referenced by name from the pinned
+      detection config at revision 2ed52ead.

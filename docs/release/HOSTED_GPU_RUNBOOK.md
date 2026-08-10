@@ -177,8 +177,12 @@ reported separately.
 Before quoting GPU hours:
 
 ```bash
-python -m scripts.measure_throughput --drive-root <artifact_root> --model-id <model>
+python -m scripts.measure_throughput --drive-root <artifact_root>
 ```
+
+It measures every controlled-track model in one pass — there is no per-model
+flag — so run it from a runtime where each family's environment is importable,
+or run it once per family after that family's provisioning cell.
 
 `docs/reference/runtime_budget.md` states `t_iter` is unmeasured and its hour
 columns are `null` until this has run on the target hardware.

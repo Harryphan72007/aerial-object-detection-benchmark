@@ -119,8 +119,11 @@ only the selected bundle plus the required latest manifest.
 GPU-hour figures require a measured seconds-per-iteration. Run
 
 ```bash
-python -m scripts.measure_throughput --drive-root <artifact_root> --model-id <model>
+python -m scripts.measure_throughput --drive-root <artifact_root>
 ```
+
+It times every controlled-track model in one pass; there is no per-model flag.
+
 
 on the target GPU before relying on
 [`docs/reference/runtime_budget.md`](reference/runtime_budget.md); until then its

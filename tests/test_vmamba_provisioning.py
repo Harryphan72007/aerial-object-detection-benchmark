@@ -186,15 +186,45 @@ def test_automatic_toolkit_installation_is_hosted_only_and_opt_out() -> None:
 
 
 def test_remediation_message_contains_runnable_commands() -> None:
+    packages = ["cuda-nvcc-11-8", "g++-11"]
     message = remediation_message(
         torch_cuda="11.8",
         required_version="11.8",
-        packages=["cuda-nvcc-11-8"],
+        packages=packages,
         search_paths=["/usr/local/cuda-11.8"],
     )
-    assert "apt-get install -y --no-install-recommends cuda-nvcc-11-8" in message
     assert CUDA_HOME_OVERRIDE in message
+
+    # Each apt invocation must stand alone on its own line. Concatenating them
+    # yields "apt-get update -qq apt-get install ...", which apt rejects with
+    # "E: Invalid operation" - a broken instruction on the one path whose entire
+    # job is telling a blocked operator what to run.
+    command_lines = [
+        line.strip()
+        for line in message.splitlines()
+        if line.strip().startswith("sudo ")
+    ]
+    assert command_lines == [
+        "sudo apt-get update -qq",
+        "sudo apt-get install -y --no-install-recommends cuda-nvcc-11-8 g++-11",
+    ]
+    for line in command_lines:
+        # One command per line: "apt-get" may appear exactly once.
+        assert line.split().count("apt-get") == 1
+
+
+def test_remediation_message_without_packages_emits_no_empty_command() -> None:
+    message = remediation_message(
+        torch_cuda="11.8",
+        required_version="11.8",
+        packages=[],
+        search_paths=["/usr/local/cuda-11.8"],
+    )
     assert apt_install_commands([]) == []
+    assert not [
+        line for line in message.splitlines() if line.strip().startswith("sudo ")
+    ]
+    assert "no toolkit packages are configured" in message
 
 
 def test_build_environment_never_mutates_the_global_toolkit() -> None:

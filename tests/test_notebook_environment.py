@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -454,3 +456,68 @@ def test_as_dict_reports_the_recorded_restart_decision() -> None:
         ).as_dict()["restart_required"]
         is True
     )
+
+
+def test_unmountable_drive_names_the_options_instead_of_falling_back(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Colab draft/restricted sessions raise NotImplementedError from mount().
+
+    Silently continuing would put the dataset, the Optuna study, and every
+    checkpoint on storage that vanishes at disconnect, so the mount failure has
+    to surface as a choice.
+    """
+
+    class _Drive:
+        @staticmethod
+        def mount(_mountpoint: str) -> None:
+            raise NotImplementedError(
+                "Mounting drive is unsupported in this environment. Use PyDrive2 instead."
+            )
+
+    module = types.ModuleType("google.colab")
+    module.drive = _Drive  # type: ignore[attr-defined]
+    package = types.ModuleType("google")
+    package.colab = module  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "google", package)
+    monkeypatch.setitem(sys.modules, "google.colab", module)
+
+    with pytest.raises(notebook_env.DriveUnavailableError) as failure:
+        notebook_env._mount_google_drive("colab", True)
+
+    message = str(failure.value)
+    assert "USE_GOOGLE_DRIVE = False" in message
+    assert "VISDRONE_DRIVE_ROOT" in message
+    assert "DELETED" in message
+
+
+def test_drive_is_not_mounted_when_it_was_not_requested() -> None:
+    # No google.colab in sys.modules: opting out must not even try to import it.
+    notebook_env._mount_google_drive("colab", False)
+    notebook_env._mount_google_drive("local", True)
+
+
+@pytest.mark.parametrize(
+    ("platform", "root", "persistent"),
+    [
+        ("colab", "/content/drive/MyDrive/visdrone_architecture_benchmark", True),
+        ("colab", "/content/drive", True),
+        ("colab", "/content/aerial-object-detection-benchmark/local_artifacts", False),
+        ("colab", "/content/visdrone_artifacts", False),
+        ("kaggle", "/kaggle/working/visdrone_architecture_benchmark", True),
+        ("local", "/home/user/repo/local_artifacts", True),
+    ],
+)
+def test_artifact_root_persistence_classification(
+    platform: str, root: str, persistent: bool
+) -> None:
+    assert notebook_env.artifact_root_is_persistent(platform, root) is persistent
+
+
+def test_active_notebooks_expose_the_drive_switch() -> None:
+    for path in sorted((ROOT / "notebooks").glob("*.ipynb")):
+        if path.name.startswith(("01_", "02_", "03_", "00_bootstrap")):
+            continue  # retired protocol notebooks
+        source = path.read_text(encoding="utf-8")
+        assert "USE_GOOGLE_DRIVE" in source, path.name
+        assert "use_google_drive=True," not in source, path.name

@@ -198,3 +198,5 @@ columns are `null` until this has run on the target hardware.
 | `CheckpointVerificationError` | truncated or wrong VMamba checkpoint | delete it and rerun, or use `scripts.fetch_pretrained_checkpoints` |
 | `EnvironmentProvisioningError` naming CUDA | no 11.x toolkit | run the `apt-get` block above, or set `VISDRONE_CUDA_HOME` |
 | `KernelRestartRequired` | a compiled package was replaced under the kernel | restart the runtime once and rerun all cells |
+| `DriveUnavailableError` / `NotImplementedError: Mounting drive is unsupported` | a Colab draft, preview, restricted, enterprise, or local runtime — `drive.mount` needs `/var/colab/hostname` | connect a standard hosted runtime; or point `VISDRONE_DRIVE_ROOT` at a directory you mounted yourself; or set `USE_GOOGLE_DRIVE = False` for a **smoke run only** — session storage is deleted at disconnect |
+| `WARNING: EPHEMERAL ARTIFACT ROOT` | running without Drive | expected only for smoke runs; never start HPO or final training from a session-storage root |

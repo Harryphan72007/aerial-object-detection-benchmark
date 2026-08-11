@@ -713,7 +713,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/07_performance_tiling.ipynb",
-      "sha256": "c965f18a5ce36cd373cf1e0738382223c08247bcc0ddb7f021d1acb331e78d38"
+      "sha256": "a9bac59dddd90f6fdb3a9cc8dc1698fec1277e589e1e6b08a91a9cffa9f3d7cf"
     },
     {
       "artifact_references": [
@@ -799,7 +799,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/10_hpo_resnet50.ipynb",
-      "sha256": "6fe09bb12c7d8b7c802fc517589434af326453fe1f0bc780fe268881c2e24f38"
+      "sha256": "ab9091a223d1ff9e814176e84e76c09bc42e91a1aa8309ab7a8fe8e84a9dd101"
     },
     {
       "artifact_references": [
@@ -885,7 +885,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/11_hpo_swin_t.ipynb",
-      "sha256": "e3c6085e3acadb093fabfb87c8d6307c86efe3c15a401e47d8adfc6e2d2ebc90"
+      "sha256": "b6d4013e2cf70a55785682c28a8145ae56a49a4a60fcb511f2600f093330cb3b"
     },
     {
       "artifact_references": [
@@ -971,7 +971,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/12_hpo_vmamba_t.ipynb",
-      "sha256": "4980cffaf2a694da6c9806db2c1c56896a74cd4953cb18ffca6fafef0a6e93a7"
+      "sha256": "b380593d9b6bf16d3a6456f498a7789253c805a6d00794a6677bd85d3b591594"
     },
     {
       "artifact_references": [
@@ -1057,7 +1057,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "d35729e9e6b046bd91bde4d3e521e157a258301e837b8eeb653e20b29075deac"
+      "sha256": "e0ccc197a498fd6acdaabd8551cd58e8a4f542ace2c3e8d85a4384c8d936367a"
     },
     {
       "artifact_references": [
@@ -1148,7 +1148,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/20_finetune_resnet50.ipynb",
-      "sha256": "a193fb588f9ee27073cee60819ceb49a245805859d0b3fa1cac7361a21f1eb13"
+      "sha256": "e2df0ccba87340467e48a32be4a5964c0e06df4a95c56d64d9ca7def09623422"
     },
     {
       "artifact_references": [
@@ -1240,7 +1240,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "110b86336e5d5aca920b3d0cb730966c6c705cdc3fdb6872968208255d87ffe9"
+      "sha256": "09610b34d4c5a371e792f160139bf1434d08003ab0ae425ab61ffd62b6bec3ab"
     },
     {
       "artifact_references": [
@@ -1332,7 +1332,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "8c094f6681542cadb9645b40f761eab9d25202c88782f7aae3e5263337549e80"
+      "sha256": "362501bdb58b59b4563a82662e07b4f2ffcf7e2977ad5b4fcde5273a0f2d24cf"
     },
     {
       "artifact_references": [
@@ -1415,7 +1415,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "0070337805ab1b6c94d90b13e7c4be68aaf4eb71dcbe6c8ed588d89127c4b209"
+      "sha256": "81ca3dbed753d1770cb820f36e14be5e5484d3f285cabc3c0b2707d17d9c7231"
     },
     {
       "artifact_references": [
@@ -1479,7 +1479,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "9a9047a951bf02e7732d0c0de00d3063b5a6956f7c65479d15dc1fe1a3c6e830"
+      "sha256": "16e78beeb1a7e0cddf96ed022a8a021f75aa64e6a8afd1b0313226dcabed36b9"
     },
     {
       "artifact_references": [
@@ -1528,7 +1528,7 @@
       ],
       "nbformat": 4,
       "path": "notebooks/31_publish_results.ipynb",
-      "sha256": "c832903287dfe6d1fa5afae55ee157f32069c8e2e27083d900c0577e799012cb"
+      "sha256": "b4f203983490d420bb3e76144049acedb9f404738cf8b744e841032e7a7b3959"
     },
     {
       "artifact_references": [
@@ -8959,7 +8959,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 319,
+          "line": 371,
           "literals": [],
           "operations": [
             "read"
@@ -8983,7 +8983,7 @@
         "typing"
       ],
       "path": "src/notebook_environment.py",
-      "sha256": "2b4853d366d8b68fbd1cdc0f2939fab0122b7bf424ec2b3f0e3cc627761ccf4a"
+      "sha256": "375888d57d3a0b44236f2ec93402755b038b0a517d2d5274b5dbdb3efa99c91d"
     },
     {
       "artifact_references": [

@@ -1393,7 +1393,7 @@
       "sha256": "b0f201d8d5d4b86e493835c1caea12c81f3ece6cdad40f4721ed21156ef88c73"
     }
   ],
-  "python_source_count": 100,
+  "python_source_count": 103,
   "python_sources": [
     {
       "artifact_references": [
@@ -2063,7 +2063,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 32,
+          "line": 23,
           "literals": [
             "project_config.yaml"
           ],
@@ -2072,34 +2072,7 @@
         },
         {
           "cell": 0,
-          "line": 47,
-          "literals": [
-            "evaluation"
-          ],
-          "operations": [],
-          "source": "/ \"evaluation\""
-        },
-        {
-          "cell": 0,
-          "line": 48,
-          "literals": [
-            "{run['run_id']}__res{IMAGE_SIZE}__metrics.json"
-          ],
-          "operations": [],
-          "source": "/ f\"{run['run_id']}__res{IMAGE_SIZE}__metrics.json\""
-        },
-        {
-          "cell": 0,
-          "line": 77,
-          "literals": [
-            "evaluation"
-          ],
-          "operations": [],
-          "source": "stage=\"evaluation\","
-        },
-        {
-          "cell": 0,
-          "line": 81,
+          "line": 45,
           "literals": [],
           "operations": [
             "write"
@@ -2112,14 +2085,12 @@
         "argparse",
         "json",
         "pathlib",
-        "src.hpo.final_workflow",
         "src.paths",
-        "src.subprocess_utils",
-        "src.workflows.environment",
+        "src.workflows.evaluation_runner",
         "src.workflows.hpo_comparison"
       ],
       "path": "scripts/evaluate_all_models.py",
-      "sha256": "de18e05667d7da41761e4af4805822dbd72a17326059f38586edda6321cd35d0"
+      "sha256": "55daafd73571b54d3eb9a68e46e3a8cc84ad9fc80118e0aee0baf869d980993d"
     },
     {
       "artifact_references": [
@@ -2364,26 +2335,16 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 55,
-          "literals": [],
-          "operations": [
-            "read",
-            "write"
-          ],
-          "source": "from src.utils.serialization import read_json, write_json"
-        },
-        {
-          "cell": 0,
-          "line": 335,
+          "line": 50,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "write_json(record_path, record)"
+          "source": "from src.utils.serialization import write_json"
         },
         {
           "cell": 0,
-          "line": 339,
+          "line": 261,
           "literals": [],
           "operations": [
             "write"
@@ -2392,21 +2353,12 @@
         },
         {
           "cell": 0,
-          "line": 371,
+          "line": 265,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "write_json("
-        },
-        {
-          "cell": 0,
-          "line": 384,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "str(read_json(record_path).get(\"status\"))"
+          "source": "write_json(record_path, record)"
         }
       ],
       "imports": [
@@ -2418,10 +2370,9 @@
         "src.config.benchmark_tracks",
         "src.models.adapter_validation",
         "src.models.registry",
-        "src.subprocess_utils",
         "src.utils.serialization",
         "src.workflows.adapter_gate",
-        "src.workflows.environment",
+        "src.workflows.adapter_smoke",
         "sys",
         "time",
         "torch",
@@ -2429,7 +2380,7 @@
         "typing"
       ],
       "path": "scripts/gpu_adapter_smoke.py",
-      "sha256": "fd01bf1901652dee6bfbbdcd189ab3e391876e1b28fd1e00ac4e873846515c1a"
+      "sha256": "7743022c39ee54bd896df0f9e1d1a6274fe1ef6b0908b50b9f2bc9b5ff84baec"
     },
     {
       "artifact_references": [
@@ -11737,6 +11688,51 @@
       "artifact_references": [
         {
           "cell": 0,
+          "line": 26,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 144,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json("
+        },
+        {
+          "cell": 0,
+          "line": 157,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "return dict(read_json(record_path))"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.config.benchmark_tracks",
+        "src.subprocess_utils",
+        "src.utils.serialization",
+        "src.workflows.adapter_gate",
+        "src.workflows.environment",
+        "traceback",
+        "typing"
+      ],
+      "path": "src/workflows/adapter_smoke.py",
+      "sha256": "ea095cfa39ebaea75a5b008d6160d7e0c4b858d6c5c9cfe41574dd89be411f8c"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
           "line": 13,
           "literals": [],
           "operations": [
@@ -12017,6 +12013,31 @@
       ],
       "path": "src/workflows/environment.py",
       "sha256": "5d54249ba015b764bfb81dae697ec90e95def6e6c70545e88a3f8bdb4dc4e396"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 34,
+          "literals": [
+            "{run['run_id']}__res{IMAGE_SIZE}__metrics.json"
+          ],
+          "operations": [],
+          "source": "metrics = paths.evaluation / f\"{run['run_id']}__res{IMAGE_SIZE}__metrics.json\""
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.hpo.final_workflow",
+        "src.paths",
+        "src.subprocess_utils",
+        "src.workflows.environment",
+        "src.workflows.hpo_comparison",
+        "typing"
+      ],
+      "path": "src/workflows/evaluation_runner.py",
+      "sha256": "e3b26a1804c131df732e50ba10ee59dd6bb2d0e3c9eb6a82f6323fadb27757d6"
     },
     {
       "artifact_references": [
@@ -12774,6 +12795,91 @@
       ],
       "path": "src/workflows/publishing.py",
       "sha256": "d304a8d7037c4912fb1d99f636d3dac55c40e08b047624c75761d5efe659d5fe"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 18,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_json"
+        },
+        {
+          "cell": 0,
+          "line": 23,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.workflows.publishing import publish_results"
+        },
+        {
+          "cell": 0,
+          "line": 28,
+          "literals": [
+            "*__metrics.json"
+          ],
+          "operations": [
+            "discover",
+            "read"
+          ],
+          "source": "read_json(path) for path in sorted(paths.evaluation.glob(\"*__metrics.json\"))"
+        },
+        {
+          "cell": 0,
+          "line": 85,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "publish_results("
+        },
+        {
+          "cell": 0,
+          "line": 90,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "publish_results=True,"
+        },
+        {
+          "cell": 0,
+          "line": 98,
+          "literals": [
+            "evaluation"
+          ],
+          "operations": [],
+          "source": "\"evaluation\": evaluation,"
+        },
+        {
+          "cell": 0,
+          "line": 104,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "\"publish_status\": \"PUBLISHED\" if published else \"NOT_PUBLISHED\","
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.evaluation.report_generator",
+        "src.paths",
+        "src.utils.serialization",
+        "src.workflows.comparison",
+        "src.workflows.contract",
+        "src.workflows.evaluation_runner",
+        "src.workflows.hpo_comparison",
+        "src.workflows.publishing",
+        "typing"
+      ],
+      "path": "src/workflows/reporting.py",
+      "sha256": "fe37f9e42762f027023c52945673ea724311c797553fd9596a38eca14ea75043"
     },
     {
       "artifact_references": [

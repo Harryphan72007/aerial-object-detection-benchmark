@@ -46,13 +46,8 @@ import traceback
 from pathlib import Path
 from typing import Any, Callable
 
-from src.config.benchmark_tracks import load_track_config, resolve_controlled_protocol
-from src.subprocess_utils import (
-    build_model_subprocess_environment,
-    python_module_command,
-    run_checked,
-)
-from src.utils.serialization import read_json, write_json
+from src.config.benchmark_tracks import load_track_config
+from src.utils.serialization import write_json
 from src.workflows.adapter_gate import (
     SMOKE_CHECK_ORDER,
     adapter_fingerprint,
@@ -66,6 +61,7 @@ from src.workflows.adapter_gate import (
     smoke_check_result,
     smoke_record_path,
 )
+from src.workflows.adapter_smoke import run_adapter_gate, unexpected_failure_record
 
 # Expected feature contract per framework, as ordered (channels, stride) pairs.
 # These encode the architecture the benchmark intends to run and are confirmed
@@ -221,76 +217,6 @@ def run_model_smoke(
     )
 
 
-def unexpected_failure_record(
-    model_id: str,
-    repo_root: Path,
-    *,
-    dataset_track: str,
-    image_size: int,
-    error: BaseException,
-    stage: str,
-) -> dict[str, Any]:
-    """Emit a complete FAILED_ADAPTER record when a run aborts before its checks."""
-    try:
-        fingerprint = adapter_fingerprint(model_id, repo_root)
-    except Exception as fingerprint_error:  # noqa: BLE001 - the record must still exist
-        fingerprint = {
-            "adapter_schema_version": None,
-            "model_id": model_id,
-            "gpu": "unknown",
-            "fingerprint_error": str(fingerprint_error),
-        }
-    return build_smoke_record(
-        model_id,
-        fingerprint,
-        [],
-        gpu=str(fingerprint.get("gpu", "unknown")),
-        dataset_track=dataset_track,
-        image_size=image_size,
-        failure={
-            "check": stage,
-            "exception_type": type(error).__name__,
-            "message": str(error),
-            "traceback": "".join(
-                traceback.format_exception(type(error), error, error.__traceback__)
-            )[-4000:],
-        },
-    )
-
-
-def _run_in_model_runtime(
-    model_id: str,
-    repo_root: Path,
-    record_path: Path,
-    *,
-    dataset_track: str,
-    image_size: int,
-) -> None:
-    """Launch this module inside the model's isolated interpreter."""
-    command = python_module_command(
-        "scripts.gpu_adapter_smoke",
-        "--in-runtime",
-        "--repo-root",
-        str(repo_root),
-        "--dataset-track",
-        dataset_track,
-        "--model-id",
-        model_id,
-        "--image-size",
-        str(image_size),
-        "--record-path",
-        str(record_path),
-    )
-    run_checked(
-        command,
-        cwd=repo_root,
-        env=build_model_subprocess_environment(),
-        environment_name=f"{model_id} adapter smoke",
-        stage="gpu_adapter_smoke",
-        python_executable=command[0],
-    )
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
@@ -348,46 +274,18 @@ def main(argv: list[str] | None = None) -> int:
 
     all_ready = True
     for model_id in model_ids:  # pragma: no cover - GPU host only
-        protocol = resolve_controlled_protocol(repo_root, model_id)
-        image_size = int(args.image_size or protocol["image_size"])
-        record_path = smoke_record_path(drive_root, model_id, args.dataset_track)
-        record_path.parent.mkdir(parents=True, exist_ok=True)
-        if record_path.exists():
-            record_path.unlink()
-        try:
-            if not args.skip_provisioning:
-                from src.workflows.environment import ensure_model_environment
-
-                ensure_model_environment(model_id, repo_root, drive_root)
-            _run_in_model_runtime(
-                model_id,
-                repo_root,
-                record_path,
-                dataset_track=args.dataset_track,
-                image_size=image_size,
-            )
-        except Exception as error:  # noqa: BLE001 - never lose the failure record
-            if not record_path.is_file():
-                write_json(
-                    record_path,
-                    unexpected_failure_record(
-                        model_id,
-                        repo_root,
-                        dataset_track=args.dataset_track,
-                        image_size=image_size,
-                        error=error,
-                        stage="constructs",
-                    ),
-                )
-            traceback.print_exc()
-        status = (
-            str(read_json(record_path).get("status"))
-            if record_path.is_file()
-            else "FAILED_ADAPTER"
+        record = run_adapter_gate(
+            model_id,
+            repo_root,
+            drive_root,
+            dataset_track=args.dataset_track,
+            image_size=args.image_size,
+            skip_provisioning=args.skip_provisioning,
         )
+        status = str(record.get("status"))
         all_ready = all_ready and status == "READY"
         print(f"{model_id}: {status}")
-        print(f"  record: {record_path}")
+        print(f"  record: {smoke_record_path(drive_root, model_id, args.dataset_track)}")
     return 0 if all_ready else 1
 
 

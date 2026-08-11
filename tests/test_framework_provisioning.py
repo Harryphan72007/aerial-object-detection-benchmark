@@ -112,8 +112,11 @@ def test_framework_roots_are_platform_local_and_revision_keyed(tmp_path: Path) -
     assert isolated._runtime_framework_root(tmp_path, platform="colab") == Path(
         "/content/visdrone_frameworks"
     )
+    # Scratch, not /kaggle/working: a pinned clone is rebuildable and must not
+    # consume Kaggle's 20 GB persisted output quota, which the dataset, studies,
+    # and checkpoints need.
     assert isolated._runtime_framework_root(tmp_path, platform="kaggle") == Path(
-        "/kaggle/working/visdrone_frameworks"
+        "/kaggle/temp/visdrone_frameworks"
     )
     assert isolated._runtime_framework_root(tmp_path, platform="local") == (
         tmp_path.resolve() / "visdrone_frameworks"

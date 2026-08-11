@@ -151,13 +151,11 @@ GPU-hour figures require a measured seconds-per-iteration. Run
 python -m scripts.measure_throughput --drive-root <artifact_root>
 ```
 
-It times every controlled-track model in one pass; there is no per-model flag.
-
-
 on the target GPU before relying on
-[`docs/reference/runtime_budget.md`](reference/runtime_budget.md); until then its
-per-model hour columns are `null` and its example rows are explicitly
-illustrative, not measurements.
+[`docs/reference/runtime_budget.md`](reference/runtime_budget.md). It times every
+controlled-track model in one pass; there is no per-model flag. Until it has run,
+that document's per-model hour columns are `null` and its example rows are
+explicitly illustrative, not measurements.
 
 ## After a disconnect
 

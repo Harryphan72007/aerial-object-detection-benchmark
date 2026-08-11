@@ -30,9 +30,31 @@ its own, or for diagnosing one that failed.
 | | Colab | Kaggle |
 |---|---|---|
 | Accelerator | any CUDA GPU (T4/L4/A100) | GPU T4 ×1 or P100 |
-| Artifact root | `/content/drive/MyDrive/visdrone_architecture_benchmark` | `/kaggle/working/visdrone_architecture_benchmark` |
-| Model runtimes | `/content/visdrone_model_envs` | `/kaggle/working/visdrone_model_envs` |
-| Framework checkouts | `/content/visdrone_frameworks` | `/kaggle/working/visdrone_frameworks` |
+| Artifact root (persists) | `/content/drive/MyDrive/visdrone_architecture_benchmark` | `/kaggle/working/visdrone_architecture_benchmark` |
+| Model runtimes (rebuildable) | `/content/visdrone_model_envs` | `/kaggle/temp/visdrone_model_envs` |
+| Framework checkouts (rebuildable) | `/content/visdrone_frameworks` | `/kaggle/temp/visdrone_frameworks` |
+| HPO trial scratch | `/content/visdrone_hpo_trials` | `/kaggle/temp/visdrone_hpo_trials` |
+
+Kaggle caps `/kaggle/working` at **20 GB** and saves it as the notebook output.
+Only real artifacts live there: the prepared dataset (~5.5 GB), the Optuna study,
+and checkpoints. Everything rebuildable goes to `/kaggle/temp`, which is scratch
+on the same larger disk and outside that quota - one OpenMMLab runtime is 5-7 GB
+once torch+cu118, the NVIDIA libraries, and MMCV/MMDetection are installed, and
+would otherwise exhaust the budget before the first checkpoint is written.
+
+### Kaggle session settings (all three are required)
+
+| Setting | Value | Why |
+|---|---|---|
+| Accelerator | `GPU T4 x2` or `GPU P100` | the adapter gate and every run need CUDA |
+| Internet | **On** (needs phone verification) | off by default; without it `git clone`, `pip install`, and the dataset download all fail |
+| Persistence | **Files only** (or Variables and Files) | otherwise `/kaggle/working` is empty on the next session and the dataset is re-downloaded |
+
+Kaggle GPU quota is ~30 h/week with a 12 h session cap. One model's HPO plus its
+final run fits that if you keep persistence on and let the workflow resume.
+
+Google Drive is never used on Kaggle - `USE_GOOGLE_DRIVE` is ignored there, and
+`/kaggle/working` is the persistent root.
 
 Model environments are isolated `uv` virtualenvs, so the notebook kernel's own
 packages are never replaced and no kernel restart is normally required. If the

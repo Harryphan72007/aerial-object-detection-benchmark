@@ -376,9 +376,11 @@ def test_rtdetrv2_quarantine_is_lifted_in_the_readme() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "Historical results only" not in readme
     assert "do not start new" not in readme
-    # The HPO/final notebooks are advertised as the active RT-DETR entry points.
-    assert "13_hpo_rtdetrv2.ipynb" in readme
-    assert "23_finetune_rtdetrv2.ipynb" in readme
+    # RT-DETRv2's notebook is advertised alongside the other three families'.
+    from scripts.validate_notebooks import MODEL_NOTEBOOKS
+
+    for name in sorted(MODEL_NOTEBOOKS):
+        assert name in readme, name
 
 
 def test_canonical_notebooks_preserve_the_selected_git_ref() -> None:

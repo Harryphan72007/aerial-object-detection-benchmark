@@ -1,30 +1,36 @@
 {
-  "generated_at_utc": "2026-07-29T15:57:49.535095+00:00",
+  "generated_at_utc": "2026-08-11T13:26:48.262854+00:00",
   "kernel": "python3",
   "mode": "CPU synthetic VisDrone smoke test; training/tuning/publishing guarded",
   "results": [
     {
-      "code_cells": 5,
-      "duration_seconds": 9.032,
-      "notebook": "notebooks/00_prepare_visdrone.ipynb",
-      "status": "passed"
-    },
-    {
-      "code_cells": 5,
-      "duration_seconds": 2.328,
-      "notebook": "notebooks/01_run_model_day.ipynb",
-      "status": "passed"
-    },
-    {
-      "code_cells": 4,
-      "duration_seconds": 2.14,
-      "notebook": "notebooks/02_publish_results.ipynb",
+      "code_cells": 3,
+      "duration_seconds": 8.047,
+      "notebook": "notebooks/10_resnet50.ipynb",
       "status": "passed"
     },
     {
       "code_cells": 3,
-      "duration_seconds": 2.594,
-      "notebook": "notebooks/03_compare_all_models.ipynb",
+      "duration_seconds": 4.016,
+      "notebook": "notebooks/11_swin_t.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 3,
+      "duration_seconds": 3.032,
+      "notebook": "notebooks/12_vmamba_t.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 3,
+      "duration_seconds": 7.125,
+      "notebook": "notebooks/13_rtdetrv2.ipynb",
+      "status": "passed"
+    },
+    {
+      "code_cells": 3,
+      "duration_seconds": 6.703,
+      "notebook": "notebooks/30_report.ipynb",
       "status": "passed"
     }
   ]

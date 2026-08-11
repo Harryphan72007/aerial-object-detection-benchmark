@@ -65,30 +65,48 @@ outcome, not evidence that annotations are invalid. Full GPU execution has not
 been claimed by the repository's CPU smoke tests and must still be completed by
 the researcher.
 
-For a data smoke validation, set `SMOKE_TEST = True` in notebook 00 and keep
-resume disabled. For the full HPO path, use `SMOKE_TEST = False`, run notebook 00,
-then set `START_HPO = True` in the matching 10-13 notebook and
-`START_FINETUNING = True` in its matching 20-23 notebook. New final runs begin
-from pretrained weights; an interrupted final run resumes only when its complete
-configuration contract matches.
+New final runs begin from pretrained weights; an interrupted final run resumes
+only when its complete configuration contract matches.
 
 ## Start in Colab, Kaggle, or local Jupyter
 
-1. Run [`00_prepare_visdrone.ipynb`](notebooks/00_prepare_visdrone.ipynb).
-2. Pass the GPU adapter smoke gate for the model on the target GPU:
-   `python -m scripts.gpu_adapter_smoke --drive-root <artifact_root> --dataset-track 2class`.
-   HPO and final training refuse to start without its READY record. See the
-   [hosted GPU runbook](docs/release/HOSTED_GPU_RUNBOOK.md).
-3. Run one model’s HPO and final pair below (the `two_stage_random_hpo_v1`
-   workflow). The older `lr_controlled_v1` workflow (notebooks 01–03) is retired
-   — its entry point raises if a new run is started.
-4. Change only the small parameter cell and run all cells.
-5. After interruption, reopen the same notebook and run all cells again.
+The whole benchmark is **five runs**: one notebook per model, then one report.
+
+| Run | Notebook | Model |
+|---|---|---|
+| 1 | [`10_resnet50.ipynb`](notebooks/10_resnet50.ipynb) | Faster R-CNN ResNet-50 |
+| 2 | [`11_swin_t.ipynb`](notebooks/11_swin_t.ipynb) | Faster R-CNN Swin-T |
+| 3 | [`12_vmamba_t.ipynb`](notebooks/12_vmamba_t.ipynb) | Faster R-CNN VMamba-T |
+| 4 | [`13_rtdetrv2.ipynb`](notebooks/13_rtdetrv2.ipynb) | RT-DETRv2-L |
+| 5 | [`30_report.ipynb`](notebooks/30_report.ipynb) | evaluate, compare, publish |
+
+Each model notebook runs that model's whole day in order — dataset preparation,
+the model environment, the GPU adapter smoke gate, two-stage LR search, final
+training, and evaluation:
+
+1. Open the notebook and run all cells with the shipped defaults. Nothing
+   expensive happens: you get a preview of every stage's contract.
+2. Review it, set `START = True`, and run all cells again to begin the run.
+3. After a disconnect, reopen the **same** notebook and run all cells again.
+   Every stage is idempotent or resumable, so it continues where it stopped.
+4. When all four models are done, run [`30_report.ipynb`](notebooks/30_report.ipynb).
+
+Four parameters per model notebook: `DATASET_TRACK`, `START`, `FULL_MATRIX`,
+`USE_GOOGLE_DRIVE`. The `two_stage_random_hpo_v1` workflow is the only live
+protocol; `lr_controlled_v1` was retired and deleted.
+
+The GPU adapter smoke gate still gates everything expensive — the pipeline runs
+it for you instead of making you type
+`python -m scripts.gpu_adapter_smoke`, and training still refuses to start
+without a stored READY record for this commit, environment, track, and
+resolution. See the [hosted GPU runbook](docs/release/HOSTED_GPU_RUNBOOK.md).
 
 These are thin, package-backed notebooks and are the only supported entry points. The
-same files detect Colab, Kaggle, or local Jupyter automatically. The dataset setup
-workflow downloads and verifies archives into the selected artifact root, so no
-separate platform notebooks are required.
+same files detect Colab, Kaggle, or local Jupyter automatically. The pipeline
+downloads and verifies dataset archives into the selected artifact root, so no
+separate setup notebook is required; use
+`python -m scripts.prepare_dataset` for the opt-in 10-class track or a forced
+redownload.
 Historical notebook-local model, training, checkpoint, resume, artifact, and evaluator
 implementations are deprecated; see
 [`docs/migration/NOTEBOOK_DEPRECATION.md`](docs/migration/NOTEBOOK_DEPRECATION.md).
@@ -98,13 +116,6 @@ Artifacts are discovered automatically under Google Drive in Colab,
 `local_artifacts` in a local checkout. `VISDRONE_DRIVE_ROOT` overrides all three;
 users never copy a checkpoint path, run ID, study name, or configuration between
 notebooks.
-
-| Model | HPO | Final runs (tuned/seed 42 by default; `FULL_MATRIX = True` for baseline+tuned × 3 seeds) |
-|---|---|---|
-| ResNet-50 | [`10_hpo_resnet50.ipynb`](notebooks/10_hpo_resnet50.ipynb) | [`20_finetune_resnet50.ipynb`](notebooks/20_finetune_resnet50.ipynb) |
-| Swin-T | [`11_hpo_swin_t.ipynb`](notebooks/11_hpo_swin_t.ipynb) | [`21_finetune_swin_t.ipynb`](notebooks/21_finetune_swin_t.ipynb) |
-| VMamba-T | [`12_hpo_vmamba_t.ipynb`](notebooks/12_hpo_vmamba_t.ipynb) | [`22_finetune_vmamba_t.ipynb`](notebooks/22_finetune_vmamba_t.ipynb) |
-| RT-DETRv2-L | [`13_hpo_rtdetrv2.ipynb`](notebooks/13_hpo_rtdetrv2.ipynb) | [`23_finetune_rtdetrv2.ipynb`](notebooks/23_finetune_rtdetrv2.ipynb) |
 
 RT-DETRv2-L is a full member of the four-family controlled benchmark. Its earlier
 quarantine is lifted now that (a) the variant is the intended L/`r50vd` model, and
@@ -118,20 +129,17 @@ observation (see
 described a 25–40 epoch run selected on official validation; the controlled track
 now trains only 8 epochs with early stopping.
 
-Then use [`30_evaluate_all_models.ipynb`](notebooks/30_evaluate_all_models.ipynb)
-and [`31_publish_results.ipynb`](notebooks/31_publish_results.ipynb).
-
-[`07_performance_tiling.ipynb`](notebooks/07_performance_tiling.ipynb) is an
-experimental performance-track (tiled-training) notebook. The performance track
-is not yet a runnable protocol (see
+[`optional/07_performance_tiling.ipynb`](notebooks/optional/07_performance_tiling.ipynb)
+is an experimental performance-track (tiled-training) notebook. The performance
+track is not yet a runnable protocol (see
 [`docs/experiments/controlled_performance_tracks.md`](docs/experiments/controlled_performance_tracks.md)),
 so this notebook is exploratory and not part of the controlled benchmark.
 
 ## Protocols and tracks
 
-- `lr_controlled_v1` (notebooks 01–03) is **retired**; only
-  `two_stage_random_hpo_v1` is a live protocol. The retired entry point raises on
-  execution so two protocols can no longer be confused.
+- `lr_controlled_v1` is **retired and deleted**; only `two_stage_random_hpo_v1`
+  is a live protocol. Its notebooks and modules were removed once it stopped
+  being runnable, so two protocols can no longer be confused.
 - `two_stage_random_hpo_v1` runs five Phase A and five Phase B LR-only random
   trials, then a single **tuned** final run at seed **42** on the `2class` track
   — the headline matrix that fits roughly one model per GPU-day. The full

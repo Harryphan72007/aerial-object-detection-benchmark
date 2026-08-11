@@ -1,18 +1,29 @@
 # Hosted GPU runbook (Colab / Kaggle)
 
-The order below is mandatory. Each step's output is the next step's precondition,
-and the adapter gate is enforced in code, not by convention.
+The order below is mandatory. Each stage's output is the next stage's
+precondition, and the adapter gate is enforced in code, not by convention.
+
+The model notebook runs all six stages in this order, so the normal path is one
+notebook per model:
 
 ```text
-1. prepare dataset          notebook 00
-2. provision model runtime  notebook 10-13 / 20-23 cell, or the smoke driver
-3. GPU adapter smoke        python -m scripts.gpu_adapter_smoke
+1. prepare dataset          the pipeline, or python -m scripts.prepare_dataset
+2. provision model runtime  the pipeline, or the smoke driver
+3. GPU adapter smoke        the pipeline, or python -m scripts.gpu_adapter_smoke
 4. confirm READY record     <artifact_root>/adapter_smoke/<model>__<track>__smoke.json
-5. HPO                      notebook 10-13, START_HPO = True
-6. final training           notebook 20-23, START_FINETUNING = True
+5. HPO                      the pipeline
+6. final training           the pipeline
+7. evaluation               the pipeline, then notebooks/30_report.ipynb
 ```
 
-Steps 5 and 6 refuse to start without the step-4 record.
+Stages 5 and 6 refuse to start without the stage-4 record, whether the gate was
+run by the pipeline or by hand.
+
+Run one model end to end by opening its notebook — `10_resnet50.ipynb`,
+`11_swin_t.ipynb`, `12_vmamba_t.ipynb`, or `13_rtdetrv2.ipynb` — running all
+cells to review the preview, then setting `START = True` and running all cells
+again. The manual commands below remain available for running a single stage on
+its own, or for diagnosing one that failed.
 
 ## 0. Runtime requirements
 
@@ -31,9 +42,17 @@ one restart; rerun all cells afterwards.
 
 ## 1. Prepare the dataset
 
-Open `notebooks/00_prepare_visdrone.ipynb`, run all cells, and wait for
-`DATA CONTRACT VERIFIED: YES`. Set `PREPARE_10CLASS_TRACK = True` first if you
-intend to run the 10-class track.
+The model notebook prepares and verifies the 2-class track before it trains, so
+this step normally needs no action. To prepare it on its own — or to build the
+opt-in 10-class track, which is never prepared automatically:
+
+```bash
+python -m scripts.prepare_dataset \
+  --drive-root /content/drive/MyDrive/visdrone_architecture_benchmark
+```
+
+Wait for `DATA CONTRACT VERIFIED: YES`. Add `--prepare-10class-track` for the
+10-class track.
 
 ## 2–4. Provision and gate each model
 
@@ -158,21 +177,23 @@ resized for the track's class count, so Transformers reports those tensors as
 `mismatched_keys`; that is expected and recorded. `missing_keys` and
 `unexpected_keys` must both be empty.
 
-## 5. HPO
+## 5–7. HPO, final training, evaluation
 
-Open `notebooks/1{0,1,2,3}_*.ipynb`, keep `DATASET_TRACK` matching the gated
-record, review the preview with `START_HPO = False`, then set `START_HPO = True`
-and run all cells. Reruns load the persisted study and only run missing finite
-trials.
+Open the model's notebook, keep `DATASET_TRACK` matching the gated record,
+review the preview with `START = False`, then set `START = True` and run all
+cells. HPO reruns load the persisted study and only run missing finite trials;
+final training resumes only when its complete configuration contract matches;
+evaluation skips any run whose metrics artifact already exists. That is what
+makes rerunning the same notebook the correct response to a disconnect.
 
-## 6. Final training
+`FULL_MATRIX = False` (default) runs the tuned recipe at seed 42.
+`FULL_MATRIX = True` runs the opt-in `baseline`+`tuned` × seeds 17/42/3407
+matrix — six runs, a multi-session job, reported separately.
 
-Open the matching `notebooks/2{0,1,2,3}_*.ipynb`. `FULL_MATRIX = False` (default)
-runs the tuned recipe at seed 42. `FULL_MATRIX = True` runs the opt-in
-`baseline`+`tuned` × seeds 17/42/3407 matrix — six runs, a multi-session job,
-reported separately.
+After all four models, run `notebooks/30_report.ipynb` for the cross-model
+aggregation, tables, and figures.
 
-## 7. Runtime budget
+## 8. Runtime budget
 
 Before quoting GPU hours:
 
@@ -191,10 +212,10 @@ columns are `null` until this has run on the target hardware.
 
 | Symptom | Cause | Action |
 |---|---|---|
-| `EnvironmentNotProvisionedError` | no isolated runtime selected | run the notebook's `ensure_model_environment` cell, or the smoke driver without `--skip-provisioning` |
-| `AdapterGateError: no adapter smoke record exists` | step 3 not done for this model/track | run the gate command above |
+| `EnvironmentNotProvisionedError` | no isolated runtime selected | rerun the model notebook with `START = True`, or the smoke driver without `--skip-provisioning` |
+| `AdapterGateError: no adapter smoke record exists` | stage 3 not done for this model/track | rerun the model notebook, or the gate command above |
 | `AdapterGateError` listing `git_commit`/`gpu` differences | record made on another commit or GPU | rerun the gate here |
-| `DatasetTrackNotPreparedError` | `10class` selected but not prepared | rerun notebook 00 with `PREPARE_10CLASS_TRACK = True` |
+| `DatasetTrackNotPreparedError` | `10class` selected but not prepared | `python -m scripts.prepare_dataset --drive-root <artifact_root> --prepare-10class-track` |
 | `CheckpointVerificationError` | truncated or wrong VMamba checkpoint | delete it and rerun, or use `scripts.fetch_pretrained_checkpoints` |
 | `EnvironmentProvisioningError` naming CUDA | no 11.x toolkit | run the `apt-get` block above, or set `VISDRONE_CUDA_HOME` |
 | `KernelRestartRequired` | a compiled package was replaced under the kernel | restart the runtime once and rerun all cells |

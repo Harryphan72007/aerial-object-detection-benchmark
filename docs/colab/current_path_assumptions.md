@@ -12,9 +12,9 @@ changed. Centralization belongs to PR 6.
 | Colab repository | `/content/aerial-object-detection-benchmark` | `project_config.yaml` and notebooks |
 | Drive mount | `/content/drive` | notebook setup cells |
 | Drive project root | `/content/drive/MyDrive/visdrone_architecture_benchmark` | `project_config.yaml`, `src.paths`, notebooks |
-| Disposable dataset cache | `/content/visdrone_cache` | notebook 01 |
+| Disposable dataset cache | `/content/visdrone_cache` | `src.data.local_cache` |
 | Isolated model environments | `/content/visdrone_model_envs` | environment provisioner |
-| Local 00-03 fallback | `<repository>/local_artifacts` | notebooks 00-03 |
+| Local artifact fallback | `<repository>/local_artifacts` | `src.notebook_environment` |
 
 `VISDRONE_DRIVE_ROOT` overrides the Drive root. Optional notebooks also accept
 `BENCHMARK_REPO_ROOT`, `BENCHMARK_REPOSITORY_URL`, and

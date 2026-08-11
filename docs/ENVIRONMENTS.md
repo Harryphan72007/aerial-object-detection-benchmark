@@ -43,9 +43,10 @@ On a GPU runtime, the required integration gate is
 [`release/GPU_VALIDATION_CHECKLIST.md`](release/GPU_VALIDATION_CHECKLIST.md). It
 constructs the real model, verifies the pretrained load, runs one forward and
 backward pass, and completes a checkpoint roundtrip before HPO or final training
-is allowed to start. (The older instruction to use notebook 01 with
-`RUN_MODE="environment"` is obsolete: that protocol is retired and its entry
-point raises.)
+is allowed to start. The model notebooks run this gate for you as a stage of the
+pipeline; the command is for running it on its own. (The older instruction to
+use notebook 01 with `RUN_MODE="environment"` is obsolete: that protocol was
+retired and deleted.)
 
 The isolated design normally needs no kernel restart, because model packages are
 installed into a separate interpreter. If the *shared* notebook dependencies

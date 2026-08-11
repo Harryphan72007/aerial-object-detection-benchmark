@@ -43,13 +43,13 @@ def test_platform_defaults_are_writable_host_locations(tmp_path: Path) -> None:
         "/kaggle/working/visdrone_architecture_benchmark"
     )
     assert notebook_env.default_local_cache_root("kaggle", tmp_path) == Path(
-        "/kaggle/working/visdrone_cache"
+        "/kaggle/temp/visdrone_cache"
     )
     assert notebook_env.default_model_runtime_root("kaggle") == Path(
-        "/kaggle/working/visdrone_model_envs"
+        "/kaggle/temp/visdrone_model_envs"
     )
     assert notebook_env.default_hpo_scratch_root("kaggle") == Path(
-        "/kaggle/working/visdrone_hpo_trials"
+        "/kaggle/temp/visdrone_hpo_trials"
     )
     assert notebook_env.default_repository_root("local", tmp_path) == (
         tmp_path / "aerial-object-detection-benchmark"
@@ -586,3 +586,30 @@ def test_active_notebooks_expose_the_drive_switch() -> None:
         source = path.read_text(encoding="utf-8")
         assert "USE_GOOGLE_DRIVE" in source, path.name
         assert "use_google_drive=True," not in source, path.name
+
+
+def test_kaggle_keeps_rebuildable_caches_out_of_the_output_quota() -> None:
+    """Kaggle caps /kaggle/working at 20 GB and saves it as the notebook output.
+
+    A single OpenMMLab runtime is roughly 5-7 GB once torch+cu118, the NVIDIA
+    libraries, and MMCV/MMDetection are installed, and the prepared dataset is
+    another ~5.5 GB. Putting both in the persisted budget exhausts it before any
+    checkpoint is written. /kaggle/temp is scratch on the same larger disk and is
+    the Kaggle equivalent of Colab's /content.
+    """
+    from src.workflows.isolated_environment import _runtime_framework_root
+
+    scratch = Path(notebook_env.KAGGLE_SCRATCH_ROOT)
+    rebuildable = (
+        notebook_env.default_local_cache_root("kaggle", "/kaggle/working/repo"),
+        notebook_env.default_model_runtime_root("kaggle"),
+        notebook_env.default_hpo_scratch_root("kaggle"),
+        _runtime_framework_root("/unused", platform="kaggle"),
+    )
+    for path in rebuildable:
+        assert scratch in path.parents, path
+
+    # The genuine artifacts - dataset, Optuna studies, checkpoints - must persist.
+    artifacts = notebook_env.default_artifact_root("kaggle", "/kaggle/working/repo")
+    assert Path(notebook_env.KAGGLE_OUTPUT_ROOT) in artifacts.parents
+    assert notebook_env.artifact_root_is_persistent("kaggle", artifacts) is True

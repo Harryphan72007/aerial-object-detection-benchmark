@@ -19,6 +19,13 @@ HOSTED_NOTEBOOK_PLATFORMS = frozenset({"colab", "kaggle"})
 REPOSITORY_NAME = "aerial-object-detection-benchmark"
 # The only path on a Colab runtime that outlives the session.
 DRIVE_MOUNTPOINT = "/content/drive"
+# Kaggle persists /kaggle/working as the notebook's output and caps it at 20 GB.
+# /kaggle/temp is session scratch on the same larger disk and is not part of that
+# quota, so it is the Kaggle equivalent of Colab's /content: the right home for
+# anything rebuildable. Only real artifacts - dataset, studies, checkpoints -
+# belong in the persisted budget.
+KAGGLE_OUTPUT_ROOT = "/kaggle/working"
+KAGGLE_SCRATCH_ROOT = "/kaggle/temp"
 ARTIFACT_ROOT_PERSISTENT = "persistent"
 ARTIFACT_ROOT_OPERATOR_DECLARED = "operator_declared"
 ARTIFACT_ROOT_SESSION = "session"
@@ -140,7 +147,7 @@ def default_local_cache_root(platform: str, repository_root: str | Path) -> Path
     if platform == "colab":
         return Path("/content/visdrone_cache")
     if platform == "kaggle":
-        return Path("/kaggle/working/visdrone_cache")
+        return Path(KAGGLE_SCRATCH_ROOT) / "visdrone_cache"
     return Path(repository_root).resolve() / ".notebook-cache" / "visdrone"
 
 
@@ -148,7 +155,7 @@ def default_model_runtime_root(platform: str) -> Path:
     if platform == "colab":
         return Path("/content/visdrone_model_envs")
     if platform == "kaggle":
-        return Path("/kaggle/working/visdrone_model_envs")
+        return Path(KAGGLE_SCRATCH_ROOT) / "visdrone_model_envs"
     return Path(tempfile.gettempdir()).resolve() / "visdrone_model_envs"
 
 
@@ -156,7 +163,7 @@ def default_hpo_scratch_root(platform: str) -> Path:
     if platform == "colab":
         return Path("/content/visdrone_hpo_trials")
     if platform == "kaggle":
-        return Path("/kaggle/working/visdrone_hpo_trials")
+        return Path(KAGGLE_SCRATCH_ROOT) / "visdrone_hpo_trials"
     return Path(tempfile.gettempdir()).resolve() / "visdrone_hpo_trials"
 
 

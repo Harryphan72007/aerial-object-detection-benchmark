@@ -15,18 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL_ID = "rtdetrv2_l"
 RUN_ID = "rtdetrv2_l__2class__640__20260729_120000__seed42"
 PRIMARY = {
-    "00_prepare_visdrone.ipynb",
-    "07_performance_tiling.ipynb",
-    "10_hpo_resnet50.ipynb",
-    "11_hpo_swin_t.ipynb",
-    "12_hpo_vmamba_t.ipynb",
-    "13_hpo_rtdetrv2.ipynb",
-    "20_finetune_resnet50.ipynb",
-    "21_finetune_swin_t.ipynb",
-    "22_finetune_vmamba_t.ipynb",
-    "23_finetune_rtdetrv2.ipynb",
-    "30_evaluate_all_models.ipynb",
-    "31_publish_results.ipynb",
+    "10_resnet50.ipynb",
+    "11_swin_t.ipynb",
+    "12_vmamba_t.ipynb",
+    "13_rtdetrv2.ipynb",
+    "30_report.ipynb",
 }
 LEGACY = {
     "00_colab_repository_setup.ipynb",
@@ -50,6 +43,18 @@ LEGACY = {
     "01_run_model_day.ipynb",
     "02_publish_results.ipynb",
     "03_compare_all_models.ipynb",
+    # Folded into the per-model pipeline and the report notebook.
+    "00_prepare_visdrone.ipynb",
+    "10_hpo_resnet50.ipynb",
+    "11_hpo_swin_t.ipynb",
+    "12_hpo_vmamba_t.ipynb",
+    "13_hpo_rtdetrv2.ipynb",
+    "20_finetune_resnet50.ipynb",
+    "21_finetune_swin_t.ipynb",
+    "22_finetune_vmamba_t.ipynb",
+    "23_finetune_rtdetrv2.ipynb",
+    "30_evaluate_all_models.ipynb",
+    "31_publish_results.ipynb",
 }
 
 
@@ -132,69 +137,20 @@ def test_expected_primary_notebooks_and_no_legacy_notebooks():
 
 
 def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
+    model_parameters = {
+        "DATASET_TRACK",
+        "START",
+        "FULL_MATRIX",
+        "USE_GOOGLE_DRIVE",
+    }
     expected = {
-        "00_prepare_visdrone.ipynb": {
-            "USE_GOOGLE_DRIVE",
-            "DATASET_SOURCE",
-            "PREPARE_10CLASS_TRACK",
-            "REDOWNLOAD",
-            "SMOKE_TEST",
-        },
-        "10_hpo_resnet50.ipynb": {
+        "10_resnet50.ipynb": model_parameters,
+        "11_swin_t.ipynb": model_parameters,
+        "12_vmamba_t.ipynb": model_parameters,
+        "13_rtdetrv2.ipynb": model_parameters,
+        "30_report.ipynb": {
             "DATASET_TRACK",
-            "START_HPO",
-            "USE_GOOGLE_DRIVE",
-        },
-        "11_hpo_swin_t.ipynb": {
-            "DATASET_TRACK",
-            "START_HPO",
-            "USE_GOOGLE_DRIVE",
-        },
-        "12_hpo_vmamba_t.ipynb": {
-            "DATASET_TRACK",
-            "START_HPO",
-            "USE_GOOGLE_DRIVE",
-        },
-        "13_hpo_rtdetrv2.ipynb": {
-            "DATASET_TRACK",
-            "START_HPO",
-            "USE_GOOGLE_DRIVE",
-        },
-        "20_finetune_resnet50.ipynb": {
-            "DATASET_TRACK",
-            "START_FINETUNING",
-            "FULL_MATRIX",
-           "USE_GOOGLE_DRIVE",
-        },
-        "21_finetune_swin_t.ipynb": {
-            "DATASET_TRACK",
-            "START_FINETUNING",
-            "FULL_MATRIX",
-           "USE_GOOGLE_DRIVE",
-        },
-        "22_finetune_vmamba_t.ipynb": {
-            "DATASET_TRACK",
-            "START_FINETUNING",
-            "FULL_MATRIX",
-           "USE_GOOGLE_DRIVE",
-        },
-        "23_finetune_rtdetrv2.ipynb": {
-            "DATASET_TRACK",
-            "START_FINETUNING",
-            "FULL_MATRIX",
-           "USE_GOOGLE_DRIVE",
-        },
-        "30_evaluate_all_models.ipynb": {
-            "DATASET_TRACK",
-            "BENCHMARK_TRACK",
-            "EVALUATOR_VERSION",
             "EVALUATE_MISSING",
-            "USE_GOOGLE_DRIVE",
-        },
-        "31_publish_results.ipynb": {
-            "MODEL_ID",
-            "DATASET_TRACK",
-            "BENCHMARK_TRACK",
             "PUBLISH_RESULTS",
             "DRY_RUN",
             "USE_GOOGLE_DRIVE",

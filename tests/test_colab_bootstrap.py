@@ -79,5 +79,14 @@ def test_notebooks_are_cross_platform_clean_and_never_start_training_by_default(
                 assert cell.execution_count is None, name
                 assert cell.outputs == [], name
         assert "bootstrap_notebook" in code, name
-        for flag in ("START", "START_HPO", "START_FINETUNING", "PUBLISH_RESULTS"):
-            assert f"{flag} = True" not in code, f"{name} ships {flag} enabled"
+        # Evaluated, not grepped: a comment explaining a flag must not read as
+        # the flag being set.
+        parameters = next(
+            cell
+            for cell in notebook.cells
+            if "parameters" in cell.metadata.get("tags", [])
+        )
+        values: dict[str, object] = {}
+        exec(compile(parameters.source, "<parameters>", "exec"), {}, values)
+        for flag in ("START", "PUBLISH_RESULTS"):
+            assert values.get(flag, False) is False, f"{name} ships {flag} enabled"

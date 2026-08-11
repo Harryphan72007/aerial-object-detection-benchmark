@@ -9,6 +9,8 @@ from pathlib import Path
 import nbformat
 from IPython.core.inputtransformer2 import TransformerManager
 
+from src.notebook_bootstrap import render_bootstrap_cell
+
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE_PATHS = (
     re.compile(r"[A-Za-z]:\\Users\\"),
@@ -27,42 +29,25 @@ TRANSIENT_CELL_METADATA = {
     "outputId",
     "scrolled",
 }
-CANONICAL_NOTEBOOKS = {
-    "00_prepare_visdrone.ipynb",
-    "07_performance_tiling.ipynb",
-    "10_hpo_resnet50.ipynb",
-    "11_hpo_swin_t.ipynb",
-    "12_hpo_vmamba_t.ipynb",
-    "13_hpo_rtdetrv2.ipynb",
-    "20_finetune_resnet50.ipynb",
-    "21_finetune_swin_t.ipynb",
-    "22_finetune_vmamba_t.ipynb",
-    "23_finetune_rtdetrv2.ipynb",
-    "30_evaluate_all_models.ipynb",
-    "31_publish_results.ipynb",
+# One notebook per model, then one report. Every canonical notebook carries the
+# same bootstrap cell and the same dependency policy; MODEL_NOTEBOOKS are the
+# four that drive a GPU run through the pipeline.
+MODEL_NOTEBOOKS = {
+    "10_resnet50.ipynb",
+    "11_swin_t.ipynb",
+    "12_vmamba_t.ipynb",
+    "13_rtdetrv2.ipynb",
 }
-MODEL_ENVIRONMENT_NOTEBOOKS = {
-    "10_hpo_resnet50.ipynb",
-    "11_hpo_swin_t.ipynb",
-    "12_hpo_vmamba_t.ipynb",
-    "13_hpo_rtdetrv2.ipynb",
-    "20_finetune_resnet50.ipynb",
-    "21_finetune_swin_t.ipynb",
-    "22_finetune_vmamba_t.ipynb",
-    "23_finetune_rtdetrv2.ipynb",
-    "30_evaluate_all_models.ipynb",
-    "31_publish_results.ipynb",
+REPORT_NOTEBOOK = "30_report.ipynb"
+CANONICAL_NOTEBOOKS = MODEL_NOTEBOOKS | {REPORT_NOTEBOOK}
+MODEL_ENVIRONMENT_NOTEBOOKS = CANONICAL_NOTEBOOKS
+# The pipeline provisions the model environment itself, so a notebook proves it
+# reaches provisioning by calling the pipeline, not by importing the installer.
+REQUIRED_ENTRY_POINTS = {
+    **{name: "run_model_pipeline" for name in MODEL_NOTEBOOKS},
+    REPORT_NOTEBOOK: "build_benchmark_report",
 }
-DIRECT_ENVIRONMENT_NOTEBOOKS = {
-    "10_hpo_resnet50.ipynb",
-    "11_hpo_swin_t.ipynb",
-    "12_hpo_vmamba_t.ipynb",
-    "13_hpo_rtdetrv2.ipynb",
-    "20_finetune_resnet50.ipynb",
-    "21_finetune_swin_t.ipynb",
-    "22_finetune_vmamba_t.ipynb",
-    "23_finetune_rtdetrv2.ipynb",
-}
+NOTEBOOK_REQUIREMENTS = "requirements-hpo-colab.txt"
 INLINE_ENVIRONMENT_SETUP = re.compile(
     r"(?im)(?:^\s*[!%]\s*(?:pip|uv|conda)|"
     r"\b(?:pip|uv)\s+install\b|\bpython\s+-m\s+venv\b)"
@@ -143,14 +128,27 @@ def validate_notebook(path: Path) -> list[str]:
             errors.append(
                 f"{path}: model notebook contains inline environment setup; use the shared API"
             )
-        if (
-            path.name in DIRECT_ENVIRONMENT_NOTEBOOKS
-            and "ensure_model_environment" not in combined
-        ):
-            errors.append(
-                f"{path}: model notebook does not call ensure_model_environment"
-            )
+        entry_point = REQUIRED_ENTRY_POINTS[path.name]
+        if entry_point not in combined:
+            errors.append(f"{path}: notebook does not call {entry_point}")
+    if path.name in CANONICAL_NOTEBOOKS:
+        errors.extend(_bootstrap_cell_errors(path, notebook_source))
     return errors
+
+
+def _bootstrap_cell_errors(path: Path, sources: list[str]) -> list[str]:
+    """The shared bootstrap cell must be identical in every canonical notebook.
+
+    Copying it by hand is what let one notebook end up with a different
+    dependency policy than its siblings while every other check still passed.
+    """
+    expected = render_bootstrap_cell(NOTEBOOK_REQUIREMENTS).rstrip("\n")
+    if any(source.rstrip("\n") == expected for source in sources):
+        return []
+    return [
+        f"{path}: bootstrap cell does not match "
+        "src.notebook_bootstrap.render_bootstrap_cell; regenerate it"
+    ]
 
 
 def main() -> None:

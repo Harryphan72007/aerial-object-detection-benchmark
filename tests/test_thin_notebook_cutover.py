@@ -31,10 +31,12 @@ def test_all_canonical_notebooks_are_thin_and_package_backed() -> None:
         assert "from src" in source or "import src" in source
 
 
-def test_every_model_has_hpo_and_final_smoke_entrypoints() -> None:
+def test_every_model_has_exactly_one_smoke_entry_point() -> None:
+    """One notebook per model, plus one report — the whole operator surface."""
     for model in MODELS:
-        assert any(name.startswith("1") and model in name for name in PRIMARY_NOTEBOOKS)
-        assert any(name.startswith("2") and model in name for name in PRIMARY_NOTEBOOKS)
+        matching = [name for name in PRIMARY_NOTEBOOKS if model in name]
+        assert len(matching) == 1, f"{model}: {matching}"
+    assert len(PRIMARY_NOTEBOOKS) == len(MODELS) + 1
 
 
 def test_retired_lr_controlled_protocol_is_gone() -> None:

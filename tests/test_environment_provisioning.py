@@ -463,24 +463,23 @@ def test_mmcv_compiled_operation_failure_is_detected(
     assert raised.value.stage == "mmcv_compiled_operation"
 
 
-def test_preview_notebooks_skip_provisioning_and_gate_before_workflow_run() -> None:
-    contracts = {
-        "10_hpo_resnet50.ipynb": "START_HPO",
-        "11_hpo_swin_t.ipynb": "START_HPO",
-        "12_hpo_vmamba_t.ipynb": "START_HPO",
-        "13_hpo_rtdetrv2.ipynb": "START_HPO",
-        "20_finetune_resnet50.ipynb": "START_FINETUNING",
-        "21_finetune_swin_t.ipynb": "START_FINETUNING",
-        "22_finetune_vmamba_t.ipynb": "START_FINETUNING",
-        "23_finetune_rtdetrv2.ipynb": "START_FINETUNING",
-    }
-    for name, flag in contracts.items():
+def test_model_notebooks_delegate_the_preview_decision_to_the_pipeline() -> None:
+    """A notebook must pass START through, never decide provisioning itself.
+
+    Whether a preview provisions an environment or runs the gate is a property
+    of the pipeline (see tests/test_model_pipeline.py). A notebook that made
+    that decision in a cell would be a second, divergent implementation.
+    """
+    from scripts.validate_notebooks import MODEL_NOTEBOOKS
+
+    for name in sorted(MODEL_NOTEBOOKS):
         notebook = json.loads((ROOT / "notebooks" / name).read_text(encoding="utf-8"))
         source = "".join(notebook["cells"][3]["source"])
-        assert f"if {flag}" in source
-        assert "SKIPPED_PREVIEW" in source
-        assert source.index("ensure_model_environment") < source.index(".run(")
-        assert source.index(f"if {flag}") < source.index(".run(")
+        assert "run_model_pipeline(" in source, name
+        assert "start=START and not SMOKE_TEST" in source, name
+        # No notebook-local provisioning or gate handling.
+        assert "ensure_model_environment" not in source, name
+        assert "SKIPPED_PREVIEW" not in source, name
 
 
 def test_selecting_another_family_clears_stale_model_runtime_variables(
@@ -519,7 +518,7 @@ def test_runtime_cleanup_cannot_escape_configured_local_base(tmp_path: Path) -> 
 def test_notebook_validation_rejects_inline_setup_and_missing_shared_api(
     tmp_path: Path,
 ) -> None:
-    path = tmp_path / "12_hpo_vmamba_t.ipynb"
+    path = tmp_path / "12_vmamba_t.ipynb"
     notebook = nbformat.v4.new_notebook(
         cells=[
             nbformat.v4.new_code_cell(
@@ -530,4 +529,5 @@ def test_notebook_validation_rejects_inline_setup_and_missing_shared_api(
     nbformat.write(notebook, path)
     errors = validate_notebook(path)
     assert any("inline environment setup" in error for error in errors)
-    assert any("does not call ensure_model_environment" in error for error in errors)
+    assert any("does not call run_model_pipeline" in error for error in errors)
+    assert any("bootstrap cell does not match" in error for error in errors)

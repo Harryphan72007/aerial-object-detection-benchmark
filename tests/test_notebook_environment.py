@@ -387,23 +387,20 @@ def test_canonical_notebooks_preserve_the_selected_git_ref() -> None:
         source = path.read_text(encoding="utf-8")
         assert '"pull", "--ff-only"' not in source, path.name
         assert "bootstrap_notebook" in source, path.name
-    for name in (
-        "20_finetune_resnet50.ipynb",
-        "21_finetune_swin_t.ipynb",
-        "22_finetune_vmamba_t.ipynb",
-    ):
+    # Every canonical notebook pins the same dependency policy, rendered from
+    # one template. Four notebooks previously named three different files.
+    from scripts.validate_notebooks import CANONICAL_NOTEBOOKS, NOTEBOOK_REQUIREMENTS
+
+    for name in sorted(CANONICAL_NOTEBOOKS):
         source = (ROOT / "notebooks" / name).read_text(encoding="utf-8")
-        assert "requirements-dataset-colab.txt" in source
+        assert NOTEBOOK_REQUIREMENTS in source, name
 
 
 def test_final_notebooks_expose_full_matrix_without_editing_code() -> None:
     """PR-06's opt-in matrix must be a parameter, not an internal argument."""
-    for name in (
-        "20_finetune_resnet50.ipynb",
-        "21_finetune_swin_t.ipynb",
-        "22_finetune_vmamba_t.ipynb",
-        "23_finetune_rtdetrv2.ipynb",
-    ):
+    from scripts.validate_notebooks import MODEL_NOTEBOOKS
+
+    for name in sorted(MODEL_NOTEBOOKS):
         notebook = json.loads((ROOT / "notebooks" / name).read_text(encoding="utf-8"))
         parameters = "".join(notebook["cells"][1]["source"])
         source = "\n".join(
@@ -416,18 +413,19 @@ def test_final_notebooks_expose_full_matrix_without_editing_code() -> None:
 
 
 def test_model_notebooks_guard_the_selected_dataset_track() -> None:
-    for name in (
-        "10_hpo_resnet50.ipynb",
-        "11_hpo_swin_t.ipynb",
-        "12_hpo_vmamba_t.ipynb",
-        "13_hpo_rtdetrv2.ipynb",
-        "20_finetune_resnet50.ipynb",
-        "21_finetune_swin_t.ipynb",
-        "22_finetune_vmamba_t.ipynb",
-        "23_finetune_rtdetrv2.ipynb",
-    ):
-        source = (ROOT / "notebooks" / name).read_text(encoding="utf-8")
-        assert "require_prepared_dataset_track" in source, name
+    """The chosen track reaches the pipeline, which prepares and verifies it."""
+    from scripts.validate_notebooks import MODEL_NOTEBOOKS
+
+    for name in sorted(MODEL_NOTEBOOKS):
+        notebook = json.loads((ROOT / "notebooks" / name).read_text(encoding="utf-8"))
+        parameters = "".join(notebook["cells"][1]["source"])
+        source = "\n".join(
+            "".join(cell.get("source", []))
+            for cell in notebook["cells"]
+            if cell["cell_type"] == "code"
+        )
+        assert 'DATASET_TRACK = "2class"' in parameters, name
+        assert "DATASET_TRACK," in source, name
 
 
 def test_as_dict_reports_the_recorded_restart_decision() -> None:

@@ -16,17 +16,11 @@ from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 
 PRIMARY_NOTEBOOKS = [
-    "00_prepare_visdrone.ipynb",
-    "10_hpo_resnet50.ipynb",
-    "11_hpo_swin_t.ipynb",
-    "12_hpo_vmamba_t.ipynb",
-    "13_hpo_rtdetrv2.ipynb",
-    "20_finetune_resnet50.ipynb",
-    "21_finetune_swin_t.ipynb",
-    "22_finetune_vmamba_t.ipynb",
-    "23_finetune_rtdetrv2.ipynb",
-    "30_evaluate_all_models.ipynb",
-    "31_publish_results.ipynb",
+    "10_resnet50.ipynb",
+    "11_swin_t.ipynb",
+    "12_vmamba_t.ipynb",
+    "13_rtdetrv2.ipynb",
+    "30_report.ipynb",
 ]
 
 

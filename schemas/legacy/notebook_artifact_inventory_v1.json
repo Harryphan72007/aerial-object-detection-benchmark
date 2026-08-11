@@ -1,152 +1,417 @@
 {
-  "notebook_count": 15,
+  "notebook_count": 9,
   "notebook_root": "notebooks",
   "notebooks": [
     {
       "artifact_references": [
         {
           "cell": 1,
-          "line": 2,
+          "line": 1,
           "literals": [],
           "operations": [],
-          "source": "DATASET_SOURCE = \"auto\""
+          "source": "DATASET_TRACK = \"2class\""
+        },
+        {
+          "cell": 1,
+          "line": 7,
+          "literals": [],
+          "operations": [],
+          "source": "# instead of the headline tuned/seed-42 recipe. Six runs, reported separately."
         },
         {
           "cell": 2,
-          "line": 58,
+          "line": 57,
           "literals": [
-            "requirements-dataset-colab.txt"
+            "requirements-hpo-colab.txt"
           ],
           "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
+          "source": "requirements_file='requirements-hpo-colab.txt',"
         },
         {
           "cell": 2,
-          "line": 64,
+          "line": 63,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
-          "line": 3,
+          "line": 4,
           "literals": [],
           "operations": [],
-          "source": "from src.data.smoke_dataset import create_smoke_archives"
-        },
-        {
-          "cell": 3,
-          "line": 4,
-          "literals": [
-            "datasets"
-          ],
-          "operations": [],
-          "source": "archive_dir = DRIVE_ROOT / \"datasets\" / \"VisDrone2019-DET\" / \"archives\""
+          "source": "result = run_model_pipeline("
         },
         {
           "cell": 3,
           "line": 6,
-          "literals": [
-            "datasets",
-            "manifests"
-          ],
-          "operations": [],
-          "source": "smoke_manifest_dir = DRIVE_ROOT / \"datasets\" / \"VisDrone2019-DET\" / \"manifests\""
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [
-            "{split}_archive.json"
-          ],
-          "operations": [],
-          "source": "(smoke_manifest_dir / f\"{split}_archive.json\").unlink(missing_ok=True)"
-        },
-        {
-          "cell": 3,
-          "line": 9,
-          "literals": [
-            "{split}_extraction.json"
-          ],
-          "operations": [],
-          "source": "(smoke_manifest_dir / f\"{split}_extraction.json\").unlink(missing_ok=True)"
-        },
-        {
-          "cell": 3,
-          "line": 13,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import prepare_visdrone"
-        },
-        {
-          "cell": 3,
-          "line": 16,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 17,
+          "line": 8,
           "literals": [],
           "operations": [],
-          "source": "dataset_source=DATASET_SOURCE,"
+          "source": "DATASET_TRACK,"
         },
         {
-          "cell": 4,
+          "cell": 3,
+          "line": 15,
+          "literals": [],
+          "operations": [],
+          "source": "result"
+        }
+      ],
+      "code_cell_count": 3,
+      "imports": [
+        "os",
+        "pathlib",
+        "src.notebook_bootstrap",
+        "src.workflows.model_pipeline",
+        "subprocess",
+        "sys"
+      ],
+      "nbformat": 4,
+      "path": "notebooks/10_resnet50.ipynb",
+      "sha256": "8bece0558681f69c211d8e8d92cce1c40404a8788106841665f0a33d7339f9b2"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 1,
+          "line": 1,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK = \"2class\""
+        },
+        {
+          "cell": 1,
+          "line": 7,
+          "literals": [],
+          "operations": [],
+          "source": "# instead of the headline tuned/seed-42 recipe. Six runs, reported separately."
+        },
+        {
+          "cell": 2,
+          "line": 57,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file='requirements-hpo-colab.txt',"
+        },
+        {
+          "cell": 2,
+          "line": 63,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 3,
+          "line": 4,
+          "literals": [],
+          "operations": [],
+          "source": "result = run_model_pipeline("
+        },
+        {
+          "cell": 3,
+          "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT,"
+        },
+        {
+          "cell": 3,
+          "line": 8,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK,"
+        },
+        {
+          "cell": 3,
+          "line": 15,
+          "literals": [],
+          "operations": [],
+          "source": "result"
+        }
+      ],
+      "code_cell_count": 3,
+      "imports": [
+        "os",
+        "pathlib",
+        "src.notebook_bootstrap",
+        "src.workflows.model_pipeline",
+        "subprocess",
+        "sys"
+      ],
+      "nbformat": 4,
+      "path": "notebooks/11_swin_t.ipynb",
+      "sha256": "c8754864eabd4925ca9f7e4496cef03d1b9e5f7c03d113836d3ceb946823f695"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 1,
+          "line": 1,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK = \"2class\""
+        },
+        {
+          "cell": 1,
+          "line": 7,
+          "literals": [],
+          "operations": [],
+          "source": "# instead of the headline tuned/seed-42 recipe. Six runs, reported separately."
+        },
+        {
+          "cell": 2,
+          "line": 57,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file='requirements-hpo-colab.txt',"
+        },
+        {
+          "cell": 2,
+          "line": 63,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 3,
+          "line": 4,
+          "literals": [],
+          "operations": [],
+          "source": "result = run_model_pipeline("
+        },
+        {
+          "cell": 3,
+          "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT,"
+        },
+        {
+          "cell": 3,
+          "line": 8,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK,"
+        },
+        {
+          "cell": 3,
+          "line": 15,
+          "literals": [],
+          "operations": [],
+          "source": "result"
+        }
+      ],
+      "code_cell_count": 3,
+      "imports": [
+        "os",
+        "pathlib",
+        "src.notebook_bootstrap",
+        "src.workflows.model_pipeline",
+        "subprocess",
+        "sys"
+      ],
+      "nbformat": 4,
+      "path": "notebooks/12_vmamba_t.ipynb",
+      "sha256": "2244f9ff65c09f6ca1a718bf72c9ce856f04b5267c07b531bb5c589b496bd0d9"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 1,
+          "line": 1,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK = \"2class\""
+        },
+        {
+          "cell": 1,
+          "line": 7,
+          "literals": [],
+          "operations": [],
+          "source": "# instead of the headline tuned/seed-42 recipe. Six runs, reported separately."
+        },
+        {
+          "cell": 2,
+          "line": 57,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file='requirements-hpo-colab.txt',"
+        },
+        {
+          "cell": 2,
+          "line": 63,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 3,
+          "line": 4,
+          "literals": [],
+          "operations": [],
+          "source": "result = run_model_pipeline("
+        },
+        {
+          "cell": 3,
+          "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT,"
+        },
+        {
+          "cell": 3,
+          "line": 8,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK,"
+        },
+        {
+          "cell": 3,
+          "line": 15,
+          "literals": [],
+          "operations": [],
+          "source": "result"
+        }
+      ],
+      "code_cell_count": 3,
+      "imports": [
+        "os",
+        "pathlib",
+        "src.notebook_bootstrap",
+        "src.workflows.model_pipeline",
+        "subprocess",
+        "sys"
+      ],
+      "nbformat": 4,
+      "path": "notebooks/13_rtdetrv2.ipynb",
+      "sha256": "6e56026a811c8ed1ce2ec8a6b9fe05164230b8bc0da1831fc1cfb0857fa7da37"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 1,
+          "line": 1,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK = \"2class\""
+        },
+        {
+          "cell": 1,
+          "line": 2,
+          "literals": [],
+          "operations": [],
+          "source": "# True evaluates any completed run that has no metrics artifact yet."
+        },
+        {
+          "cell": 1,
+          "line": 5,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "# PUBLISH_RESULTS = True and DRY_RUN = False."
+        },
+        {
+          "cell": 1,
+          "line": 6,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "PUBLISH_RESULTS = False"
+        },
+        {
+          "cell": 2,
+          "line": 57,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file='requirements-hpo-colab.txt',"
+        },
+        {
+          "cell": 2,
+          "line": 63,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 3,
+          "line": 1,
+          "literals": [],
+          "operations": [],
+          "source": "from src.workflows.reporting import build_benchmark_report"
+        },
+        {
+          "cell": 3,
+          "line": 3,
+          "literals": [],
+          "operations": [],
+          "source": "result = build_benchmark_report("
+        },
+        {
+          "cell": 3,
           "line": 5,
           "literals": [],
           "operations": [],
-          "source": "from src.data.dataset import CocoDetectionRecords, detection_collate"
+          "source": "DRIVE_ROOT,"
         },
         {
-          "cell": 4,
-          "line": 8,
-          "literals": [
-            "instances_train.json"
-          ],
+          "cell": 3,
+          "line": 6,
+          "literals": [],
           "operations": [],
-          "source": "records = CocoDetectionRecords(Path(summary[\"train_images\"]), coco_root / \"annotations\" / \"instances_train.json\")"
+          "source": "DATASET_TRACK,"
         },
         {
-          "cell": 5,
+          "cell": 3,
           "line": 7,
-          "literals": [
-            "Persistent Drive root: {summary['drive_root']}"
-          ],
+          "literals": [],
           "operations": [],
-          "source": "print(f\"Persistent Drive root: {summary['drive_root']}\")"
+          "source": "# A smoke run reaches the real report but never launches an evaluation"
         },
         {
-          "cell": 5,
-          "line": 16,
-          "literals": [
-            "LR-search manifests: {summary['lr_search_manifests']}"
+          "cell": 3,
+          "line": 10,
+          "literals": [],
+          "operations": [
+            "write"
           ],
+          "source": "publish=PUBLISH_RESULTS and not SMOKE_TEST,"
+        },
+        {
+          "cell": 3,
+          "line": 13,
+          "literals": [],
           "operations": [],
-          "source": "print(f\"LR-search manifests: {summary['lr_search_manifests']}\")"
+          "source": "result"
         }
       ],
-      "code_cell_count": 5,
+      "code_cell_count": 3,
       "imports": [
-        "json",
-        "matplotlib.patches",
-        "matplotlib.pyplot",
         "os",
         "pathlib",
-        "random",
-        "src.data.dataset",
-        "src.data.download",
-        "src.data.smoke_dataset",
         "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
+        "src.workflows.reporting",
         "subprocess",
-        "sys",
-        "torch.utils.data"
+        "sys"
       ],
       "nbformat": 4,
-      "path": "notebooks/00_prepare_visdrone.ipynb",
-      "sha256": "6344dae48d24b45290be8cd541a60dd61c1fc8f8df267b429f270a352897704c"
+      "path": "notebooks/30_report.ipynb",
+      "sha256": "ae99005981c3e1c5e8ec39053a942b66078506beb067952a0b24824f9a737f24"
     },
     {
       "artifact_references": [
@@ -214,823 +479,8 @@
         "sys"
       ],
       "nbformat": 4,
-      "path": "notebooks/07_performance_tiling.ipynb",
+      "path": "notebooks/optional/07_performance_tiling.ipynb",
       "sha256": "a9bac59dddd90f6fdb3a9cc8dc1698fec1277e589e1e6b08a91a9cffa9f3d7cf"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-hpo-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-hpo-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [
-            "dataset_track"
-          ],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID, \"dataset_track\": DATASET_TRACK}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.workflow",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/10_hpo_resnet50.ipynb",
-      "sha256": "ab9091a223d1ff9e814176e84e76c09bc42e91a1aa8309ab7a8fe8e84a9dd101"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-hpo-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-hpo-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [
-            "dataset_track"
-          ],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID, \"dataset_track\": DATASET_TRACK}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.workflow",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/11_hpo_swin_t.ipynb",
-      "sha256": "b6d4013e2cf70a55785682c28a8145ae56a49a4a60fcb511f2600f093330cb3b"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-hpo-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-hpo-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [
-            "dataset_track"
-          ],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID, \"dataset_track\": DATASET_TRACK}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.workflow",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/12_hpo_vmamba_t.ipynb",
-      "sha256": "b380593d9b6bf16d3a6456f498a7789253c805a6d00794a6677bd85d3b591594"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-hpo-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-hpo-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [
-            "dataset_track"
-          ],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID, \"dataset_track\": DATASET_TRACK}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = RTDetrOptunaV2(REPO_PATH, DRIVE_ROOT, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.rtdetr_v2",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "e0ccc197a498fd6acdaabd8551cd58e8a4f542ace2c3e8d85a4384c8d936367a"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "# matrix - six runs, reported separately from the headline table."
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run("
-        },
-        {
-          "cell": 3,
-          "line": 18,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.final_workflow",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/20_finetune_resnet50.ipynb",
-      "sha256": "e2df0ccba87340467e48a32be4a5964c0e06df4a95c56d64d9ca7def09623422"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "# matrix - six runs, reported separately from the headline table."
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
-        },
-        {
-          "cell": 3,
-          "line": 7,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 12,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 16,
-          "literals": [],
-          "operations": [],
-          "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run("
-        },
-        {
-          "cell": 3,
-          "line": 20,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.final_workflow",
-        "src.models.swin_frcnn.trainer",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "09610b34d4c5a371e792f160139bf1434d08003ab0ae425ab61ffd62b6bec3ab"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "# matrix - six runs, reported separately from the headline table."
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
-        },
-        {
-          "cell": 3,
-          "line": 7,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 12,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 16,
-          "literals": [],
-          "operations": [],
-          "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run("
-        },
-        {
-          "cell": 3,
-          "line": 20,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.final_workflow",
-        "src.models.vmamba_frcnn.trainer",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "362501bdb58b59b4563a82662e07b4f2ffcf7e2977ad5b4fcde5273a0f2d24cf"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "# matrix - six runs, reported separately from the headline table."
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 6,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 11,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 13,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 17,
-          "literals": [],
-          "operations": [],
-          "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run("
-        },
-        {
-          "cell": 3,
-          "line": 21,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.final_workflow",
-        "src.models.rtdetrv2.trainer",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "81ca3dbed753d1770cb820f36e14be5e5484d3f285cabc3c0b2707d17d9c7231"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 2,
-          "line": 73,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 2,
-          "line": 75,
-          "literals": [],
-          "operations": [],
-          "source": "from src.evaluation.versioned import evaluate_prediction_artifact"
-        },
-        {
-          "cell": 2,
-          "line": 78,
-          "literals": [
-            "Legacy evaluator accepts controlled artifacts only"
-          ],
-          "operations": [],
-          "source": "raise RuntimeError(\"Legacy evaluator accepts controlled artifacts only\")"
-        },
-        {
-          "cell": 2,
-          "line": 80,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        }
-      ],
-      "code_cell_count": 2,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.config.benchmark_tracks",
-        "src.evaluation.versioned",
-        "src.notebook_bootstrap",
-        "src.subprocess_utils",
-        "src.workflows.dataset_setup",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "16e78beeb1a7e0cddf96ed022a8a021f75aa64e6a8afd1b0313226dcabed36b9"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 2,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 4,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "PUBLISH_RESULTS = False"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 2,
-          "line": 74,
-          "literals": [
-            "Legacy publisher accepts controlled artifacts only"
-          ],
-          "operations": [],
-          "source": "raise RuntimeError(\"Legacy publisher accepts controlled artifacts only\")"
-        }
-      ],
-      "code_cell_count": 2,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.config.benchmark_tracks",
-        "src.notebook_bootstrap",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/31_publish_results.ipynb",
-      "sha256": "b4f203983490d420bb3e76144049acedb9f404738cf8b744e841032e7a7b3959"
     },
     {
       "artifact_references": [
@@ -3104,7 +2554,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 37,
+          "line": 31,
           "literals": [
             ".notebook-smoke/notebook_smoke_results.json"
           ],
@@ -3113,7 +2563,7 @@
         },
         {
           "cell": 0,
-          "line": 57,
+          "line": 51,
           "literals": [
             "{Path(name).stem}.json"
           ],
@@ -3122,7 +2572,7 @@
         },
         {
           "cell": 0,
-          "line": 77,
+          "line": 71,
           "literals": [],
           "operations": [
             "read"
@@ -3131,7 +2581,7 @@
         },
         {
           "cell": 0,
-          "line": 89,
+          "line": 83,
           "literals": [],
           "operations": [
             "write"
@@ -3140,7 +2590,7 @@
         },
         {
           "cell": 0,
-          "line": 90,
+          "line": 84,
           "literals": [],
           "operations": [
             "write"
@@ -3149,7 +2599,7 @@
         },
         {
           "cell": 0,
-          "line": 144,
+          "line": 138,
           "literals": [],
           "operations": [
             "write"
@@ -3172,7 +2622,7 @@
         "time"
       ],
       "path": "scripts/run_notebook_smoke.py",
-      "sha256": "1675ef86013b191a73420884469a37533da53a7f549566ccf9eb438c968cb741"
+      "sha256": "050693cf6e7bb9b6ee9905e1b46f17af0a276980bfeb29119380d00cfd4dce85"
     },
     {
       "artifact_references": [
@@ -3562,7 +3012,16 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 158,
+          "line": 50,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "NOTEBOOK_REQUIREMENTS = \"requirements-hpo-colab.txt\""
+        },
+        {
+          "cell": 0,
+          "line": 156,
           "literals": [],
           "operations": [
             "discover"
@@ -3576,10 +3035,11 @@
         "ast",
         "nbformat",
         "pathlib",
-        "re"
+        "re",
+        "src.notebook_bootstrap"
       ],
       "path": "scripts/validate_notebooks.py",
-      "sha256": "ed1a8985f6aac85436656907ac703b9cb7e527efead4b5e367c8e436225bc793"
+      "sha256": "6744a4d1eaead336fffa7be837538bce2cbf31a7494a77ebf77cc2d5029c1da8"
     },
     {
       "artifact_references": [

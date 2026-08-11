@@ -570,7 +570,14 @@ def test_operator_declared_root_is_not_warned_about_as_ephemeral(
         platform="colab",
         use_google_drive=False,
         install_dependencies=False,
-        environ={"VISDRONE_DRIVE_ROOT": str(declared)},
+        # Every root must be redirected: the Colab defaults for the other three
+        # are under /content, which is not creatable off a Colab runtime.
+        environ={
+            "VISDRONE_DRIVE_ROOT": str(declared),
+            "VISDRONE_LOCAL_CACHE_ROOT": str(tmp_path / "cache"),
+            "VISDRONE_MODEL_ENV_ROOT": str(tmp_path / "envs"),
+            "VISDRONE_HPO_SCRATCH_ROOT": str(tmp_path / "scratch"),
+        },
     )
 
     output = capsys.readouterr().out

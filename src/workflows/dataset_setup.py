@@ -35,11 +35,11 @@ def require_prepared_dataset_track(
     missing = [str(path) for path in required.values() if not path.is_file()]
     if missing:
         remedy = (
-            "Rerun notebooks/00_prepare_visdrone.ipynb with "
-            "PREPARE_10CLASS_TRACK = True."
-            if dataset_track == "10class"
-            else "Rerun notebooks/00_prepare_visdrone.ipynb and wait for "
-            "DATA CONTRACT VERIFIED: YES."
+            "Set START = True in a model notebook and run all cells; the "
+            f"pipeline prepares the {dataset_track} track before it trains. To "
+            "prepare it on its own, run "
+            f"python -m scripts.prepare_dataset --drive-root {paths.root}"
+            + (" --prepare-10class-track." if dataset_track == "10class" else ".")
         )
         raise DatasetTrackNotPreparedError(
             f"The {dataset_track} dataset track is not prepared under {paths.root}.\n"

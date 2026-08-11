@@ -185,4 +185,4 @@ def test_an_unprepared_track_fails_before_the_gate(tmp_path: Path) -> None:
     with pytest.raises(DatasetTrackNotPreparedError) as raised:
         workflow.run(start_expensive_stage=False)
 
-    assert "PREPARE_10CLASS_TRACK = True" in str(raised.value)
+    assert "--prepare-10class-track" in str(raised.value)

@@ -1393,7 +1393,7 @@
       "sha256": "b0f201d8d5d4b86e493835c1caea12c81f3ece6cdad40f4721ed21156ef88c73"
     }
   ],
-  "python_source_count": 103,
+  "python_source_count": 105,
   "python_sources": [
     {
       "artifact_references": [
@@ -2512,6 +2512,38 @@
       ],
       "path": "scripts/prepare_data.py",
       "sha256": "7ceff1172fc6c6e2ba27eec4ca9eb369c4fa9c0ab6bed316d1f12e9a286eb4c4"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 25,
+          "literals": [
+            "project_config.yaml"
+          ],
+          "operations": [],
+          "source": "\"--config\", default=str(REPOSITORY_ROOT / \"project_config.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 52,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "print(json.dumps({**summary, \"archives\": len(summary[\"archives\"])}, indent=2))"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "pathlib",
+        "src.paths",
+        "src.workflows.dataset_setup"
+      ],
+      "path": "scripts/prepare_dataset.py",
+      "sha256": "f3acf6c9db40839e082fbb49af6f474037ff1a56382549537bfef6ddd14970c6"
     },
     {
       "artifact_references": [
@@ -11926,7 +11958,7 @@
         "typing"
       ],
       "path": "src/workflows/dataset_setup.py",
-      "sha256": "cc09ebb84e637011ef1c12d556751caafb030a51785038a0935e1432aac66f7b"
+      "sha256": "2a86b4c135fffa7d815786bb01db8005a90532cd06a64b3c120c659c89bf6e38"
     },
     {
       "artifact_references": [
@@ -12547,6 +12579,64 @@
       ],
       "path": "src/workflows/isolated_environment.py",
       "sha256": "8cb6baa1dc545794f41cfb54bd111d4798d9ce10933aa539a6610e9c3330281e"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 25,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_json"
+        },
+        {
+          "cell": 0,
+          "line": 47,
+          "literals": [
+            "evaluation"
+          ],
+          "operations": [],
+          "source": "\"evaluation\","
+        },
+        {
+          "cell": 0,
+          "line": 85,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "stored = read_json(record_path) if record_path.is_file() else None"
+        },
+        {
+          "cell": 0,
+          "line": 209,
+          "literals": [
+            "evaluation"
+          ],
+          "operations": [],
+          "source": "\"evaluation\","
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.config.benchmark_tracks",
+        "src.hpo.final_workflow",
+        "src.hpo.workflow",
+        "src.models.registry",
+        "src.paths",
+        "src.utils.serialization",
+        "src.workflows.adapter_gate",
+        "src.workflows.adapter_smoke",
+        "src.workflows.dataset_setup",
+        "src.workflows.environment",
+        "src.workflows.evaluation_runner",
+        "typing"
+      ],
+      "path": "src/workflows/model_pipeline.py",
+      "sha256": "186a88cdf95287fd20b3e2d4480af0803ad26e1beb3957a45b3a5eeb6f70081b"
     },
     {
       "artifact_references": [

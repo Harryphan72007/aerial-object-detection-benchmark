@@ -23,7 +23,7 @@ try:
 except ImportError:  # The shared notebook requirements install it before provisioning.
     psutil = None  # type: ignore[assignment]
 
-from src.notebook_environment import detect_notebook_platform
+from src.notebook_environment import KAGGLE_SCRATCH_ROOT, detect_notebook_platform
 from src.subprocess_utils import (
     CheckedSubprocessError,
     build_model_subprocess_environment,
@@ -310,7 +310,8 @@ def _runtime_framework_root(
     if selected == "colab":
         return Path("/content/visdrone_frameworks")
     if selected == "kaggle":
-        return Path("/kaggle/working/visdrone_frameworks")
+        # Scratch, not the 20 GB output quota: a pinned clone is rebuildable.
+        return Path(KAGGLE_SCRATCH_ROOT) / "visdrone_frameworks"
     return Path(runtime_base).expanduser().resolve() / "visdrone_frameworks"
 
 

@@ -8959,7 +8959,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 371,
+          "line": 414,
           "literals": [],
           "operations": [
             "read"
@@ -8983,7 +8983,7 @@
         "typing"
       ],
       "path": "src/notebook_environment.py",
-      "sha256": "375888d57d3a0b44236f2ec93402755b038b0a517d2d5274b5dbdb3efa99c91d"
+      "sha256": "b2514785f85c104d69cfe919b01301ddd2b21215b4b9ff89ec1933231aa9ff19"
     },
     {
       "artifact_references": [
@@ -13431,7 +13431,7 @@
         },
         {
           "cell": 0,
-          "line": 404,
+          "line": 405,
           "literals": [
             ".json"
           ],
@@ -13440,7 +13440,7 @@
         },
         {
           "cell": 0,
-          "line": 408,
+          "line": 409,
           "literals": [],
           "operations": [
             "read"
@@ -13449,7 +13449,7 @@
         },
         {
           "cell": 0,
-          "line": 435,
+          "line": 436,
           "literals": [],
           "operations": [
             "write"
@@ -13458,7 +13458,7 @@
         },
         {
           "cell": 0,
-          "line": 445,
+          "line": 446,
           "literals": [],
           "operations": [
             "write"
@@ -13467,7 +13467,7 @@
         },
         {
           "cell": 0,
-          "line": 540,
+          "line": 541,
           "literals": [],
           "operations": [
             "read"
@@ -13476,7 +13476,7 @@
         },
         {
           "cell": 0,
-          "line": 660,
+          "line": 661,
           "literals": [],
           "operations": [
             "discover"
@@ -13485,7 +13485,7 @@
         },
         {
           "cell": 0,
-          "line": 755,
+          "line": 756,
           "literals": [],
           "operations": [
             "read"
@@ -13494,7 +13494,7 @@
         },
         {
           "cell": 0,
-          "line": 762,
+          "line": 763,
           "literals": [],
           "operations": [
             "write"
@@ -13503,7 +13503,7 @@
         },
         {
           "cell": 0,
-          "line": 824,
+          "line": 825,
           "literals": [
             "pretrained"
           ],
@@ -13512,7 +13512,7 @@
         },
         {
           "cell": 0,
-          "line": 1005,
+          "line": 1006,
           "literals": [
             "pretrained"
           ],
@@ -13521,7 +13521,7 @@
         },
         {
           "cell": 0,
-          "line": 1077,
+          "line": 1078,
           "literals": [],
           "operations": [
             "read"
@@ -13530,7 +13530,7 @@
         },
         {
           "cell": 0,
-          "line": 1094,
+          "line": 1095,
           "literals": [
             "pretrained"
           ],
@@ -13539,7 +13539,7 @@
         },
         {
           "cell": 0,
-          "line": 1133,
+          "line": 1134,
           "literals": [
             "pretrained"
           ],
@@ -13548,7 +13548,7 @@
         },
         {
           "cell": 0,
-          "line": 1150,
+          "line": 1151,
           "literals": [
             "environment_probe.json",
             "quick_environment_probe.json"
@@ -13558,7 +13558,7 @@
         },
         {
           "cell": 0,
-          "line": 1160,
+          "line": 1161,
           "literals": [
             "logs"
           ],
@@ -13567,7 +13567,7 @@
         },
         {
           "cell": 0,
-          "line": 1162,
+          "line": 1163,
           "literals": [],
           "operations": [
             "read"
@@ -13576,7 +13576,7 @@
         },
         {
           "cell": 0,
-          "line": 1205,
+          "line": 1206,
           "literals": [],
           "operations": [
             "write"
@@ -13585,7 +13585,7 @@
         },
         {
           "cell": 0,
-          "line": 1229,
+          "line": 1230,
           "literals": [
             "benchmark_runtime.json"
           ],
@@ -13594,7 +13594,7 @@
         },
         {
           "cell": 0,
-          "line": 1230,
+          "line": 1231,
           "literals": [
             "environment_probe.json"
           ],
@@ -13603,7 +13603,7 @@
         },
         {
           "cell": 0,
-          "line": 1231,
+          "line": 1232,
           "literals": [
             "quick_environment_probe.json"
           ],
@@ -13612,7 +13612,7 @@
         },
         {
           "cell": 0,
-          "line": 1232,
+          "line": 1233,
           "literals": [
             "logs"
           ],
@@ -13621,7 +13621,7 @@
         },
         {
           "cell": 0,
-          "line": 1279,
+          "line": 1280,
           "literals": [
             "pretrained"
           ],
@@ -13630,7 +13630,7 @@
         },
         {
           "cell": 0,
-          "line": 1285,
+          "line": 1286,
           "literals": [],
           "operations": [
             "read"
@@ -13639,7 +13639,7 @@
         },
         {
           "cell": 0,
-          "line": 1294,
+          "line": 1295,
           "literals": [
             "pretrained"
           ],
@@ -13648,7 +13648,7 @@
         },
         {
           "cell": 0,
-          "line": 1319,
+          "line": 1320,
           "literals": [
             "benchmark_runtime.json"
           ],
@@ -13657,7 +13657,7 @@
         },
         {
           "cell": 0,
-          "line": 1320,
+          "line": 1321,
           "literals": [
             "environment_probe.json"
           ],
@@ -13666,7 +13666,7 @@
         },
         {
           "cell": 0,
-          "line": 1321,
+          "line": 1322,
           "literals": [
             "{runtime_hash}.json"
           ],
@@ -13675,7 +13675,7 @@
         },
         {
           "cell": 0,
-          "line": 1327,
+          "line": 1328,
           "literals": [],
           "operations": [
             "read"
@@ -13684,7 +13684,7 @@
         },
         {
           "cell": 0,
-          "line": 1359,
+          "line": 1360,
           "literals": [
             "quick_environment_probe.json"
           ],
@@ -13693,7 +13693,7 @@
         },
         {
           "cell": 0,
-          "line": 1362,
+          "line": 1363,
           "literals": [
             "quick_environment_probe.json"
           ],
@@ -13702,21 +13702,12 @@
         },
         {
           "cell": 0,
-          "line": 1384,
+          "line": 1385,
           "literals": [
             "logs"
           ],
           "operations": [],
           "source": "\"log_directory\": str(environment / \"logs\"),"
-        },
-        {
-          "cell": 0,
-          "line": 1396,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(marker, manifest)"
         },
         {
           "cell": 0,
@@ -13725,11 +13716,20 @@
           "operations": [
             "write"
           ],
+          "source": "write_json(marker, manifest)"
+        },
+        {
+          "cell": 0,
+          "line": 1398,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
           "source": "write_json(manifest_path, manifest)"
         },
         {
           "cell": 0,
-          "line": 1480,
+          "line": 1481,
           "literals": [
             "logs"
           ],
@@ -13738,7 +13738,7 @@
         },
         {
           "cell": 0,
-          "line": 1502,
+          "line": 1503,
           "literals": [],
           "operations": [
             "write"
@@ -13774,7 +13774,7 @@
         "uuid"
       ],
       "path": "src/workflows/isolated_environment.py",
-      "sha256": "8cb6baa1dc545794f41cfb54bd111d4798d9ce10933aa539a6610e9c3330281e"
+      "sha256": "0ce865e225429170e032e3aed675e45604e5e69e0b72faff5568307c2908bf09"
     },
     {
       "artifact_references": [

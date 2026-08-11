@@ -10,12 +10,10 @@ from src.data.download import VISDRONE_ARCHIVES, sha256_file
 from src.data.local_cache import resolve_data_access
 from src.data.smoke_dataset import create_smoke_archives
 from src.paths import ProjectPaths
-from src.workflows.dataset_setup import prepare_visdrone
-from src.workflows.model_day import inspect_model_day
+from src.workflows.dataset_setup import prepare_visdrone, require_prepared_dataset_track
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_ID = "rtdetrv2_l"
 
 
 def _assert_record(records: CocoDetectionRecords) -> None:
@@ -80,9 +78,10 @@ def test_synthetic_end_to_end_contract_repairs_and_is_idempotent(
     for records in datasets:
         _assert_record(records)
 
-    inspected = inspect_model_day(drive_root, MODEL_ID, ROOT)
-    assert inspected["stage"] == "ENVIRONMENT"
-    assert inspected["data_contract"]["verified"]
+    # The prepared track is now usable by an expensive stage: this is the exact
+    # check every stage of the pipeline runs before it touches the dataset.
+    required = require_prepared_dataset_track(drive_root, "2class")
+    assert Path(required["train"]).is_file() and Path(required["validation"]).is_file()
     discovered = discover_evaluation_dataset(paths, "2class", "val")
     assert discovered["record_count"] == 12
     _assert_record(discovered["records"])

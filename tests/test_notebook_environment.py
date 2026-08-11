@@ -337,17 +337,17 @@ def test_active_model_and_epoch_contracts_remain_bounded() -> None:
         assert model_id in (
             ROOT / "src" / "hpo" / "search_spaces.py"
         ).read_text(encoding="utf-8")
-    model_day = json.loads(
-        (ROOT / "notebooks" / "01_run_model_day.ipynb").read_text(encoding="utf-8")
-    )
-    parameters = "".join(model_day["cells"][1]["source"])
-    assert 'MODEL_ID = "faster_rcnn_resnet50"' in parameters
-    for name, flag in (
-        ("13_hpo_rtdetrv2.ipynb", "START_HPO = False"),
-        ("23_finetune_rtdetrv2.ipynb", "START_FINETUNING = False"),
-    ):
-        notebook = json.loads((ROOT / "notebooks" / name).read_text(encoding="utf-8"))
-        assert flag in "".join(notebook["cells"][1]["source"])
+    notebooks = sorted((ROOT / "notebooks").glob("*rtdetrv2*.ipynb"))
+    assert notebooks, "no RT-DETRv2 notebook found"
+    for path in notebooks:
+        notebook = json.loads(path.read_text(encoding="utf-8"))
+        parameters = "".join(notebook["cells"][1]["source"])
+        started = [
+            line
+            for line in parameters.splitlines()
+            if line.startswith("START") and "False" not in line
+        ]
+        assert not started, f"{path.name} ships an expensive stage enabled: {started}"
 
 
 def test_readme_model_table_matches_controlled_model_ids() -> None:
@@ -376,9 +376,11 @@ def test_rtdetrv2_quarantine_is_lifted_in_the_readme() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "Historical results only" not in readme
     assert "do not start new" not in readme
-    # The HPO/final notebooks are advertised as the active RT-DETR entry points.
-    assert "13_hpo_rtdetrv2.ipynb" in readme
-    assert "23_finetune_rtdetrv2.ipynb" in readme
+    # RT-DETRv2's notebook is advertised alongside the other three families'.
+    from scripts.validate_notebooks import MODEL_NOTEBOOKS
+
+    for name in sorted(MODEL_NOTEBOOKS):
+        assert name in readme, name
 
 
 def test_canonical_notebooks_preserve_the_selected_git_ref() -> None:
@@ -387,23 +389,20 @@ def test_canonical_notebooks_preserve_the_selected_git_ref() -> None:
         source = path.read_text(encoding="utf-8")
         assert '"pull", "--ff-only"' not in source, path.name
         assert "bootstrap_notebook" in source, path.name
-    for name in (
-        "20_finetune_resnet50.ipynb",
-        "21_finetune_swin_t.ipynb",
-        "22_finetune_vmamba_t.ipynb",
-    ):
+    # Every canonical notebook pins the same dependency policy, rendered from
+    # one template. Four notebooks previously named three different files.
+    from scripts.validate_notebooks import CANONICAL_NOTEBOOKS, NOTEBOOK_REQUIREMENTS
+
+    for name in sorted(CANONICAL_NOTEBOOKS):
         source = (ROOT / "notebooks" / name).read_text(encoding="utf-8")
-        assert "requirements-dataset-colab.txt" in source
+        assert NOTEBOOK_REQUIREMENTS in source, name
 
 
 def test_final_notebooks_expose_full_matrix_without_editing_code() -> None:
     """PR-06's opt-in matrix must be a parameter, not an internal argument."""
-    for name in (
-        "20_finetune_resnet50.ipynb",
-        "21_finetune_swin_t.ipynb",
-        "22_finetune_vmamba_t.ipynb",
-        "23_finetune_rtdetrv2.ipynb",
-    ):
+    from scripts.validate_notebooks import MODEL_NOTEBOOKS
+
+    for name in sorted(MODEL_NOTEBOOKS):
         notebook = json.loads((ROOT / "notebooks" / name).read_text(encoding="utf-8"))
         parameters = "".join(notebook["cells"][1]["source"])
         source = "\n".join(
@@ -416,18 +415,19 @@ def test_final_notebooks_expose_full_matrix_without_editing_code() -> None:
 
 
 def test_model_notebooks_guard_the_selected_dataset_track() -> None:
-    for name in (
-        "10_hpo_resnet50.ipynb",
-        "11_hpo_swin_t.ipynb",
-        "12_hpo_vmamba_t.ipynb",
-        "13_hpo_rtdetrv2.ipynb",
-        "20_finetune_resnet50.ipynb",
-        "21_finetune_swin_t.ipynb",
-        "22_finetune_vmamba_t.ipynb",
-        "23_finetune_rtdetrv2.ipynb",
-    ):
-        source = (ROOT / "notebooks" / name).read_text(encoding="utf-8")
-        assert "require_prepared_dataset_track" in source, name
+    """The chosen track reaches the pipeline, which prepares and verifies it."""
+    from scripts.validate_notebooks import MODEL_NOTEBOOKS
+
+    for name in sorted(MODEL_NOTEBOOKS):
+        notebook = json.loads((ROOT / "notebooks" / name).read_text(encoding="utf-8"))
+        parameters = "".join(notebook["cells"][1]["source"])
+        source = "\n".join(
+            "".join(cell.get("source", []))
+            for cell in notebook["cells"]
+            if cell["cell_type"] == "code"
+        )
+        assert 'DATASET_TRACK = "2class"' in parameters, name
+        assert "DATASET_TRACK," in source, name
 
 
 def test_as_dict_reports_the_recorded_restart_decision() -> None:

@@ -66,7 +66,11 @@ def test_diagnostic_cli_reports_current_repository_without_model_setup() -> None
     report = json.loads(completed.stdout)
     assert report["diagnostic"] == "current-environment-read-only"
     assert report["repository"]["is_repository"] is True
-    assert report["notebooks"]["notebook_count"] == 19
+    # Counted, not hardcoded: the diagnostic must report what is on disk, and the
+    # notebook set changes whenever the workflow is restructured.
+    assert report["notebooks"]["notebook_count"] == len(
+        list((ROOT / "notebooks").rglob("*.ipynb"))
+    )
     assert report["model_construction_performed"] is False
     assert report["third_party_sources"]["available"] is True
 

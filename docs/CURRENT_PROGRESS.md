@@ -80,10 +80,11 @@ gate.
 
 ## Remaining experiments
 
-1. Run notebook 00, then the GPU adapter smoke gate
-   (`python -m scripts.gpu_adapter_smoke`) for each model on the target GPU. HPO
-   and final training refuse to start without its READY record; see
-   [the hosted GPU runbook](release/HOSTED_GPU_RUNBOOK.md).
+1. Open each model's notebook (`10_resnet50`, `11_swin_t`, `12_vmamba_t`,
+   `13_rtdetrv2`) and set `START = True`. The pipeline prepares the dataset,
+   provisions the runtime, and runs the GPU adapter smoke gate before anything
+   expensive; HPO and final training still refuse to start without its READY
+   record. See [the hosted GPU runbook](release/HOSTED_GPU_RUNBOOK.md).
 2. Resume/complete five finite Phase A and five finite Phase B LR trials for each
    model and selected dataset track.
 3. Run the default final matrix: the **tuned** recipe at seed **42**
@@ -108,21 +109,23 @@ All paths are below
 - Evaluation: `evaluation/`
 - Reports: `reports/`
 
-The original full-study and final-checkpoint paths remain unchanged for notebooks
-30 and 31 and for the comparison workflows.
+The original full-study and final-checkpoint paths remain unchanged for the
+report notebook and the comparison workflows.
 
 ## Safe resume settings
 
-Run notebook 00 first and continue only after `DATA CONTRACT VERIFIED: YES`.
-For HPO, open the matching notebook 10-13, keep the correct `DATASET_TRACK`, and
-set `START_HPO = True`. Re-running the notebook loads its SQLite study and only
-runs missing finite trials. Do not delete or recreate the database.
+Rerun the same model notebook. Every stage discovers its own state, so a
+disconnected session is recovered by running all cells again with `START = True`
+and the same `DATASET_TRACK`:
 
-For final training, open the matching notebook 20-23 and set
-`START_FINETUNING = True`. A new configuration starts from pretrained weights.
-Only an interrupted run with the same model, track, seed, image size, effective
-batch size, LR/configuration hash, and scheduler contract may resume from
-`last.pth`.
+- Dataset preparation reuses verified archives, extractions, and conversions.
+- HPO loads its SQLite study and only runs missing finite trials. Do not delete
+  or recreate the database.
+- Final training starts a new configuration from pretrained weights. Only an
+  interrupted run with the same model, track, seed, image size, effective batch
+  size, LR/configuration hash, and scheduler contract may resume from
+  `last.pth`.
+- Evaluation skips any run whose metrics artifact already exists.
 
 Final training reads `final_train_seed42.json` — official train minus the 5%
 model-selection holdout — not the complete official train split. The holdout

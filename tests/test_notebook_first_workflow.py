@@ -9,32 +9,17 @@ import pytest
 
 from src.paths import ProjectPaths
 from src.utils.serialization import write_json, write_yaml
-from src.workflows.adapter_gate import adapter_fingerprint
 from src.workflows.contract import BENCHMARK_CONTRACT, validate_final_config
-from src.workflows.model_day import Stage, inspect_model_day
-from src.workflows.notebook_entrypoints import require_verified_data
-from src.data.contract import DataContractReport
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_ID = "rtdetrv2_l"
 RUN_ID = "rtdetrv2_l__2class__640__20260729_120000__seed42"
 PRIMARY = {
-    "00_bootstrap_colab.ipynb",
-    "00_prepare_visdrone.ipynb",
-    "01_run_model_day.ipynb",
-    "02_publish_results.ipynb",
-    "03_compare_all_models.ipynb",
-    "07_performance_tiling.ipynb",
-    "10_hpo_resnet50.ipynb",
-    "11_hpo_swin_t.ipynb",
-    "12_hpo_vmamba_t.ipynb",
-    "13_hpo_rtdetrv2.ipynb",
-    "20_finetune_resnet50.ipynb",
-    "21_finetune_swin_t.ipynb",
-    "22_finetune_vmamba_t.ipynb",
-    "23_finetune_rtdetrv2.ipynb",
-    "30_evaluate_all_models.ipynb",
-    "31_publish_results.ipynb",
+    "10_resnet50.ipynb",
+    "11_swin_t.ipynb",
+    "12_vmamba_t.ipynb",
+    "13_rtdetrv2.ipynb",
+    "30_report.ipynb",
 }
 LEGACY = {
     "00_colab_repository_setup.ipynb",
@@ -53,6 +38,23 @@ LEGACY = {
     "11_sync_results_to_github.ipynb",
     "12_learning_rate_search.ipynb",
     "13_full_dataset_finetune.ipynb",
+    # The retired lr_controlled_v1 entry points, deleted with the protocol.
+    "00_bootstrap_colab.ipynb",
+    "01_run_model_day.ipynb",
+    "02_publish_results.ipynb",
+    "03_compare_all_models.ipynb",
+    # Folded into the per-model pipeline and the report notebook.
+    "00_prepare_visdrone.ipynb",
+    "10_hpo_resnet50.ipynb",
+    "11_hpo_swin_t.ipynb",
+    "12_hpo_vmamba_t.ipynb",
+    "13_hpo_rtdetrv2.ipynb",
+    "20_finetune_resnet50.ipynb",
+    "21_finetune_swin_t.ipynb",
+    "22_finetune_vmamba_t.ipynb",
+    "23_finetune_rtdetrv2.ipynb",
+    "30_evaluate_all_models.ipynb",
+    "31_publish_results.ipynb",
 }
 
 
@@ -135,94 +137,20 @@ def test_expected_primary_notebooks_and_no_legacy_notebooks():
 
 
 def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
+    model_parameters = {
+        "DATASET_TRACK",
+        "START",
+        "FULL_MATRIX",
+        "USE_GOOGLE_DRIVE",
+    }
     expected = {
-        "00_bootstrap_colab.ipynb": {
-            "REPOSITORY_URL",
-            "REPOSITORY_PATH",
-            "REFERENCE_TYPE",
-            "REFERENCE",
-            "DRIVE_ROOT",
-            "MOUNT_GOOGLE_DRIVE",
-            "INSTALL_SHARED_DEPENDENCIES",
-        },
-        "00_prepare_visdrone.ipynb": {
-            "USE_GOOGLE_DRIVE",
-            "DATASET_SOURCE",
-            "PREPARE_10CLASS_TRACK",
-            "REDOWNLOAD",
-            "SMOKE_TEST",
-        },
-            "01_run_model_day.ipynb": {
-                "MODEL_ID",
-                "BENCHMARK_TRACK",
-            "RUN_MODE",
-            "RUN_LR_RANGE_TEST",
-            "RUN_BOUNDARY_EXTENSION",
-            "START_EXPENSIVE_STAGE",
-            "ALLOW_OVER_BUDGET_RUN",
-            "DATA_ACCESS_MODE",
-        },
-            "02_publish_results.ipynb": {
-                "MODEL_ID",
-                "BENCHMARK_TRACK",
-                "PUBLISH_RESULTS",
-                "DRY_RUN",
-            },
-        "10_hpo_resnet50.ipynb": {
+        "10_resnet50.ipynb": model_parameters,
+        "11_swin_t.ipynb": model_parameters,
+        "12_vmamba_t.ipynb": model_parameters,
+        "13_rtdetrv2.ipynb": model_parameters,
+        "30_report.ipynb": {
             "DATASET_TRACK",
-            "START_HPO",
-            "USE_GOOGLE_DRIVE",
-        },
-        "11_hpo_swin_t.ipynb": {
-            "DATASET_TRACK",
-            "START_HPO",
-            "USE_GOOGLE_DRIVE",
-        },
-        "12_hpo_vmamba_t.ipynb": {
-            "DATASET_TRACK",
-            "START_HPO",
-            "USE_GOOGLE_DRIVE",
-        },
-        "13_hpo_rtdetrv2.ipynb": {
-            "DATASET_TRACK",
-            "START_HPO",
-            "USE_GOOGLE_DRIVE",
-        },
-        "20_finetune_resnet50.ipynb": {
-            "DATASET_TRACK",
-            "START_FINETUNING",
-            "FULL_MATRIX",
-           "USE_GOOGLE_DRIVE",
-        },
-        "21_finetune_swin_t.ipynb": {
-            "DATASET_TRACK",
-            "START_FINETUNING",
-            "FULL_MATRIX",
-           "USE_GOOGLE_DRIVE",
-        },
-        "22_finetune_vmamba_t.ipynb": {
-            "DATASET_TRACK",
-            "START_FINETUNING",
-            "FULL_MATRIX",
-           "USE_GOOGLE_DRIVE",
-        },
-        "23_finetune_rtdetrv2.ipynb": {
-            "DATASET_TRACK",
-            "START_FINETUNING",
-            "FULL_MATRIX",
-           "USE_GOOGLE_DRIVE",
-        },
-        "30_evaluate_all_models.ipynb": {
-            "DATASET_TRACK",
-            "BENCHMARK_TRACK",
-            "EVALUATOR_VERSION",
             "EVALUATE_MISSING",
-            "USE_GOOGLE_DRIVE",
-        },
-        "31_publish_results.ipynb": {
-            "MODEL_ID",
-            "DATASET_TRACK",
-            "BENCHMARK_TRACK",
             "PUBLISH_RESULTS",
             "DRY_RUN",
             "USE_GOOGLE_DRIVE",
@@ -250,68 +178,6 @@ def test_notebooks_are_clean_valid_and_config_cells_are_minimal():
         assert _parameter_names(ROOT / "notebooks" / name) == variables
 
 
-def test_auto_stage_detection_skips_completed_stages(tmp_path):
-    paths = ProjectPaths.from_value(tmp_path)
-    assert (
-        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
-        == Stage.DATA
-    )
-    _ready_dataset(paths)
-    assert (
-        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
-        == Stage.ENVIRONMENT
-    )
-    write_json(
-        paths.lr_search_checkpoints / MODEL_ID / "adapter_smoke.json",
-        {
-            "status": "READY",
-            "fingerprint": adapter_fingerprint(MODEL_ID, ROOT),
-            "batch_policy": {
-                "per_device_batch_size": 2,
-                "gradient_accumulation_steps": 4,
-            },
-        },
-    )
-    assert (
-        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
-        == Stage.LR_SEARCH
-    )
-    _selected(paths)
-    assert (
-        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
-        == Stage.FINAL_TRAINING
-    )
-    _run(paths)
-    assert (
-        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
-        == Stage.EVALUATION
-    )
-    write_json(
-        paths.evaluation / f"{RUN_ID}__res640__metrics.json",
-        {"run_id": RUN_ID, "model_id": MODEL_ID, "dataset_track": "2class"},
-    )
-    assert (
-        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
-        == Stage.PROFILING
-    )
-    write_json(
-        paths.evaluation / f"{RUN_ID}__profile.json",
-        {"profiles": [{"batch_size": 1, "status": "completed"}]},
-    )
-    assert (
-        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
-        == Stage.REPORT
-    )
-    write_json(
-        paths.reports / "models" / MODEL_ID / RUN_ID / "final_results.json",
-        [{"run_id": RUN_ID}],
-    )
-    assert (
-        inspect_model_day(tmp_path, MODEL_ID, ROOT, verify_data=False)["stage"]
-        == Stage.COMPLETE
-    )
-
-
 def test_final_contract_rejects_incompatible_resume_configuration():
     config = {
         "dataset_track": "2class",
@@ -332,31 +198,20 @@ def test_final_contract_rejects_incompatible_resume_configuration():
 
 
 def test_publishing_configuration_defaults_to_dry_run():
-    notebook = nbformat.read(
-        ROOT / "notebooks" / "02_publish_results.ipynb", as_version=4
-    )
-    parameter = next(
-        cell for cell in notebook.cells if "parameters" in cell.metadata.get("tags", [])
-    )
-    values = {}
-    exec(compile(parameter.source, "<parameters>", "exec"), {}, values)
-    assert values["PUBLISH_RESULTS"] is False
-    assert values["DRY_RUN"] is True
-
-
-def test_notebook_one_gives_concise_interrupted_setup_recovery_instruction(capsys):
-    notebook = nbformat.read(
-        ROOT / "notebooks" / "01_run_model_day.ipynb", as_version=4
-    )
-    source = "\n".join(
-        cell.source for cell in notebook.cells if cell.cell_type == "code"
-    )
-    assert "from src.workflows.notebook_entrypoints import require_verified_data" in source
-    report = DataContractReport(
-        verified=False, errors=["staging directory is incomplete"]
-    )
-    with pytest.raises(RuntimeError, match="stopped safely before caching or training"):
-        require_verified_data(report)
-    output = capsys.readouterr().out
-    assert "Dataset setup is incomplete or was interrupted." in output
-    assert "notebook 00 will recover or rebuild it" in output
+    """Publishing is a push to a public repository; it never happens by default."""
+    checked = 0
+    for name in sorted(PRIMARY):
+        notebook = nbformat.read(ROOT / "notebooks" / name, as_version=4)
+        parameter = next(
+            cell
+            for cell in notebook.cells
+            if "parameters" in cell.metadata.get("tags", [])
+        )
+        values: dict[str, object] = {}
+        exec(compile(parameter.source, "<parameters>", "exec"), {}, values)
+        if "PUBLISH_RESULTS" not in values:
+            continue
+        checked += 1
+        assert values["PUBLISH_RESULTS"] is False, name
+        assert values["DRY_RUN"] is True, name
+    assert checked, "no notebook exposes PUBLISH_RESULTS"

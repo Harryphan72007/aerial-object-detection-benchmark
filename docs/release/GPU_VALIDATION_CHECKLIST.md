@@ -16,10 +16,12 @@ advisory.
 | Validates | notebook execution order, imports safe on CI, path and config resolution, syntax, notebook structure | environment provisioning, framework import, real model construction, pretrained loading, forward/backward, head class count, feature contract, checkpoint roundtrip |
 | Proves the models work? | **No** | Yes, for the checked contract |
 
-Level 1 runs every notebook with `SMOKE_TEST=1`, where model cells return
-`{"status": "guarded"}`. It is a structural test. **A green Level 1 is compatible
-with every adapter being broken** — it never constructs a model, never loads a
-checkpoint, and never touches CUDA. Only Level 2 answers that question, and it is
+Level 1 runs every notebook with `SMOKE_TEST=1`. The notebook still calls its
+real workflow entry point — that is what proves it is wired to one — but with
+the expensive stage forced off, so the pipeline reports its stage contracts and
+stops. It is a structural test. **A green Level 1 is compatible with every
+adapter being broken** — it never constructs a model, never loads a checkpoint,
+and never touches CUDA. Only Level 2 answers that question, and it is
 deliberately not part of normal CI because it needs a GPU.
 
 ## Run the gate

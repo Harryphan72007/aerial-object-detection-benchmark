@@ -27,6 +27,90 @@ from src.notebook_environment import (
 )
 
 
+BOOTSTRAP_CELL_TEMPLATE = '''\
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+REPOSITORY_URL = "https://github.com/Harryphan72007/aerial-object-detection-benchmark.git"
+REPOSITORY_BRANCH = "main"
+SMOKE_TEST = os.environ.get("SMOKE_TEST", "").lower() in {{"1", "true", "yes"}}
+
+# The only logic a notebook still owns: make `src` importable. Everything after
+# this line - Git state, platform detection, paths, dependency policy - lives in
+# src/notebook_bootstrap.py so all notebooks behave identically.
+_override = os.environ.get("BENCHMARK_REPO_ROOT")
+_candidates = (
+    [Path(_override).expanduser()]
+    if _override
+    else [
+        Path.cwd(),
+        *Path.cwd().parents,
+        Path("/content/aerial-object-detection-benchmark"),
+        Path("/kaggle/working/aerial-object-detection-benchmark"),
+    ]
+)
+REPO_PATH = next(
+    (
+        candidate.resolve()
+        for candidate in _candidates
+        if (candidate / "src" / "notebook_bootstrap.py").is_file()
+    ),
+    None,
+)
+if REPO_PATH is None:
+    _host = (
+        Path("/content")
+        if Path("/content").is_dir()
+        else Path("/kaggle/working")
+        if Path("/kaggle/working").is_dir()
+        else None
+    )
+    if _host is None:
+        raise RuntimeError(
+            "Run this notebook from the repository, or set BENCHMARK_REPO_ROOT "
+            "to an existing clone."
+        )
+    REPO_PATH = (_host / "aerial-object-detection-benchmark").resolve()
+    REPO_PATH.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["git", "clone", "--branch", REPOSITORY_BRANCH, REPOSITORY_URL, str(REPO_PATH)],
+        check=True,
+    )
+sys.path.insert(0, str(REPO_PATH))
+
+from src.notebook_bootstrap import bootstrap_notebook
+
+bootstrap = bootstrap_notebook(
+    REPO_PATH,
+    requirements_file={requirements_file},
+    use_google_drive=USE_GOOGLE_DRIVE,
+    smoke_test=SMOKE_TEST,
+)
+notebook_environment = bootstrap.environment
+REPO_PATH = notebook_environment.repository_root
+DRIVE_ROOT = notebook_environment.artifact_root
+NOTEBOOK_PLATFORM = notebook_environment.platform
+print(bootstrap.summary())
+'''
+
+
+def render_bootstrap_cell(requirements_file: str | None) -> str:
+    """Render the one bootstrap cell every canonical notebook must contain.
+
+    The cell cannot become an import: its whole job is to make ``src``
+    importable, by locating an existing checkout or cloning one. Copying it into
+    each notebook is therefore unavoidable — copying it by hand is not, and hand
+    copying is what let one notebook drift to a different dependency policy than
+    its three siblings. ``scripts/validate_notebooks.py`` asserts every notebook
+    matches this rendering byte for byte.
+    """
+    return BOOTSTRAP_CELL_TEMPLATE.format(
+        requirements_file=repr(requirements_file) if requirements_file else "None"
+    )
+
+
 class RepositoryStateError(RuntimeError):
     """The checkout a notebook was pointed at cannot be used."""
 

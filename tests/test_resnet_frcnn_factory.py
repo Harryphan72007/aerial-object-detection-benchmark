@@ -83,6 +83,17 @@ def test_factory_requires_resolved_existing_checkout(
         factory.build(initializer=_initializer)
 
 
-def test_notebook_exposes_factory_without_constructing_other_models() -> None:
-    source = (ROOT / "notebooks" / "01_run_model_day.ipynb").read_text()
-    assert "RESNET_FACTORY_MODEL_ID" in source
+def test_resnet_notebook_selects_only_the_resnet_family() -> None:
+    """The ResNet notebook must not name another family's model id.
+
+    Which factory runs is decided by the model id the notebook passes, so a
+    notebook mentioning two of them would leave the reader unable to tell which
+    model the run actually builds.
+    """
+    notebooks = sorted((ROOT / "notebooks").glob("*resnet50*.ipynb"))
+    assert notebooks, "no ResNet-50 notebook found"
+    for path in notebooks:
+        source = path.read_text(encoding="utf-8")
+        assert RESNET_FACTORY_MODEL_ID in source, path.name
+        for other in ("faster_rcnn_swin_t", "faster_rcnn_vmamba_t", "rtdetrv2_l"):
+            assert other not in source, f"{path.name} also names {other}"

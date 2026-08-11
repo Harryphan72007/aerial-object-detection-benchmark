@@ -1317,6 +1317,36 @@ Classifications: `KEEP` remains active; `MERGE` was consolidated into a replacem
 - Replacement: —
 - References that must be updated: Resolved by the new README, run guide, tests, and CI.
 
+## Later removals
+
+The decisions above were made against the `e104f29` baseline and are kept as a
+record. Two later rounds removed more; entries above naming a since-deleted file
+as a `Replacement` should be read against this section.
+
+### Retired `lr_controlled_v1` protocol
+
+`lr_controlled_v1` stopped being runnable at PR-11 but kept shipping. Deleted:
+`src/workflows/model_day.py`, `src/training/lr_workflow.py`,
+`src/workflows/notebook_entrypoints.py`, `scripts/benchmark.py`,
+`scripts/lr_search.py`, `scripts/full_dataset_finetune.py`, and notebooks
+`00_bootstrap_colab`, `01_run_model_day`, `02_publish_results`,
+`03_compare_all_models`.
+
+Live pieces moved rather than died: `LRControlledBenchmark.prepare_manifests` →
+`src/training/lr_search.py::ensure_lr_search_manifests`; `model_day._run_module`
+→ `src/subprocess_utils.py::run_module_in_model_runtime`; `scripts.benchmark
+publish` → `scripts/publish_results.py`.
+
+### Twelve operator runs collapsed to five
+
+One notebook per model plus one report replaced the twelve-launch flow. Deleted:
+`00_prepare_visdrone`, `10_hpo_*`–`13_hpo_*`, `20_finetune_*`–`23_finetune_*`,
+`30_evaluate_all_models`, `31_publish_results`. Added: `10_resnet50`,
+`11_swin_t`, `12_vmamba_t`, `13_rtdetrv2`, `30_report`, backed by
+`src/workflows/model_pipeline.py`, `evaluation_runner.py`, `reporting.py`, and
+`adapter_smoke.py`. `07_performance_tiling` moved to `notebooks/optional/`.
+Notebook 00's dataset knobs survive as `scripts/prepare_dataset.py`.
+
 ## Generated artifacts policy
 
 Datasets, archives, checkpoints, optimizer/scheduler states, raw predictions, TensorBoard logs, compiled CUDA extensions, cloned framework trees, credentials, and generated experimental reports are classified **GENERATED** and excluded by `.gitignore`. Only validated lightweight bundles under `results/bundles/` may be tracked.

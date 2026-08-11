@@ -1,450 +1,331 @@
 {
-  "notebook_count": 19,
+  "notebook_count": 9,
   "notebook_root": "notebooks",
   "notebooks": [
     {
       "artifact_references": [
         {
           "cell": 1,
-          "line": 5,
+          "line": 1,
           "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = \"\"  # Empty selects Drive, Kaggle working, or local artifacts."
+          "source": "DATASET_TRACK = \"2class\""
         },
         {
-          "cell": 3,
-          "line": 3,
-          "literals": [],
-          "operations": [],
-          "source": "from scripts.diagnostics.run_diagnostics import build_report"
-        },
-        {
-          "cell": 3,
+          "cell": 1,
           "line": 7,
           "literals": [],
           "operations": [],
-          "source": "artifact_root=DRIVE_ROOT or None,"
+          "source": "# instead of the headline tuned/seed-42 recipe. Six runs, reported separately."
         },
         {
-          "cell": 3,
-          "line": 9,
+          "cell": 2,
+          "line": 57,
           "literals": [
-            "requirements/legacy-colab.txt"
+            "requirements-hpo-colab.txt"
           ],
           "operations": [],
-          "source": "requirements_file=\"requirements/legacy-colab.txt\","
+          "source": "requirements_file='requirements-hpo-colab.txt',"
         },
         {
-          "cell": 3,
-          "line": 17,
+          "cell": 2,
+          "line": 63,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
-          "line": 18,
+          "line": 4,
           "literals": [],
           "operations": [],
-          "source": "paths = initialize_drive_directories(DRIVE_ROOT)"
+          "source": "result = run_model_pipeline("
         },
         {
           "cell": 3,
-          "line": 21,
+          "line": 6,
           "literals": [],
           "operations": [],
-          "source": "print(build_report(repository))"
+          "source": "DRIVE_ROOT,"
+        },
+        {
+          "cell": 3,
+          "line": 8,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK,"
+        },
+        {
+          "cell": 3,
+          "line": 15,
+          "literals": [],
+          "operations": [],
+          "source": "result"
         }
       ],
       "code_cell_count": 3,
       "imports": [
         "os",
         "pathlib",
-        "scripts.diagnostics.run_diagnostics",
-        "src.colab_setup",
         "src.notebook_bootstrap",
+        "src.workflows.model_pipeline",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
-      "path": "notebooks/00_bootstrap_colab.ipynb",
-      "sha256": "c4e4ab8b6e84a4b881fc6852879681eba2556273901d2ff7f590cdf29baec9ce"
+      "path": "notebooks/10_resnet50.ipynb",
+      "sha256": "8bece0558681f69c211d8e8d92cce1c40404a8788106841665f0a33d7339f9b2"
     },
     {
       "artifact_references": [
         {
           "cell": 1,
-          "line": 2,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_SOURCE = \"auto\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [],
-          "operations": [],
-          "source": "from src.data.smoke_dataset import create_smoke_archives"
-        },
-        {
-          "cell": 3,
-          "line": 4,
-          "literals": [
-            "datasets"
-          ],
-          "operations": [],
-          "source": "archive_dir = DRIVE_ROOT / \"datasets\" / \"VisDrone2019-DET\" / \"archives\""
-        },
-        {
-          "cell": 3,
-          "line": 6,
-          "literals": [
-            "datasets",
-            "manifests"
-          ],
-          "operations": [],
-          "source": "smoke_manifest_dir = DRIVE_ROOT / \"datasets\" / \"VisDrone2019-DET\" / \"manifests\""
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [
-            "{split}_archive.json"
-          ],
-          "operations": [],
-          "source": "(smoke_manifest_dir / f\"{split}_archive.json\").unlink(missing_ok=True)"
-        },
-        {
-          "cell": 3,
-          "line": 9,
-          "literals": [
-            "{split}_extraction.json"
-          ],
-          "operations": [],
-          "source": "(smoke_manifest_dir / f\"{split}_extraction.json\").unlink(missing_ok=True)"
-        },
-        {
-          "cell": 3,
-          "line": 13,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import prepare_visdrone"
-        },
-        {
-          "cell": 3,
-          "line": 16,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT,"
-        },
-        {
-          "cell": 3,
-          "line": 17,
-          "literals": [],
-          "operations": [],
-          "source": "dataset_source=DATASET_SOURCE,"
-        },
-        {
-          "cell": 4,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.data.dataset import CocoDetectionRecords, detection_collate"
-        },
-        {
-          "cell": 4,
-          "line": 8,
-          "literals": [
-            "instances_train.json"
-          ],
-          "operations": [],
-          "source": "records = CocoDetectionRecords(Path(summary[\"train_images\"]), coco_root / \"annotations\" / \"instances_train.json\")"
-        },
-        {
-          "cell": 5,
-          "line": 7,
-          "literals": [
-            "Persistent Drive root: {summary['drive_root']}"
-          ],
-          "operations": [],
-          "source": "print(f\"Persistent Drive root: {summary['drive_root']}\")"
-        },
-        {
-          "cell": 5,
-          "line": 16,
-          "literals": [
-            "LR-search manifests: {summary['lr_search_manifests']}"
-          ],
-          "operations": [],
-          "source": "print(f\"LR-search manifests: {summary['lr_search_manifests']}\")"
-        }
-      ],
-      "code_cell_count": 5,
-      "imports": [
-        "json",
-        "matplotlib.patches",
-        "matplotlib.pyplot",
-        "os",
-        "pathlib",
-        "random",
-        "src.data.dataset",
-        "src.data.download",
-        "src.data.smoke_dataset",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "subprocess",
-        "sys",
-        "torch.utils.data"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/00_prepare_visdrone.ipynb",
-      "sha256": "6344dae48d24b45290be8cd541a60dd61c1fc8f8df267b429f270a352897704c"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 13,
-          "literals": [
-            "Benchmark track: {BENCHMARK_TRACK}; outputs: {track_output_root(DRIVE_ROOT, BENCHMARK_TRACK)}"
-          ],
-          "operations": [],
-          "source": "print(f\"Benchmark track: {BENCHMARK_TRACK}; outputs: {track_output_root(DRIVE_ROOT, BENCHMARK_TRACK)}\")"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "paths = resolve_legacy_paths(DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 23,
-          "literals": [
-            "Parameter-group report: diagnostic global-LR mode"
-          ],
-          "operations": [],
-          "source": "print(\"Parameter-group report: diagnostic global-LR mode\")"
-        },
-        {
-          "cell": 3,
-          "line": 49,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(contract.to_dict(), indent=2, default=str))"
-        },
-        {
-          "cell": 3,
-          "line": 52,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT,"
-        },
-        {
-          "cell": 3,
-          "line": 58,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(state, indent=2, default=str))"
-        },
-        {
-          "cell": 3,
-          "line": 61,
-          "literals": [
-            "Dataset setup is incomplete. Run 00_prepare_visdrone.ipynb, then rerun this notebook."
-          ],
-          "operations": [],
-          "source": "\"Dataset setup is incomplete. Run 00_prepare_visdrone.ipynb, then rerun this notebook.\""
-        },
-        {
-          "cell": 4,
-          "line": 2,
-          "literals": [],
-          "operations": [],
-          "source": "result = run_model_day("
-        },
-        {
-          "cell": 4,
-          "line": 4,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT,"
-        },
-        {
-          "cell": 4,
-          "line": 19,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(result, indent=2, default=str))"
-        },
-        {
-          "cell": 5,
           "line": 1,
           "literals": [],
           "operations": [],
-          "source": "if result[\"stage\"] == \"COMPLETE\":"
+          "source": "DATASET_TRACK = \"2class\""
         },
         {
-          "cell": 5,
-          "line": 2,
-          "literals": [
-            "evaluation_paths"
-          ],
-          "operations": [
-            "read"
-          ],
-          "source": "evaluation = json.loads(Path(result[\"evaluation_paths\"][0]).read_text())"
-        },
-        {
-          "cell": 5,
-          "line": 6,
-          "literals": [
-            "Selected LR: {result['selected_lr']}"
-          ],
-          "operations": [],
-          "source": "print(f\"Selected LR: {result['selected_lr']}\")"
-        },
-        {
-          "cell": 5,
+          "cell": 1,
           "line": 7,
-          "literals": [
-            "Final run ID: {result['final_run_id']}"
-          ],
+          "literals": [],
           "operations": [],
-          "source": "print(f\"Final run ID: {result['final_run_id']}\")"
+          "source": "# instead of the headline tuned/seed-42 recipe. Six runs, reported separately."
         },
         {
-          "cell": 5,
+          "cell": 2,
+          "line": 57,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file='requirements-hpo-colab.txt',"
+        },
+        {
+          "cell": 2,
+          "line": 63,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 3,
+          "line": 4,
+          "literals": [],
+          "operations": [],
+          "source": "result = run_model_pipeline("
+        },
+        {
+          "cell": 3,
+          "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT,"
+        },
+        {
+          "cell": 3,
           "line": 8,
-          "literals": [
-            "Best checkpoint: {result['checkpoint_path']}"
-          ],
+          "literals": [],
           "operations": [],
-          "source": "print(f\"Best checkpoint: {result['checkpoint_path']}\")"
+          "source": "DATASET_TRACK,"
         },
         {
-          "cell": 5,
-          "line": 9,
-          "literals": [
-            "mAP50-95: {evaluation.get('mAP')}"
-          ],
-          "operations": [],
-          "source": "print(f\"mAP50-95: {evaluation.get('mAP')}\")"
-        },
-        {
-          "cell": 5,
-          "line": 10,
-          "literals": [
-            "APtiny: {evaluation.get('APtiny')}"
-          ],
-          "operations": [],
-          "source": "print(f\"APtiny: {evaluation.get('APtiny')}\")"
-        },
-        {
-          "cell": 5,
-          "line": 11,
-          "literals": [
-            "Report: {result['report_path']}"
-          ],
-          "operations": [],
-          "source": "print(f\"Report: {result['report_path']}\")"
-        },
-        {
-          "cell": 5,
-          "line": 12,
-          "literals": [
-            "Recommended bundle: {result['recommended_bundle']}"
-          ],
-          "operations": [],
-          "source": "print(f\"Recommended bundle: {result['recommended_bundle']}\")"
-        },
-        {
-          "cell": 5,
-          "line": 13,
-          "literals": [
-            "Next notebook: 02_publish_results.ipynb"
-          ],
-          "operations": [],
-          "source": "print(\"Next notebook: 02_publish_results.ipynb\")"
-        },
-        {
-          "cell": 5,
+          "cell": 3,
           "line": 15,
-          "literals": [
-            "Next stage: {result['stage']}"
-          ],
+          "literals": [],
           "operations": [],
-          "source": "print(result.get(\"message\", f\"Next stage: {result['stage']}\"))"
+          "source": "result"
         }
       ],
-      "code_cell_count": 5,
+      "code_cell_count": 3,
       "imports": [
-        "json",
         "os",
         "pathlib",
-        "src.config.benchmark_tracks",
-        "src.data.contract",
-        "src.data.download",
-        "src.data.local_cache",
-        "src.models.resnet_frcnn.factory",
-        "src.models.rtdetrv2.factory",
-        "src.models.swin_frcnn.factory",
-        "src.models.vmamba_frcnn.factory",
         "src.notebook_bootstrap",
-        "src.pathing.resolver",
-        "src.workflows.model_day",
-        "src.workflows.notebook_entrypoints",
+        "src.workflows.model_pipeline",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
-      "path": "notebooks/01_run_model_day.ipynb",
-      "sha256": "41c038e495304b35dee101ceb521b47b042b636989abfc6d7eceb1f09be5d60e"
+      "path": "notebooks/11_swin_t.ipynb",
+      "sha256": "c8754864eabd4925ca9f7e4496cef03d1b9e5f7c03d113836d3ceb946823f695"
     },
     {
       "artifact_references": [
         {
           "cell": 1,
+          "line": 1,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK = \"2class\""
+        },
+        {
+          "cell": 1,
+          "line": 7,
+          "literals": [],
+          "operations": [],
+          "source": "# instead of the headline tuned/seed-42 recipe. Six runs, reported separately."
+        },
+        {
+          "cell": 2,
+          "line": 57,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file='requirements-hpo-colab.txt',"
+        },
+        {
+          "cell": 2,
+          "line": 63,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 3,
           "line": 4,
+          "literals": [],
+          "operations": [],
+          "source": "result = run_model_pipeline("
+        },
+        {
+          "cell": 3,
+          "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT,"
+        },
+        {
+          "cell": 3,
+          "line": 8,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK,"
+        },
+        {
+          "cell": 3,
+          "line": 15,
+          "literals": [],
+          "operations": [],
+          "source": "result"
+        }
+      ],
+      "code_cell_count": 3,
+      "imports": [
+        "os",
+        "pathlib",
+        "src.notebook_bootstrap",
+        "src.workflows.model_pipeline",
+        "subprocess",
+        "sys"
+      ],
+      "nbformat": 4,
+      "path": "notebooks/12_vmamba_t.ipynb",
+      "sha256": "2244f9ff65c09f6ca1a718bf72c9ce856f04b5267c07b531bb5c589b496bd0d9"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 1,
+          "line": 1,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK = \"2class\""
+        },
+        {
+          "cell": 1,
+          "line": 7,
+          "literals": [],
+          "operations": [],
+          "source": "# instead of the headline tuned/seed-42 recipe. Six runs, reported separately."
+        },
+        {
+          "cell": 2,
+          "line": 57,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file='requirements-hpo-colab.txt',"
+        },
+        {
+          "cell": 2,
+          "line": 63,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+        },
+        {
+          "cell": 3,
+          "line": 4,
+          "literals": [],
+          "operations": [],
+          "source": "result = run_model_pipeline("
+        },
+        {
+          "cell": 3,
+          "line": 6,
+          "literals": [],
+          "operations": [],
+          "source": "DRIVE_ROOT,"
+        },
+        {
+          "cell": 3,
+          "line": 8,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK,"
+        },
+        {
+          "cell": 3,
+          "line": 15,
+          "literals": [],
+          "operations": [],
+          "source": "result"
+        }
+      ],
+      "code_cell_count": 3,
+      "imports": [
+        "os",
+        "pathlib",
+        "src.notebook_bootstrap",
+        "src.workflows.model_pipeline",
+        "subprocess",
+        "sys"
+      ],
+      "nbformat": 4,
+      "path": "notebooks/13_rtdetrv2.ipynb",
+      "sha256": "6e56026a811c8ed1ce2ec8a6b9fe05164230b8bc0da1831fc1cfb0857fa7da37"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 1,
+          "line": 1,
+          "literals": [],
+          "operations": [],
+          "source": "DATASET_TRACK = \"2class\""
+        },
+        {
+          "cell": 1,
+          "line": 2,
+          "literals": [],
+          "operations": [],
+          "source": "# True evaluates any completed run that has no metrics artifact yet."
+        },
+        {
+          "cell": 1,
+          "line": 5,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "# PUBLISH_RESULTS = True and DRY_RUN = False."
+        },
+        {
+          "cell": 1,
+          "line": 6,
           "literals": [],
           "operations": [
             "write"
@@ -453,198 +334,84 @@
         },
         {
           "cell": 2,
-          "line": 64,
+          "line": 57,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "requirements_file='requirements-hpo-colab.txt',"
+        },
+        {
+          "cell": 2,
+          "line": 63,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT = notebook_environment.artifact_root"
         },
         {
           "cell": 3,
-          "line": 4,
-          "literals": [
-            "Legacy publisher accepts controlled artifacts only"
-          ],
-          "operations": [],
-          "source": "raise RuntimeError(\"Legacy publisher accepts controlled artifacts only\")"
-        },
-        {
-          "cell": 3,
-          "line": 6,
+          "line": 1,
           "literals": [],
           "operations": [],
-          "source": "result = {"
+          "source": "from src.workflows.reporting import build_benchmark_report"
         },
         {
           "cell": 3,
-          "line": 8,
-          "literals": [
-            "publish_results"
-          ],
-          "operations": [
-            "write"
-          ],
-          "source": "\"publish_results\": PUBLISH_RESULTS,"
-        },
-        {
-          "cell": 3,
-          "line": 9,
-          "literals": [
-            "Smoke mode validates notebook control flow without requiring completed GPU artifacts."
-          ],
+          "line": 3,
+          "literals": [],
           "operations": [],
-          "source": "\"message\": \"Smoke mode validates notebook control flow without requiring completed GPU artifacts.\","
+          "source": "result = build_benchmark_report("
         },
         {
           "cell": 3,
-          "line": 12,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "from src.workflows.publishing import publish_results"
-        },
-        {
-          "cell": 3,
-          "line": 13,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "result = publish_results("
-        },
-        {
-          "cell": 3,
-          "line": 15,
+          "line": 5,
           "literals": [],
           "operations": [],
           "source": "DRIVE_ROOT,"
         },
         {
           "cell": 3,
-          "line": 17,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "publish_results=PUBLISH_RESULTS,"
-        },
-        {
-          "cell": 3,
-          "line": 20,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(result, indent=2, default=str))"
-        },
-        {
-          "cell": 4,
-          "line": 5,
-          "literals": [
-            "Published bundle: {result['bundle_id']}"
-          ],
-          "operations": [],
-          "source": "print(f\"Published bundle: {result['bundle_id']}\")"
-        },
-        {
-          "cell": 4,
           "line": 6,
-          "literals": [
-            "Pull request: {result.get('pull_request') or 'Open/report manually from experiment-results'}"
-          ],
-          "operations": [],
-          "source": "print(f\"Pull request: {result.get('pull_request') or 'Open/report manually from experiment-results'}\")"
-        }
-      ],
-      "code_cell_count": 4,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.config.benchmark_tracks",
-        "src.notebook_bootstrap",
-        "src.workflows.publishing",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/02_publish_results.ipynb",
-      "sha256": "6ca5bfd4cb130e136b460c60067ee59d72dec0992a708c812df5ad73e3021bb0"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 2,
-          "line": 64,
           "literals": [],
           "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
+          "source": "DATASET_TRACK,"
         },
         {
           "cell": 3,
-          "line": 2,
+          "line": 7,
           "literals": [],
           "operations": [],
-          "source": "result = {\"message\": \"Smoke mode: comparison requires at least two measured completed models.\"}"
+          "source": "# A smoke run reaches the real report but never launches an evaluation"
         },
         {
           "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "result = compare_completed_models(DRIVE_ROOT, benchmark_track=BENCHMARK_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 9,
+          "line": 10,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "print(json.dumps(result, indent=2, default=str))"
+          "source": "publish=PUBLISH_RESULTS and not SMOKE_TEST,"
         },
         {
-          "cell": 4,
-          "line": 3,
+          "cell": 3,
+          "line": 13,
           "literals": [],
           "operations": [],
-          "source": "report = Path(result[\"output\"]) / \"comparison.md\""
-        },
-        {
-          "cell": 4,
-          "line": 4,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "display(Markdown(report.read_text(encoding=\"utf-8\")))"
-        },
-        {
-          "cell": 4,
-          "line": 5,
-          "literals": [
-            "accuracy_latency.png"
-          ],
-          "operations": [],
-          "source": "figure = Path(result[\"output\"]) / \"accuracy_latency.png\""
+          "source": "result"
         }
       ],
-      "code_cell_count": 4,
+      "code_cell_count": 3,
       "imports": [
-        "IPython.display",
-        "json",
         "os",
         "pathlib",
-        "src.config.benchmark_tracks",
         "src.notebook_bootstrap",
-        "src.workflows.comparison",
-        "src.workflows.versioned_comparison",
+        "src.workflows.reporting",
         "subprocess",
         "sys"
       ],
       "nbformat": 4,
-      "path": "notebooks/03_compare_all_models.ipynb",
-      "sha256": "9ebe7ecf1e41be5e1c4a04d8431d57da95e5dc0047d3605d01e8c5c365ecb758"
+      "path": "notebooks/30_report.ipynb",
+      "sha256": "ae99005981c3e1c5e8ec39053a942b66078506beb067952a0b24824f9a737f24"
     },
     {
       "artifact_references": [
@@ -712,823 +479,8 @@
         "sys"
       ],
       "nbformat": 4,
-      "path": "notebooks/07_performance_tiling.ipynb",
+      "path": "notebooks/optional/07_performance_tiling.ipynb",
       "sha256": "a9bac59dddd90f6fdb3a9cc8dc1698fec1277e589e1e6b08a91a9cffa9f3d7cf"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-hpo-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-hpo-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [
-            "dataset_track"
-          ],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID, \"dataset_track\": DATASET_TRACK}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.workflow",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/10_hpo_resnet50.ipynb",
-      "sha256": "ab9091a223d1ff9e814176e84e76c09bc42e91a1aa8309ab7a8fe8e84a9dd101"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-hpo-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-hpo-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [
-            "dataset_track"
-          ],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID, \"dataset_track\": DATASET_TRACK}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.workflow",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/11_hpo_swin_t.ipynb",
-      "sha256": "b6d4013e2cf70a55785682c28a8145ae56a49a4a60fcb511f2600f093330cb3b"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-hpo-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-hpo-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [
-            "dataset_track"
-          ],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID, \"dataset_track\": DATASET_TRACK}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = TwoStageRandomHPO(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.workflow",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/12_hpo_vmamba_t.ipynb",
-      "sha256": "b380593d9b6bf16d3a6456f498a7789253c805a6d00794a6677bd85d3b591594"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-hpo-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-hpo-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [
-            "dataset_track"
-          ],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID, \"dataset_track\": DATASET_TRACK}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = RTDetrOptunaV2(REPO_PATH, DRIVE_ROOT, DATASET_TRACK).run(start_expensive_stage=START_HPO)"
-        },
-        {
-          "cell": 3,
-          "line": 15,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.rtdetr_v2",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/13_hpo_rtdetrv2.ipynb",
-      "sha256": "e0ccc197a498fd6acdaabd8551cd58e8a4f542ace2c3e8d85a4384c8d936367a"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "# matrix - six runs, reported separately from the headline table."
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 3,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 14,
-          "literals": [],
-          "operations": [],
-          "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run("
-        },
-        {
-          "cell": 3,
-          "line": 18,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.final_workflow",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/20_finetune_resnet50.ipynb",
-      "sha256": "e2df0ccba87340467e48a32be4a5964c0e06df4a95c56d64d9ca7def09623422"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "# matrix - six runs, reported separately from the headline table."
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
-        },
-        {
-          "cell": 3,
-          "line": 7,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 12,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 16,
-          "literals": [],
-          "operations": [],
-          "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run("
-        },
-        {
-          "cell": 3,
-          "line": 20,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.final_workflow",
-        "src.models.swin_frcnn.trainer",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/21_finetune_swin_t.ipynb",
-      "sha256": "09610b34d4c5a371e792f160139bf1434d08003ab0ae425ab61ffd62b6bec3ab"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "# matrix - six runs, reported separately from the headline table."
-        },
-        {
-          "cell": 2,
-          "line": 58,
-          "literals": [
-            "requirements-dataset-colab.txt"
-          ],
-          "operations": [],
-          "source": "requirements_file='requirements-dataset-colab.txt',"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
-        },
-        {
-          "cell": 3,
-          "line": 7,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 10,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 12,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 16,
-          "literals": [],
-          "operations": [],
-          "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run("
-        },
-        {
-          "cell": 3,
-          "line": 20,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.final_workflow",
-        "src.models.vmamba_frcnn.trainer",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/22_finetune_vmamba_t.ipynb",
-      "sha256": "362501bdb58b59b4563a82662e07b4f2ffcf7e2977ad5b4fcde5273a0f2d24cf"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 5,
-          "literals": [],
-          "operations": [],
-          "source": "# matrix - six runs, reported separately from the headline table."
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 3,
-          "line": 6,
-          "literals": [],
-          "operations": [],
-          "source": "result = {\"status\": \"guarded\", \"model_id\": MODEL_ID}"
-        },
-        {
-          "cell": 3,
-          "line": 8,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 3,
-          "line": 11,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        },
-        {
-          "cell": 3,
-          "line": 13,
-          "literals": [],
-          "operations": [],
-          "source": "ensure_model_environment(MODEL_ID, REPO_PATH, DRIVE_ROOT)"
-        },
-        {
-          "cell": 3,
-          "line": 17,
-          "literals": [],
-          "operations": [],
-          "source": "result = FinalExperimentWorkflow(REPO_PATH, DRIVE_ROOT, MODEL_ID, DATASET_TRACK).run("
-        },
-        {
-          "cell": 3,
-          "line": 21,
-          "literals": [],
-          "operations": [],
-          "source": "result"
-        }
-      ],
-      "code_cell_count": 3,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.hpo.final_workflow",
-        "src.models.rtdetrv2.trainer",
-        "src.notebook_bootstrap",
-        "src.workflows.dataset_setup",
-        "src.workflows.environment",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/23_finetune_rtdetrv2.ipynb",
-      "sha256": "81ca3dbed753d1770cb820f36e14be5e5484d3f285cabc3c0b2707d17d9c7231"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 1,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 2,
-          "line": 73,
-          "literals": [],
-          "operations": [],
-          "source": "from src.workflows.dataset_setup import require_prepared_dataset_track"
-        },
-        {
-          "cell": 2,
-          "line": 75,
-          "literals": [],
-          "operations": [],
-          "source": "from src.evaluation.versioned import evaluate_prediction_artifact"
-        },
-        {
-          "cell": 2,
-          "line": 78,
-          "literals": [
-            "Legacy evaluator accepts controlled artifacts only"
-          ],
-          "operations": [],
-          "source": "raise RuntimeError(\"Legacy evaluator accepts controlled artifacts only\")"
-        },
-        {
-          "cell": 2,
-          "line": 80,
-          "literals": [],
-          "operations": [],
-          "source": "require_prepared_dataset_track(DRIVE_ROOT, DATASET_TRACK)"
-        }
-      ],
-      "code_cell_count": 2,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.config.benchmark_tracks",
-        "src.evaluation.versioned",
-        "src.notebook_bootstrap",
-        "src.subprocess_utils",
-        "src.workflows.dataset_setup",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/30_evaluate_all_models.ipynb",
-      "sha256": "16e78beeb1a7e0cddf96ed022a8a021f75aa64e6a8afd1b0313226dcabed36b9"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 1,
-          "line": 2,
-          "literals": [],
-          "operations": [],
-          "source": "DATASET_TRACK = \"2class\""
-        },
-        {
-          "cell": 1,
-          "line": 4,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "PUBLISH_RESULTS = False"
-        },
-        {
-          "cell": 2,
-          "line": 64,
-          "literals": [],
-          "operations": [],
-          "source": "DRIVE_ROOT = notebook_environment.artifact_root"
-        },
-        {
-          "cell": 2,
-          "line": 74,
-          "literals": [
-            "Legacy publisher accepts controlled artifacts only"
-          ],
-          "operations": [],
-          "source": "raise RuntimeError(\"Legacy publisher accepts controlled artifacts only\")"
-        }
-      ],
-      "code_cell_count": 2,
-      "imports": [
-        "json",
-        "os",
-        "pathlib",
-        "src.config.benchmark_tracks",
-        "src.notebook_bootstrap",
-        "subprocess",
-        "sys"
-      ],
-      "nbformat": 4,
-      "path": "notebooks/31_publish_results.ipynb",
-      "sha256": "b4f203983490d420bb3e76144049acedb9f404738cf8b744e841032e7a7b3959"
     },
     {
       "artifact_references": [
@@ -1891,72 +843,8 @@
       "sha256": "b0f201d8d5d4b86e493835c1caea12c81f3ece6cdad40f4721ed21156ef88c73"
     }
   ],
-  "python_source_count": 104,
+  "python_source_count": 105,
   "python_sources": [
-    {
-      "artifact_references": [
-        {
-          "cell": 0,
-          "line": 19,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "from src.workflows.publishing import publish_results"
-        },
-        {
-          "cell": 0,
-          "line": 25,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(value, indent=2, default=str))"
-        },
-        {
-          "cell": 0,
-          "line": 30,
-          "literals": [
-            "project_config.yaml"
-          ],
-          "operations": [],
-          "source": "parser.add_argument(\"--config\", default=str(REPOSITORY_ROOT / \"project_config.yaml\"))"
-        },
-        {
-          "cell": 0,
-          "line": 114,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "publish_results("
-        },
-        {
-          "cell": 0,
-          "line": 119,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "publish_results=args.publish_results,"
-        }
-      ],
-      "imports": [
-        "__future__",
-        "argparse",
-        "json",
-        "pathlib",
-        "src.benchmark_status",
-        "src.paths",
-        "src.workflows.comparison",
-        "src.workflows.contract",
-        "src.workflows.model_day",
-        "src.workflows.publishing",
-        "typing"
-      ],
-      "path": "scripts/benchmark.py",
-      "sha256": "64574f56e0cf0f1efbb400bdad979df26b959cf11866837e73d0a907ac73057d"
-    },
     {
       "artifact_references": [
         {
@@ -2625,7 +1513,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 32,
+          "line": 23,
           "literals": [
             "project_config.yaml"
           ],
@@ -2634,34 +1522,7 @@
         },
         {
           "cell": 0,
-          "line": 47,
-          "literals": [
-            "evaluation"
-          ],
-          "operations": [],
-          "source": "/ \"evaluation\""
-        },
-        {
-          "cell": 0,
-          "line": 48,
-          "literals": [
-            "{run['run_id']}__res{IMAGE_SIZE}__metrics.json"
-          ],
-          "operations": [],
-          "source": "/ f\"{run['run_id']}__res{IMAGE_SIZE}__metrics.json\""
-        },
-        {
-          "cell": 0,
-          "line": 77,
-          "literals": [
-            "evaluation"
-          ],
-          "operations": [],
-          "source": "stage=\"evaluation\","
-        },
-        {
-          "cell": 0,
-          "line": 81,
+          "line": 45,
           "literals": [],
           "operations": [
             "write"
@@ -2674,14 +1535,12 @@
         "argparse",
         "json",
         "pathlib",
-        "src.hpo.final_workflow",
         "src.paths",
-        "src.subprocess_utils",
-        "src.workflows.environment",
+        "src.workflows.evaluation_runner",
         "src.workflows.hpo_comparison"
       ],
       "path": "scripts/evaluate_all_models.py",
-      "sha256": "de18e05667d7da41761e4af4805822dbd72a17326059f38586edda6321cd35d0"
+      "sha256": "55daafd73571b54d3eb9a68e46e3a8cc84ad9fc80118e0aee0baf869d980993d"
     },
     {
       "artifact_references": [
@@ -2884,68 +1743,6 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 16,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "from src.utils.serialization import read_yaml"
-        },
-        {
-          "cell": 0,
-          "line": 25,
-          "literals": [
-            "project_config.yaml"
-          ],
-          "operations": [],
-          "source": "parser.add_argument(\"--config\", default=\"project_config.yaml\")"
-        },
-        {
-          "cell": 0,
-          "line": 59,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "selected = read_yaml(selected_path)"
-        },
-        {
-          "cell": 0,
-          "line": 73,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(preview, indent=2))"
-        },
-        {
-          "cell": 0,
-          "line": 90,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(manifest, indent=2))"
-        }
-      ],
-      "imports": [
-        "__future__",
-        "argparse",
-        "json",
-        "pathlib",
-        "src.benchmark_status",
-        "src.paths",
-        "src.training.lr_workflow",
-        "src.utils.serialization",
-        "sys"
-      ],
-      "path": "scripts/full_dataset_finetune.py",
-      "sha256": "aced01d80c0dfea373ced83c814181ebecb3ccaf1fdccc0de8eefcab2a4840cf"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 0,
           "line": 18,
           "literals": [],
           "operations": [
@@ -2988,26 +1785,16 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 55,
-          "literals": [],
-          "operations": [
-            "read",
-            "write"
-          ],
-          "source": "from src.utils.serialization import read_json, write_json"
-        },
-        {
-          "cell": 0,
-          "line": 335,
+          "line": 50,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "write_json(record_path, record)"
+          "source": "from src.utils.serialization import write_json"
         },
         {
           "cell": 0,
-          "line": 339,
+          "line": 261,
           "literals": [],
           "operations": [
             "write"
@@ -3016,21 +1803,12 @@
         },
         {
           "cell": 0,
-          "line": 371,
+          "line": 265,
           "literals": [],
           "operations": [
             "write"
           ],
-          "source": "write_json("
-        },
-        {
-          "cell": 0,
-          "line": 384,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "str(read_json(record_path).get(\"status\"))"
+          "source": "write_json(record_path, record)"
         }
       ],
       "imports": [
@@ -3042,10 +1820,9 @@
         "src.config.benchmark_tracks",
         "src.models.adapter_validation",
         "src.models.registry",
-        "src.subprocess_utils",
         "src.utils.serialization",
         "src.workflows.adapter_gate",
-        "src.workflows.environment",
+        "src.workflows.adapter_smoke",
         "sys",
         "time",
         "torch",
@@ -3053,7 +1830,7 @@
         "typing"
       ],
       "path": "scripts/gpu_adapter_smoke.py",
-      "sha256": "fd01bf1901652dee6bfbbdcd189ab3e391876e1b28fd1e00ac4e873846515c1a"
+      "sha256": "7743022c39ee54bd896df0f9e1d1a6274fe1ef6b0908b50b9f2bc9b5ff84baec"
     },
     {
       "artifact_references": [
@@ -3087,94 +1864,6 @@
       ],
       "path": "scripts/hpo.py",
       "sha256": "4b4dc419f7c03fb551a65c3ae8d1d0b83e5b441d844d56dddb31340d49ac1008"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 0,
-          "line": 17,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "export_candidate_yaml,"
-        },
-        {
-          "cell": 0,
-          "line": 29,
-          "literals": [
-            "project_config.yaml"
-          ],
-          "operations": [],
-          "source": "parser.add_argument(\"--config\", default=\"project_config.yaml\")"
-        },
-        {
-          "cell": 0,
-          "line": 53,
-          "literals": [
-            "{args.model_id}_2class_candidates.yaml"
-          ],
-          "operations": [],
-          "source": "/ f\"{args.model_id}_2class_candidates.yaml\""
-        },
-        {
-          "cell": 0,
-          "line": 55,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "export_candidate_yaml("
-        },
-        {
-          "cell": 0,
-          "line": 69,
-          "literals": [
-            "search_train_seed42.json"
-          ],
-          "operations": [],
-          "source": "\"search_train_seed42.json\""
-        },
-        {
-          "cell": 0,
-          "line": 72,
-          "literals": [
-            "search_validation_seed42.json"
-          ],
-          "operations": [],
-          "source": "\"search_validation_seed42.json\""
-        },
-        {
-          "cell": 0,
-          "line": 78,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(preview, indent=2))"
-        },
-        {
-          "cell": 0,
-          "line": 93,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "print(json.dumps(result, indent=2))"
-        }
-      ],
-      "imports": [
-        "__future__",
-        "argparse",
-        "json",
-        "pathlib",
-        "src.paths",
-        "src.training.lr_search",
-        "src.training.lr_workflow",
-        "sys"
-      ],
-      "path": "scripts/lr_search.py",
-      "sha256": "173a2a06a2076d00bb0dd50b244cbae82dcc5a200d101d5d483d4b66a4f76974"
     },
     {
       "artifact_references": [
@@ -3278,6 +1967,38 @@
       "artifact_references": [
         {
           "cell": 0,
+          "line": 25,
+          "literals": [
+            "project_config.yaml"
+          ],
+          "operations": [],
+          "source": "\"--config\", default=str(REPOSITORY_ROOT / \"project_config.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 52,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "print(json.dumps({**summary, \"archives\": len(summary[\"archives\"])}, indent=2))"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "pathlib",
+        "src.paths",
+        "src.workflows.dataset_setup"
+      ],
+      "path": "scripts/prepare_dataset.py",
+      "sha256": "f3acf6c9db40839e082fbb49af6f474037ff1a56382549537bfef6ddd14970c6"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
           "line": 15,
           "literals": [],
           "operations": [
@@ -3359,6 +2080,66 @@
       ],
       "path": "scripts/profile_model.py",
       "sha256": "449b435a97b8e191369d73a0ec1821a946d69180f4916161e83990a8851413d0"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 16,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.workflows.publishing import publish_results"
+        },
+        {
+          "cell": 0,
+          "line": 26,
+          "literals": [
+            "project_config.yaml"
+          ],
+          "operations": [],
+          "source": "\"--config\", default=str(REPOSITORY_ROOT / \"project_config.yaml\")"
+        },
+        {
+          "cell": 0,
+          "line": 42,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "result = publish_results("
+        },
+        {
+          "cell": 0,
+          "line": 47,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "publish_results=args.publish,"
+        },
+        {
+          "cell": 0,
+          "line": 50,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "print(json.dumps(result, indent=2, default=str))"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "argparse",
+        "json",
+        "pathlib",
+        "src.paths",
+        "src.workflows.contract",
+        "src.workflows.publishing"
+      ],
+      "path": "scripts/publish_results.py",
+      "sha256": "66a45d900ea3a06c127a9500c95c58c5b4b21cea2c71b834770742ebd24d2b5d"
     },
     {
       "artifact_references": [
@@ -3773,7 +2554,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 40,
+          "line": 31,
           "literals": [
             ".notebook-smoke/notebook_smoke_results.json"
           ],
@@ -3782,7 +2563,7 @@
         },
         {
           "cell": 0,
-          "line": 60,
+          "line": 51,
           "literals": [
             "{Path(name).stem}.json"
           ],
@@ -3791,7 +2572,7 @@
         },
         {
           "cell": 0,
-          "line": 80,
+          "line": 71,
           "literals": [],
           "operations": [
             "read"
@@ -3800,7 +2581,7 @@
         },
         {
           "cell": 0,
-          "line": 92,
+          "line": 83,
           "literals": [],
           "operations": [
             "write"
@@ -3809,7 +2590,7 @@
         },
         {
           "cell": 0,
-          "line": 93,
+          "line": 84,
           "literals": [],
           "operations": [
             "write"
@@ -3818,7 +2599,7 @@
         },
         {
           "cell": 0,
-          "line": 147,
+          "line": 138,
           "literals": [],
           "operations": [
             "write"
@@ -3841,7 +2622,7 @@
         "time"
       ],
       "path": "scripts/run_notebook_smoke.py",
-      "sha256": "adece22cfeae214fe55c0da30c3981640f1536d84a5a5b10b02ec0fe7ca9414d"
+      "sha256": "050693cf6e7bb9b6ee9905e1b46f17af0a276980bfeb29119380d00cfd4dce85"
     },
     {
       "artifact_references": [
@@ -4231,7 +3012,16 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 163,
+          "line": 50,
+          "literals": [
+            "requirements-hpo-colab.txt"
+          ],
+          "operations": [],
+          "source": "NOTEBOOK_REQUIREMENTS = \"requirements-hpo-colab.txt\""
+        },
+        {
+          "cell": 0,
+          "line": 156,
           "literals": [],
           "operations": [
             "discover"
@@ -4245,10 +3035,11 @@
         "ast",
         "nbformat",
         "pathlib",
-        "re"
+        "re",
+        "src.notebook_bootstrap"
       ],
       "path": "scripts/validate_notebooks.py",
-      "sha256": "0095cb9de7f9067c06407fc04ee6a6519d705d87cb3ccc7a2e3a901b4a0319f7"
+      "sha256": "6744a4d1eaead336fffa7be837538bce2cbf31a7494a77ebf77cc2d5029c1da8"
     },
     {
       "artifact_references": [
@@ -10628,7 +9419,7 @@
         "urllib.parse"
       ],
       "path": "src/subprocess_utils.py",
-      "sha256": "00a980caba4d5e336525ab9c357b5dc7641b54b108395813bfb716b8726d4bb9"
+      "sha256": "02809db7e0d2dc4213f1eaefdcac824ef0e25c2179a8cb5ea2f27c7768ebd8f0"
     },
     {
       "artifact_references": [
@@ -11023,17 +9814,17 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 24,
+          "line": 25,
           "literals": [],
           "operations": [
             "read",
             "write"
           ],
-          "source": "from src.utils.serialization import read_yaml, write_json, write_yaml"
+          "source": "from src.utils.serialization import read_json, read_yaml, write_json, write_yaml"
         },
         {
           "cell": 0,
-          "line": 154,
+          "line": 155,
           "literals": [
             "checkpoints"
           ],
@@ -11042,7 +9833,7 @@
         },
         {
           "cell": 0,
-          "line": 205,
+          "line": 206,
           "literals": [
             "model.yaml"
           ],
@@ -11051,7 +9842,7 @@
         },
         {
           "cell": 0,
-          "line": 206,
+          "line": 207,
           "literals": [],
           "operations": [
             "read"
@@ -11060,7 +9851,7 @@
         },
         {
           "cell": 0,
-          "line": 247,
+          "line": 248,
           "literals": [
             "pretrained"
           ],
@@ -11069,7 +9860,7 @@
         },
         {
           "cell": 0,
-          "line": 448,
+          "line": 449,
           "literals": [],
           "operations": [
             "read"
@@ -11078,7 +9869,7 @@
         },
         {
           "cell": 0,
-          "line": 449,
+          "line": 450,
           "literals": [],
           "operations": [
             "read"
@@ -11087,7 +9878,7 @@
         },
         {
           "cell": 0,
-          "line": 505,
+          "line": 506,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -11096,7 +9887,7 @@
         },
         {
           "cell": 0,
-          "line": 508,
+          "line": 509,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -11105,7 +9896,7 @@
         },
         {
           "cell": 0,
-          "line": 513,
+          "line": 514,
           "literals": [
             "model_selection_seed42.json"
           ],
@@ -11114,7 +9905,7 @@
         },
         {
           "cell": 0,
-          "line": 519,
+          "line": 520,
           "literals": [
             "final_train_seed42.json"
           ],
@@ -11123,7 +9914,7 @@
         },
         {
           "cell": 0,
-          "line": 525,
+          "line": 526,
           "literals": [
             "official_full_train.json"
           ],
@@ -11132,7 +9923,7 @@
         },
         {
           "cell": 0,
-          "line": 529,
+          "line": 530,
           "literals": [
             "official_validation.json"
           ],
@@ -11141,7 +9932,7 @@
         },
         {
           "cell": 0,
-          "line": 540,
+          "line": 541,
           "literals": [],
           "operations": [
             "write"
@@ -11150,7 +9941,7 @@
         },
         {
           "cell": 0,
-          "line": 567,
+          "line": 568,
           "literals": [
             "split_summary.json"
           ],
@@ -11161,7 +9952,7 @@
         },
         {
           "cell": 0,
-          "line": 578,
+          "line": 579,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -11172,7 +9963,7 @@
         },
         {
           "cell": 0,
-          "line": 579,
+          "line": 580,
           "literals": [],
           "operations": [
             "read"
@@ -11181,7 +9972,7 @@
         },
         {
           "cell": 0,
-          "line": 580,
+          "line": 581,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -11192,7 +9983,7 @@
         },
         {
           "cell": 0,
-          "line": 582,
+          "line": 583,
           "literals": [],
           "operations": [
             "read"
@@ -11201,7 +9992,7 @@
         },
         {
           "cell": 0,
-          "line": 583,
+          "line": 584,
           "literals": [
             "model_selection_seed42.json"
           ],
@@ -11212,7 +10003,7 @@
         },
         {
           "cell": 0,
-          "line": 585,
+          "line": 586,
           "literals": [],
           "operations": [
             "read"
@@ -11221,7 +10012,7 @@
         },
         {
           "cell": 0,
-          "line": 586,
+          "line": 587,
           "literals": [
             "final_train_seed42.json"
           ],
@@ -11232,7 +10023,7 @@
         },
         {
           "cell": 0,
-          "line": 588,
+          "line": 589,
           "literals": [
             "official_full_train.json"
           ],
@@ -11243,7 +10034,7 @@
         },
         {
           "cell": 0,
-          "line": 589,
+          "line": 590,
           "literals": [],
           "operations": [
             "read"
@@ -11252,7 +10043,7 @@
         },
         {
           "cell": 0,
-          "line": 590,
+          "line": 591,
           "literals": [
             "official_validation.json"
           ],
@@ -11263,7 +10054,7 @@
         },
         {
           "cell": 0,
-          "line": 683,
+          "line": 684,
           "literals": [
             "split_summary.json"
           ],
@@ -11272,7 +10063,7 @@
         },
         {
           "cell": 0,
-          "line": 687,
+          "line": 688,
           "literals": [],
           "operations": [
             "read"
@@ -11281,7 +10072,7 @@
         },
         {
           "cell": 0,
-          "line": 694,
+          "line": 695,
           "literals": [],
           "operations": [
             "read"
@@ -11290,7 +10081,92 @@
         },
         {
           "cell": 0,
-          "line": 708,
+          "line": 713,
+          "literals": [
+            "search_train_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"search_train_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 714,
+          "literals": [
+            "search_validation_seed42.json"
+          ],
+          "operations": [],
+          "source": "\"search_validation_seed42.json\","
+        },
+        {
+          "cell": 0,
+          "line": 715,
+          "literals": [
+            "official_full_train.json"
+          ],
+          "operations": [],
+          "source": "\"official_full_train.json\","
+        },
+        {
+          "cell": 0,
+          "line": 716,
+          "literals": [
+            "official_validation.json"
+          ],
+          "operations": [],
+          "source": "\"official_validation.json\","
+        },
+        {
+          "cell": 0,
+          "line": 717,
+          "literals": [
+            "split_summary.json"
+          ],
+          "operations": [],
+          "source": "\"split_summary.json\","
+        },
+        {
+          "cell": 0,
+          "line": 744,
+          "literals": [
+            "instances_train.json"
+          ],
+          "operations": [],
+          "source": "official_train_json = annotations / \"instances_train.json\""
+        },
+        {
+          "cell": 0,
+          "line": 745,
+          "literals": [
+            "instances_val.json"
+          ],
+          "operations": [],
+          "source": "official_validation_json = annotations / \"instances_val.json\""
+        },
+        {
+          "cell": 0,
+          "line": 751,
+          "literals": [
+            "split_summary.json"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "return read_json(manifest_dir / \"split_summary.json\"), \"reused\""
+        },
+        {
+          "cell": 0,
+          "line": 756,
+          "literals": [
+            "{split}_extraction.json"
+          ],
+          "operations": [
+            "read"
+          ],
+          "source": "read_json(paths.dataset_manifests / f\"{split}_extraction.json\")["
+        },
+        {
+          "cell": 0,
+          "line": 777,
           "literals": [
             "official_full_train.json"
           ],
@@ -11301,7 +10177,7 @@
         },
         {
           "cell": 0,
-          "line": 709,
+          "line": 778,
           "literals": [],
           "operations": [
             "read"
@@ -11310,7 +10186,7 @@
         },
         {
           "cell": 0,
-          "line": 710,
+          "line": 779,
           "literals": [
             "official_validation.json"
           ],
@@ -11321,7 +10197,7 @@
         },
         {
           "cell": 0,
-          "line": 714,
+          "line": 783,
           "literals": [
             "split_summary.json"
           ],
@@ -11330,7 +10206,7 @@
         },
         {
           "cell": 0,
-          "line": 716,
+          "line": 785,
           "literals": [],
           "operations": [
             "read"
@@ -11339,7 +10215,7 @@
         },
         {
           "cell": 0,
-          "line": 717,
+          "line": 786,
           "literals": [],
           "operations": [
             "read"
@@ -11348,7 +10224,7 @@
         },
         {
           "cell": 0,
-          "line": 721,
+          "line": 790,
           "literals": [],
           "operations": [
             "read"
@@ -11357,7 +10233,7 @@
         },
         {
           "cell": 0,
-          "line": 722,
+          "line": 791,
           "literals": [],
           "operations": [
             "read"
@@ -11366,7 +10242,7 @@
         },
         {
           "cell": 0,
-          "line": 732,
+          "line": 801,
           "literals": [],
           "operations": [
             "read"
@@ -11375,7 +10251,7 @@
         },
         {
           "cell": 0,
-          "line": 733,
+          "line": 802,
           "literals": [
             "split_summary.json"
           ],
@@ -11386,7 +10262,7 @@
         },
         {
           "cell": 0,
-          "line": 780,
+          "line": 849,
           "literals": [],
           "operations": [
             "read"
@@ -11395,7 +10271,7 @@
         },
         {
           "cell": 0,
-          "line": 784,
+          "line": 853,
           "literals": [
             "final_train_seed42.json"
           ],
@@ -11404,7 +10280,7 @@
         },
         {
           "cell": 0,
-          "line": 785,
+          "line": 854,
           "literals": [
             "model_selection_seed42.json"
           ],
@@ -11413,7 +10289,7 @@
         },
         {
           "cell": 0,
-          "line": 786,
+          "line": 855,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -11422,7 +10298,7 @@
         },
         {
           "cell": 0,
-          "line": 787,
+          "line": 856,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -11431,7 +10307,7 @@
         },
         {
           "cell": 0,
-          "line": 788,
+          "line": 857,
           "literals": [
             "official_full_train.json"
           ],
@@ -11440,7 +10316,7 @@
         },
         {
           "cell": 0,
-          "line": 789,
+          "line": 858,
           "literals": [
             "official_validation.json"
           ],
@@ -11449,7 +10325,7 @@
         },
         {
           "cell": 0,
-          "line": 1003,
+          "line": 1072,
           "literals": [],
           "operations": [
             "write"
@@ -11458,7 +10334,7 @@
         },
         {
           "cell": 0,
-          "line": 1029,
+          "line": 1098,
           "literals": [],
           "operations": [
             "write"
@@ -11467,7 +10343,7 @@
         },
         {
           "cell": 0,
-          "line": 1033,
+          "line": 1102,
           "literals": [],
           "operations": [
             "write"
@@ -11476,7 +10352,7 @@
         },
         {
           "cell": 0,
-          "line": 1067,
+          "line": 1136,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -11485,7 +10361,7 @@
         },
         {
           "cell": 0,
-          "line": 1069,
+          "line": 1138,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -11494,7 +10370,7 @@
         },
         {
           "cell": 0,
-          "line": 1071,
+          "line": 1140,
           "literals": [
             "search_train_seed42.json"
           ],
@@ -11503,7 +10379,7 @@
         },
         {
           "cell": 0,
-          "line": 1073,
+          "line": 1142,
           "literals": [
             "search_validation_seed42.json"
           ],
@@ -11512,7 +10388,7 @@
         },
         {
           "cell": 0,
-          "line": 1093,
+          "line": 1162,
           "literals": [
             "official_full_train.json"
           ],
@@ -11521,7 +10397,7 @@
         },
         {
           "cell": 0,
-          "line": 1094,
+          "line": 1163,
           "literals": [
             "official_validation.json"
           ],
@@ -11530,7 +10406,7 @@
         },
         {
           "cell": 0,
-          "line": 1111,
+          "line": 1180,
           "literals": [],
           "operations": [
             "write"
@@ -11551,677 +10427,14 @@
         "os",
         "pathlib",
         "random",
+        "src.paths",
         "src.training.recipes",
         "src.utils.serialization",
         "statistics",
         "typing"
       ],
       "path": "src/training/lr_search.py",
-      "sha256": "fb5b8f024f7f4a8f99d838564af953eb38fafebed97c6456f868afb0e9be47f0"
-    },
-    {
-      "artifact_references": [
-        {
-          "cell": 0,
-          "line": 35,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "export_candidate_yaml,"
-        },
-        {
-          "cell": 0,
-          "line": 36,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "export_selected_yaml,"
-        },
-        {
-          "cell": 0,
-          "line": 45,
-          "literals": [],
-          "operations": [
-            "read",
-            "write"
-          ],
-          "source": "from src.utils.serialization import read_json, read_yaml, write_json"
-        },
-        {
-          "cell": 0,
-          "line": 49,
-          "literals": [
-            "epoch_metrics.jsonl"
-          ],
-          "operations": [],
-          "source": "path = run_dir / \"epoch_metrics.jsonl\""
-        },
-        {
-          "cell": 0,
-          "line": 53,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "json.loads(line)"
-        },
-        {
-          "cell": 0,
-          "line": 54,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "for line in path.read_text(encoding=\"utf-8\").splitlines()"
-        },
-        {
-          "cell": 0,
-          "line": 60,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "return len(read_json(path).get(\"images\", []))"
-        },
-        {
-          "cell": 0,
-          "line": 108,
-          "literals": [
-            "search_train_seed42.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"search_train_seed42.json\","
-        },
-        {
-          "cell": 0,
-          "line": 109,
-          "literals": [
-            "search_validation_seed42.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"search_validation_seed42.json\","
-        },
-        {
-          "cell": 0,
-          "line": 110,
-          "literals": [
-            "official_full_train.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"official_full_train.json\","
-        },
-        {
-          "cell": 0,
-          "line": 111,
-          "literals": [
-            "official_validation.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"official_validation.json\","
-        },
-        {
-          "cell": 0,
-          "line": 112,
-          "literals": [
-            "split_summary.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"split_summary.json\","
-        },
-        {
-          "cell": 0,
-          "line": 114,
-          "literals": [
-            "instances_train.json"
-          ],
-          "operations": [],
-          "source": "train_json = source / \"instances_train.json\""
-        },
-        {
-          "cell": 0,
-          "line": 115,
-          "literals": [
-            "instances_val.json"
-          ],
-          "operations": [],
-          "source": "validation_json = source / \"instances_val.json\""
-        },
-        {
-          "cell": 0,
-          "line": 123,
-          "literals": [
-            "split_summary.json"
-          ],
-          "operations": [
-            "read"
-          ],
-          "source": "return read_json(self.manifest_dir / \"split_summary.json\")"
-        },
-        {
-          "cell": 0,
-          "line": 138,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "read_json("
-        },
-        {
-          "cell": 0,
-          "line": 139,
-          "literals": [
-            "{split}_extraction.json"
-          ],
-          "operations": [],
-          "source": "self.paths.dataset_manifests / f\"{split}_extraction.json\""
-        },
-        {
-          "cell": 0,
-          "line": 159,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json("
-        },
-        {
-          "cell": 0,
-          "line": 160,
-          "literals": [
-            "model_failure.json"
-          ],
-          "operations": [],
-          "source": "destination / \"model_failure.json\","
-        },
-        {
-          "cell": 0,
-          "line": 199,
-          "literals": [
-            "run_manifest.json"
-          ],
-          "operations": [
-            "read"
-          ],
-          "source": "return read_json(run_dir / \"run_manifest.json\")"
-        },
-        {
-          "cell": 0,
-          "line": 200,
-          "literals": [
-            "last.pth"
-          ],
-          "operations": [],
-          "source": "resume = run_id if (run_dir / \"last.pth\").exists() else None"
-        },
-        {
-          "cell": 0,
-          "line": 208,
-          "literals": [
-            "search_train_seed42.json"
-          ],
-          "operations": [],
-          "source": "train_annotation_override=self.manifest_dir / \"search_train_seed42.json\","
-        },
-        {
-          "cell": 0,
-          "line": 210,
-          "literals": [
-            "search_validation_seed42.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"search_validation_seed42.json\""
-        },
-        {
-          "cell": 0,
-          "line": 241,
-          "literals": [
-            "search_train_seed42.json"
-          ],
-          "operations": [],
-          "source": "train_annotation_override=self.manifest_dir / \"search_train_seed42.json\","
-        },
-        {
-          "cell": 0,
-          "line": 243,
-          "literals": [
-            "search_validation_seed42.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"search_validation_seed42.json\""
-        },
-        {
-          "cell": 0,
-          "line": 257,
-          "literals": [
-            "summary.json"
-          ],
-          "operations": [
-            "read"
-          ],
-          "source": "return read_json(output / \"summary.json\")"
-        },
-        {
-          "cell": 0,
-          "line": 267,
-          "literals": [
-            "calibration.json"
-          ],
-          "operations": [],
-          "source": "output = self.paths.lr_search_checkpoints / model_id / \"calibration.json\""
-        },
-        {
-          "cell": 0,
-          "line": 269,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "return read_json(output)"
-        },
-        {
-          "cell": 0,
-          "line": 277,
-          "literals": [
-            "search_train_seed42.json"
-          ],
-          "operations": [],
-          "source": "train_annotation_override=self.manifest_dir / \"search_train_seed42.json\","
-        },
-        {
-          "cell": 0,
-          "line": 279,
-          "literals": [
-            "search_validation_seed42.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"search_validation_seed42.json\""
-        },
-        {
-          "cell": 0,
-          "line": 300,
-          "literals": [
-            "search_train_seed42.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"search_train_seed42.json\""
-        },
-        {
-          "cell": 0,
-          "line": 303,
-          "literals": [
-            "search_validation_seed42.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"search_validation_seed42.json\""
-        },
-        {
-          "cell": 0,
-          "line": 305,
-          "literals": [
-            "official_full_train.json"
-          ],
-          "operations": [],
-          "source": "full_train_images = _image_count(self.manifest_dir / \"official_full_train.json\")"
-        },
-        {
-          "cell": 0,
-          "line": 307,
-          "literals": [
-            "official_validation.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"official_validation.json\""
-        },
-        {
-          "cell": 0,
-          "line": 321,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(output, calibration)"
-        },
-        {
-          "cell": 0,
-          "line": 336,
-          "literals": [
-            "search_train_seed42.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"search_train_seed42.json\""
-        },
-        {
-          "cell": 0,
-          "line": 362,
-          "literals": [
-            "search_state.json"
-          ],
-          "operations": [],
-          "source": "self.paths.lr_search_checkpoints / model_id / \"search_state.json\""
-        },
-        {
-          "cell": 0,
-          "line": 365,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "state = read_json(state_path)"
-        },
-        {
-          "cell": 0,
-          "line": 384,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(state_path, state)"
-        },
-        {
-          "cell": 0,
-          "line": 488,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json("
-        },
-        {
-          "cell": 0,
-          "line": 492,
-          "literals": [
-            "summary.json"
-          ],
-          "operations": [],
-          "source": "/ \"summary.json\","
-        },
-        {
-          "cell": 0,
-          "line": 505,
-          "literals": [
-            "{model_id}_2class_candidates.yaml"
-          ],
-          "operations": [],
-          "source": "self.repository_config_dir / f\"{model_id}_2class_candidates.yaml\""
-        },
-        {
-          "cell": 0,
-          "line": 507,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "export_candidate_yaml("
-        },
-        {
-          "cell": 0,
-          "line": 537,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(state_path, state)"
-        },
-        {
-          "cell": 0,
-          "line": 552,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json("
-        },
-        {
-          "cell": 0,
-          "line": 553,
-          "literals": [
-            "failure_environment.json"
-          ],
-          "operations": [],
-          "source": "failure_dir / \"failure_environment.json\","
-        },
-        {
-          "cell": 0,
-          "line": 556,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(state_path, state)"
-        },
-        {
-          "cell": 0,
-          "line": 559,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(state_path, state)"
-        },
-        {
-          "cell": 0,
-          "line": 603,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(state_path, state)"
-        },
-        {
-          "cell": 0,
-          "line": 652,
-          "literals": [
-            "{model_id}_2class_selected.yaml"
-          ],
-          "operations": [],
-          "source": "self.repository_config_dir / f\"{model_id}_2class_selected.yaml\""
-        },
-        {
-          "cell": 0,
-          "line": 654,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "selected_payload = export_selected_yaml("
-        },
-        {
-          "cell": 0,
-          "line": 687,
-          "literals": [
-            "{model_id}_2class_search_summary.json"
-          ],
-          "operations": [],
-          "source": "self.repository_config_dir / f\"{model_id}_2class_search_summary.json\""
-        },
-        {
-          "cell": 0,
-          "line": 689,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(summary_path, summary)"
-        },
-        {
-          "cell": 0,
-          "line": 719,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "selected = read_yaml(selected_path)"
-        },
-        {
-          "cell": 0,
-          "line": 740,
-          "literals": [
-            "instances_train.json"
-          ],
-          "operations": [],
-          "source": "self.paths.coco(\"2class\") / \"annotations\" / \"instances_train.json\""
-        },
-        {
-          "cell": 0,
-          "line": 744,
-          "literals": [
-            "official_full_train.json"
-          ],
-          "operations": [
-            "read"
-          ],
-          "source": "for image in read_json(self.manifest_dir / \"official_full_train.json\")["
-        },
-        {
-          "cell": 0,
-          "line": 749,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "int(image[\"id\"]) for image in read_json(source_train)[\"images\"]"
-        },
-        {
-          "cell": 0,
-          "line": 753,
-          "literals": [
-            "official_validation.json"
-          ],
-          "operations": [
-            "read"
-          ],
-          "source": "for image in read_json(self.manifest_dir / \"official_validation.json\")["
-        },
-        {
-          "cell": 0,
-          "line": 818,
-          "literals": [
-            "official_full_train.json"
-          ],
-          "operations": [],
-          "source": "train_annotation_override=self.manifest_dir / \"official_full_train.json\","
-        },
-        {
-          "cell": 0,
-          "line": 820,
-          "literals": [
-            "official_validation.json"
-          ],
-          "operations": [],
-          "source": "self.manifest_dir / \"official_validation.json\""
-        },
-        {
-          "cell": 0,
-          "line": 849,
-          "literals": [
-            "instances_val.json"
-          ],
-          "operations": [],
-          "source": "str(self.data_access.coco_annotation_dir / \"instances_val.json\"),"
-        },
-        {
-          "cell": 0,
-          "line": 856,
-          "literals": [
-            "{run_id}__res{self.settings.image_size}__metrics.json"
-          ],
-          "operations": [],
-          "source": "/ f\"{run_id}__res{self.settings.image_size}__metrics.json\""
-        },
-        {
-          "cell": 0,
-          "line": 858,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "evaluation = read_json(evaluation_path)"
-        },
-        {
-          "cell": 0,
-          "line": 859,
-          "literals": [
-            "final_metrics.json"
-          ],
-          "operations": [
-            "read"
-          ],
-          "source": "training_summary = read_json(run_dir / \"final_metrics.json\")"
-        },
-        {
-          "cell": 0,
-          "line": 860,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json("
-        },
-        {
-          "cell": 0,
-          "line": 861,
-          "literals": [
-            "final_metrics.json"
-          ],
-          "operations": [],
-          "source": "run_dir / \"final_metrics.json\","
-        },
-        {
-          "cell": 0,
-          "line": 862,
-          "literals": [
-            "evaluation"
-          ],
-          "operations": [],
-          "source": "{\"training\": training_summary, \"evaluation\": evaluation},"
-        },
-        {
-          "cell": 0,
-          "line": 871,
-          "literals": [
-            "run_manifest.json"
-          ],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(run_dir / \"run_manifest.json\", manifest)"
-        },
-        {
-          "cell": 0,
-          "line": 872,
-          "literals": [
-            "run_manifest.json"
-          ],
-          "operations": [],
-          "source": "RunRegistry(self.paths).register_run(run_dir / \"run_manifest.json\")"
-        }
-      ],
-      "imports": [
-        "__future__",
-        "dataclasses",
-        "json",
-        "math",
-        "os",
-        "pathlib",
-        "shutil",
-        "src.benchmark_status",
-        "src.data.local_cache",
-        "src.git_utils",
-        "src.models.registry",
-        "src.paths",
-        "src.subprocess_utils",
-        "src.training.checkpointing",
-        "src.training.lr_search",
-        "src.training.trainer",
-        "src.utils.environment",
-        "src.utils.serialization",
-        "subprocess",
-        "typing"
-      ],
-      "path": "src/training/lr_workflow.py",
-      "sha256": "128c09a538829bd075c6bd482e8619847d774b6cc1151d4ba487f9ad3417bcc6"
+      "sha256": "6206751d05efa886d311583323d7970024dcd67cbd3145875c7c799610725d91"
     },
     {
       "artifact_references": [
@@ -12967,6 +11180,51 @@
       "artifact_references": [
         {
           "cell": 0,
+          "line": 26,
+          "literals": [],
+          "operations": [
+            "read",
+            "write"
+          ],
+          "source": "from src.utils.serialization import read_json, write_json"
+        },
+        {
+          "cell": 0,
+          "line": 144,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "write_json("
+        },
+        {
+          "cell": 0,
+          "line": 157,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "return dict(read_json(record_path))"
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.config.benchmark_tracks",
+        "src.subprocess_utils",
+        "src.utils.serialization",
+        "src.workflows.adapter_gate",
+        "src.workflows.environment",
+        "traceback",
+        "typing"
+      ],
+      "path": "src/workflows/adapter_smoke.py",
+      "sha256": "ea095cfa39ebaea75a5b008d6160d7e0c4b858d6c5c9cfe41574dd89be411f8c"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
           "line": 13,
           "literals": [],
           "operations": [
@@ -13102,7 +11360,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 13,
+          "line": 12,
           "literals": [],
           "operations": [
             "write"
@@ -13111,7 +11369,7 @@
         },
         {
           "cell": 0,
-          "line": 33,
+          "line": 32,
           "literals": [
             "instances_train.json"
           ],
@@ -13120,7 +11378,7 @@
         },
         {
           "cell": 0,
-          "line": 34,
+          "line": 33,
           "literals": [
             "instances_val.json"
           ],
@@ -13129,25 +11387,7 @@
         },
         {
           "cell": 0,
-          "line": 57,
-          "literals": [
-            "instances_train.json"
-          ],
-          "operations": [],
-          "source": "official_train_json=annotations / \"instances_train.json\","
-        },
-        {
-          "cell": 0,
-          "line": 58,
-          "literals": [
-            "instances_val.json"
-          ],
-          "operations": [],
-          "source": "official_validation_json=annotations / \"instances_val.json\","
-        },
-        {
-          "cell": 0,
-          "line": 110,
+          "line": 91,
           "literals": [
             "{split}_extraction.json"
           ],
@@ -13156,7 +11396,7 @@
         },
         {
           "cell": 0,
-          "line": 164,
+          "line": 142,
           "literals": [
             "dataset_setup_summary.json"
           ],
@@ -13174,12 +11414,11 @@
         "src.data.download",
         "src.paths",
         "src.training.lr_search",
-        "src.training.lr_workflow",
         "src.utils.serialization",
         "typing"
       ],
       "path": "src/workflows/dataset_setup.py",
-      "sha256": "844a41d6bb4a01cced22a4c1860a7474bf0c7d455dd60e89ad88bc390f298cad"
+      "sha256": "2a86b4c135fffa7d815786bb01db8005a90532cd06a64b3c120c659c89bf6e38"
     },
     {
       "artifact_references": [
@@ -13266,6 +11505,31 @@
       ],
       "path": "src/workflows/environment.py",
       "sha256": "5d54249ba015b764bfb81dae697ec90e95def6e6c70545e88a3f8bdb4dc4e396"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 34,
+          "literals": [
+            "{run['run_id']}__res{IMAGE_SIZE}__metrics.json"
+          ],
+          "operations": [],
+          "source": "metrics = paths.evaluation / f\"{run['run_id']}__res{IMAGE_SIZE}__metrics.json\""
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.hpo.final_workflow",
+        "src.paths",
+        "src.subprocess_utils",
+        "src.workflows.environment",
+        "src.workflows.hpo_comparison",
+        "typing"
+      ],
+      "path": "src/workflows/evaluation_runner.py",
+      "sha256": "e3b26a1804c131df732e50ba10ee59dd6bb2d0e3c9eb6a82f6323fadb27757d6"
     },
     {
       "artifact_references": [
@@ -13783,400 +12047,56 @@
           "line": 25,
           "literals": [],
           "operations": [
-            "read",
-            "write"
+            "read"
           ],
-          "source": "from src.utils.serialization import read_json, read_yaml, write_json"
+          "source": "from src.utils.serialization import read_json"
         },
         {
           "cell": 0,
-          "line": 40,
+          "line": 47,
           "literals": [
-            "EVALUATION"
+            "evaluation"
           ],
           "operations": [],
-          "source": "EVALUATION = \"EVALUATION\""
+          "source": "\"evaluation\","
         },
         {
           "cell": 0,
-          "line": 41,
-          "literals": [
-            "PROFILING"
-          ],
-          "operations": [],
-          "source": "PROFILING = \"PROFILING\""
-        },
-        {
-          "cell": 0,
-          "line": 80,
-          "literals": [
-            "instances_train.json"
-          ],
-          "operations": [],
-          "source": "paths.coco(\"2class\") / \"annotations\" / \"instances_train.json\","
-        },
-        {
-          "cell": 0,
-          "line": 81,
-          "literals": [
-            "instances_val.json"
-          ],
-          "operations": [],
-          "source": "paths.coco(\"2class\") / \"annotations\" / \"instances_val.json\","
-        },
-        {
-          "cell": 0,
-          "line": 92,
+          "line": 85,
           "literals": [],
           "operations": [
             "read"
           ],
-          "source": "rows = read_json(path)"
+          "source": "stored = read_json(record_path) if record_path.is_file() else None"
         },
         {
           "cell": 0,
-          "line": 102,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "profile = read_json(path)"
-        },
-        {
-          "cell": 0,
-          "line": 141,
+          "line": 209,
           "literals": [
-            "adapter_smoke.json"
+            "evaluation"
           ],
           "operations": [],
-          "source": "gate_path = paths.lr_search_checkpoints / model_id / \"adapter_smoke.json\""
-        },
-        {
-          "cell": 0,
-          "line": 142,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "gate = read_json(gate_path) if gate_path.is_file() else {}"
-        },
-        {
-          "cell": 0,
-          "line": 149,
-          "literals": [
-            "{run_id}__profile.json"
-          ],
-          "operations": [],
-          "source": "profile_path = paths.evaluation / f\"{run_id}__profile.json\" if run_id else None"
-        },
-        {
-          "cell": 0,
-          "line": 156,
-          "literals": [
-            "final_results.json"
-          ],
-          "operations": [],
-          "source": "and _report_contains_run(model_report_dir / \"final_results.json\", run_id)"
-        },
-        {
-          "cell": 0,
-          "line": 186,
-          "literals": [
-            "instances_train.json"
-          ],
-          "operations": [],
-          "source": "\"dataset_train\": str(paths.coco(\"2class\") / \"annotations\" / \"instances_train.json\"),"
-        },
-        {
-          "cell": 0,
-          "line": 188,
-          "literals": [
-            "instances_val.json"
-          ],
-          "operations": [],
-          "source": "paths.coco(\"2class\") / \"annotations\" / \"instances_val.json\""
-        },
-        {
-          "cell": 0,
-          "line": 194,
-          "literals": [
-            "search_state.json"
-          ],
-          "operations": [],
-          "source": "paths.lr_search_checkpoints / model_id / \"search_state.json\""
-        },
-        {
-          "cell": 0,
-          "line": 218,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "data = read_json(source)"
-        },
-        {
-          "cell": 0,
-          "line": 227,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(destination, subset)"
-        },
-        {
-          "cell": 0,
-          "line": 241,
-          "literals": [
-            "adapter_smoke.json"
-          ],
-          "operations": [],
-          "source": "gate_path = workflow.paths.lr_search_checkpoints / model_id / \"adapter_smoke.json\""
-        },
-        {
-          "cell": 0,
-          "line": 242,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "gate = read_json(gate_path) if gate_path.is_file() else {}"
-        },
-        {
-          "cell": 0,
-          "line": 254,
-          "literals": [
-            "search_train_seed42.json"
-          ],
-          "operations": [],
-          "source": "workflow.manifest_dir / \"search_train_seed42.json\","
-        },
-        {
-          "cell": 0,
-          "line": 255,
-          "literals": [
-            "train.json"
-          ],
-          "operations": [],
-          "source": "smoke_root / \"train.json\","
-        },
-        {
-          "cell": 0,
-          "line": 258,
-          "literals": [
-            "search_validation_seed42.json"
-          ],
-          "operations": [],
-          "source": "workflow.manifest_dir / \"search_validation_seed42.json\","
-        },
-        {
-          "cell": 0,
-          "line": 259,
-          "literals": [
-            "val.json"
-          ],
-          "operations": [],
-          "source": "smoke_root / \"val.json\","
-        },
-        {
-          "cell": 0,
-          "line": 290,
-          "literals": [
-            "last.pth"
-          ],
-          "operations": [],
-          "source": "checkpoint = run_dir / \"last.pth\""
-        },
-        {
-          "cell": 0,
-          "line": 292,
-          "literals": [
-            "Adapter smoke did not save last.pth"
-          ],
-          "operations": [],
-          "source": "raise RuntimeError(\"Adapter smoke did not save last.pth\")"
-        },
-        {
-          "cell": 0,
-          "line": 300,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "adapter.load_model(checkpoint, model_config)"
-        },
-        {
-          "cell": 0,
-          "line": 319,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(gate_path, gate)"
-        },
-        {
-          "cell": 0,
-          "line": 338,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(gate_path, gate)"
-        },
-        {
-          "cell": 0,
-          "line": 346,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(gate_path, gate)"
-        },
-        {
-          "cell": 0,
-          "line": 444,
-          "literals": [
-            "adapter_smoke.json"
-          ],
-          "operations": [],
-          "source": "paths.lr_search_checkpoints / options.model_id / \"adapter_smoke.json\""
-        },
-        {
-          "cell": 0,
-          "line": 452,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json("
-        },
-        {
-          "cell": 0,
-          "line": 490,
-          "literals": [
-            "search_state.json"
-          ],
-          "operations": [],
-          "source": "/ \"search_state.json\""
-        },
-        {
-          "cell": 0,
-          "line": 493,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "read_json(search_state_path) if search_state_path.is_file() else {}"
-        },
-        {
-          "cell": 0,
-          "line": 504,
-          "literals": [
-            "adapter_smoke.json"
-          ],
-          "operations": [],
-          "source": "/ \"adapter_smoke.json\""
-        },
-        {
-          "cell": 0,
-          "line": 506,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "gate = read_json(gate_path)"
-        },
-        {
-          "cell": 0,
-          "line": 509,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(gate_path, gate)"
-        },
-        {
-          "cell": 0,
-          "line": 553,
-          "literals": [
-            "adapter_smoke.json"
-          ],
-          "operations": [],
-          "source": "/ \"adapter_smoke.json\""
-        },
-        {
-          "cell": 0,
-          "line": 555,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "gate = read_json(gate_path)"
-        },
-        {
-          "cell": 0,
-          "line": 558,
-          "literals": [],
-          "operations": [
-            "write"
-          ],
-          "source": "write_json(gate_path, gate)"
-        },
-        {
-          "cell": 0,
-          "line": 588,
-          "literals": [
-            "instances_val.json"
-          ],
-          "operations": [],
-          "source": "str(data_access.coco_annotation_dir / \"instances_val.json\"),"
-        },
-        {
-          "cell": 0,
-          "line": 612,
-          "literals": [],
-          "operations": [
-            "read"
-          ],
-          "source": "read_json(path)"
-        },
-        {
-          "cell": 0,
-          "line": 614,
-          "literals": [
-            "{state['final_run_id']}__res*__metrics.json"
-          ],
-          "operations": [
-            "discover"
-          ],
-          "source": "paths.evaluation.glob(f\"{state['final_run_id']}__res*__metrics.json\")"
+          "source": "\"evaluation\","
         }
       ],
       "imports": [
         "__future__",
-        "dataclasses",
-        "enum",
-        "json",
-        "os",
         "pathlib",
-        "src.benchmark_status",
-        "src.data.contract",
-        "src.data.image_files",
-        "src.data.local_cache",
-        "src.evaluation.report_generator",
+        "src.config.benchmark_tracks",
+        "src.hpo.final_workflow",
+        "src.hpo.workflow",
         "src.models.registry",
         "src.paths",
-        "src.subprocess_utils",
-        "src.training.checkpointing",
-        "src.training.lr_search",
-        "src.training.lr_workflow",
         "src.utils.serialization",
         "src.workflows.adapter_gate",
-        "src.workflows.contract",
+        "src.workflows.adapter_smoke",
+        "src.workflows.dataset_setup",
         "src.workflows.environment",
+        "src.workflows.evaluation_runner",
         "typing"
       ],
-      "path": "src/workflows/model_day.py",
-      "sha256": "0b623cbef8962057ac7571b168af684731266b423b6faa1a9b13dc7a1208399d"
+      "path": "src/workflows/model_pipeline.py",
+      "sha256": "186a88cdf95287fd20b3e2d4480af0803ad26e1beb3957a45b3a5eeb6f70081b"
     },
     {
       "artifact_references": [
@@ -14425,6 +12345,91 @@
       ],
       "path": "src/workflows/publishing.py",
       "sha256": "d304a8d7037c4912fb1d99f636d3dac55c40e08b047624c75761d5efe659d5fe"
+    },
+    {
+      "artifact_references": [
+        {
+          "cell": 0,
+          "line": 18,
+          "literals": [],
+          "operations": [
+            "read"
+          ],
+          "source": "from src.utils.serialization import read_json"
+        },
+        {
+          "cell": 0,
+          "line": 23,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "from src.workflows.publishing import publish_results"
+        },
+        {
+          "cell": 0,
+          "line": 28,
+          "literals": [
+            "*__metrics.json"
+          ],
+          "operations": [
+            "discover",
+            "read"
+          ],
+          "source": "read_json(path) for path in sorted(paths.evaluation.glob(\"*__metrics.json\"))"
+        },
+        {
+          "cell": 0,
+          "line": 85,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "publish_results("
+        },
+        {
+          "cell": 0,
+          "line": 90,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "publish_results=True,"
+        },
+        {
+          "cell": 0,
+          "line": 98,
+          "literals": [
+            "evaluation"
+          ],
+          "operations": [],
+          "source": "\"evaluation\": evaluation,"
+        },
+        {
+          "cell": 0,
+          "line": 104,
+          "literals": [],
+          "operations": [
+            "write"
+          ],
+          "source": "\"publish_status\": \"PUBLISHED\" if published else \"NOT_PUBLISHED\","
+        }
+      ],
+      "imports": [
+        "__future__",
+        "pathlib",
+        "src.evaluation.report_generator",
+        "src.paths",
+        "src.utils.serialization",
+        "src.workflows.comparison",
+        "src.workflows.contract",
+        "src.workflows.evaluation_runner",
+        "src.workflows.hpo_comparison",
+        "src.workflows.publishing",
+        "typing"
+      ],
+      "path": "src/workflows/reporting.py",
+      "sha256": "fe37f9e42762f027023c52945673ea724311c797553fd9596a38eca14ea75043"
     },
     {
       "artifact_references": [

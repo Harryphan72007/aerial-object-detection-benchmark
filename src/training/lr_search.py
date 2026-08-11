@@ -14,6 +14,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
 
+from src.paths import ProjectPaths
 from src.training.recipes import (
     RTDETR_BASELINE_LR,
     RTDETR_OPTIMIZER_TYPE,
@@ -21,7 +22,7 @@ from src.training.recipes import (
     RTDETR_WARMUP_EPOCHS,
     RTDETR_WEIGHT_DECAY,
 )
-from src.utils.serialization import read_yaml, write_json, write_yaml
+from src.utils.serialization import read_json, read_yaml, write_json, write_yaml
 
 EXPERIMENT_NAME = "visdrone_lr_controlled_benchmark"
 EXPERIMENT_DISPLAY_NAME = "VisDrone Learning-Rate-Controlled Architecture Benchmark"
@@ -698,6 +699,74 @@ def validate_lr_search_manifests(
     if not all(checks.values()):
         raise AssertionError(f"invalid LR-search manifests: {checks}")
     return checks
+
+
+def lr_search_manifests_current(
+    manifest_dir: str | Path,
+    *,
+    official_train_json: str | Path,
+    official_validation_json: str | Path,
+) -> bool:
+    """Whether the persisted manifests still describe this exact dataset."""
+    root = Path(manifest_dir)
+    required = (
+        "search_train_seed42.json",
+        "search_validation_seed42.json",
+        "official_full_train.json",
+        "official_validation.json",
+        "split_summary.json",
+    )
+    if not all((root / name).is_file() for name in required):
+        return False
+    try:
+        validate_lr_search_manifests(
+            root,
+            official_train_json=official_train_json,
+            official_validation_json=official_validation_json,
+        )
+    except (AssertionError, FileNotFoundError, KeyError, json.JSONDecodeError, ValueError):
+        return False
+    return True
+
+
+def ensure_lr_search_manifests(
+    paths: ProjectPaths, *, seed: int = 42, force: bool = False
+) -> tuple[dict[str, Any], str]:
+    """Build the held-out split manifests once and reuse them while they verify.
+
+    These manifests fix which images the search may see and which are held out
+    for model selection, so rebuilding them when they are already valid would
+    silently move the held-out split under a run that has already started.
+    Returns the split summary and whether it was ``reused`` or ``created``.
+    """
+    manifest_dir = paths.lr_search_manifests
+    annotations = paths.coco("2class") / "annotations"
+    official_train_json = annotations / "instances_train.json"
+    official_validation_json = annotations / "instances_val.json"
+    if not force and lr_search_manifests_current(
+        manifest_dir,
+        official_train_json=official_train_json,
+        official_validation_json=official_validation_json,
+    ):
+        return read_json(manifest_dir / "split_summary.json"), "reused"
+    # The archive identity travels into the manifests so a rebuilt dataset can
+    # never be mistaken for the one a stored manifest was cut from.
+    source_archive_identities = {
+        split: str(
+            read_json(paths.dataset_manifests / f"{split}_extraction.json")[
+                "archive_sha256"
+            ]
+        )
+        for split in ("train", "val")
+    }
+    summary = create_lr_search_manifests(
+        official_train_json,
+        official_validation_json,
+        manifest_dir,
+        seed=seed,
+        source_archive_identities=source_archive_identities,
+    )
+    return summary, "created"
 
 
 def assert_final_training_uses_official_train(

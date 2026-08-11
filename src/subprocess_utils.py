@@ -263,6 +263,29 @@ def python_module_command(
     return [executable, "-m", module, *(str(value) for value in arguments)]
 
 
+def run_module_in_model_runtime(
+    repo_root: str | Path,
+    module: str,
+    *arguments: object,
+    environment_name: str = "model runtime",
+) -> None:
+    """Run a repository module inside the selected model's isolated interpreter.
+
+    The notebook kernel does not have MMDetection, VMamba, or the pinned
+    Transformers stack installed, so every stage that touches a real model is
+    launched as a module in the model runtime rather than imported here.
+    """
+    command = python_module_command(module, *arguments)
+    run_checked(
+        command,
+        cwd=Path(repo_root),
+        env=build_model_subprocess_environment(),
+        environment_name=environment_name,
+        stage=module,
+        python_executable=command[0],
+    )
+
+
 def build_model_subprocess_environment(
     parent: Mapping[str, str] | None = None,
     *,

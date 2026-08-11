@@ -19,11 +19,12 @@ for the command and
 [`docs/release/HOSTED_GPU_RUNBOOK.md`](release/HOSTED_GPU_RUNBOOK.md) for the
 per-model Colab/Kaggle order.
 
-> **Retired:** `lr_controlled_v1` (notebooks 01 → 02 → 03) is **not** runnable.
-> `run_model_day` raises `RetiredProtocolError` if a new run is started. Notebooks
-> 01–03 remain in the repository only so historical artifacts stay readable. Any
-> older instruction to run notebook 01 with `RUN_MODE="environment"` as an
-> integration gate is obsolete; that gate is now
+> **Retired and deleted:** `lr_controlled_v1` (notebooks 01 → 02 → 03) no longer
+> ships. Its notebooks, `src/workflows/model_day.py`, and
+> `src/training/lr_workflow.py` were removed once the protocol stopped being
+> runnable; artifacts it produced remain readable through the versioned
+> evaluator. Any older instruction to run notebook 01 with
+> `RUN_MODE="environment"` as an integration gate is obsolete; that gate is now
 > `python -m scripts.gpu_adapter_smoke`.
 
 ## Prepare once

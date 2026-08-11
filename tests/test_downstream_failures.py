@@ -5,8 +5,6 @@ import pytest
 from scripts.evaluate import require_successful_evaluation
 from scripts.profile_model import required_profile_succeeded
 from src.data.image_files import first_supported_image, supported_image_files
-from src.utils.serialization import write_json
-from src.workflows.model_day import _profile_complete
 
 
 def test_evaluation_failures_produce_nonzero_error() -> None:
@@ -35,23 +33,6 @@ def test_required_batch_one_profile_controls_completion(
     profiles: list[dict], expected: bool
 ) -> None:
     assert required_profile_succeeded(profiles) is expected
-
-
-def test_failed_profile_json_remains_incomplete(tmp_path: Path) -> None:
-    profile_path = tmp_path / "profile.json"
-    write_json(
-        profile_path,
-        {"status": "failed", "profiles": [{"batch_size": 1, "status": "failed"}]},
-    )
-    assert not _profile_complete(profile_path)
-    write_json(
-        profile_path,
-        {
-            "status": "completed",
-            "profiles": [{"batch_size": 1, "status": "completed"}],
-        },
-    )
-    assert _profile_complete(profile_path)
 
 
 def test_image_discovery_filters_extensions_and_is_deterministic(

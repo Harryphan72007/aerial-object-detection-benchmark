@@ -337,17 +337,17 @@ def test_active_model_and_epoch_contracts_remain_bounded() -> None:
         assert model_id in (
             ROOT / "src" / "hpo" / "search_spaces.py"
         ).read_text(encoding="utf-8")
-    model_day = json.loads(
-        (ROOT / "notebooks" / "01_run_model_day.ipynb").read_text(encoding="utf-8")
-    )
-    parameters = "".join(model_day["cells"][1]["source"])
-    assert 'MODEL_ID = "faster_rcnn_resnet50"' in parameters
-    for name, flag in (
-        ("13_hpo_rtdetrv2.ipynb", "START_HPO = False"),
-        ("23_finetune_rtdetrv2.ipynb", "START_FINETUNING = False"),
-    ):
-        notebook = json.loads((ROOT / "notebooks" / name).read_text(encoding="utf-8"))
-        assert flag in "".join(notebook["cells"][1]["source"])
+    notebooks = sorted((ROOT / "notebooks").glob("*rtdetrv2*.ipynb"))
+    assert notebooks, "no RT-DETRv2 notebook found"
+    for path in notebooks:
+        notebook = json.loads(path.read_text(encoding="utf-8"))
+        parameters = "".join(notebook["cells"][1]["source"])
+        started = [
+            line
+            for line in parameters.splitlines()
+            if line.startswith("START") and "False" not in line
+        ]
+        assert not started, f"{path.name} ships an expensive stage enabled: {started}"
 
 
 def test_readme_model_table_matches_controlled_model_ids() -> None:

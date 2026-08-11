@@ -28,11 +28,7 @@ TRANSIENT_CELL_METADATA = {
     "scrolled",
 }
 CANONICAL_NOTEBOOKS = {
-    "00_bootstrap_colab.ipynb",
     "00_prepare_visdrone.ipynb",
-    "01_run_model_day.ipynb",
-    "02_publish_results.ipynb",
-    "03_compare_all_models.ipynb",
     "07_performance_tiling.ipynb",
     "10_hpo_resnet50.ipynb",
     "11_hpo_swin_t.ipynb",
@@ -46,7 +42,6 @@ CANONICAL_NOTEBOOKS = {
     "31_publish_results.ipynb",
 }
 MODEL_ENVIRONMENT_NOTEBOOKS = {
-    "01_run_model_day.ipynb",
     "10_hpo_resnet50.ipynb",
     "11_hpo_swin_t.ipynb",
     "12_hpo_vmamba_t.ipynb",

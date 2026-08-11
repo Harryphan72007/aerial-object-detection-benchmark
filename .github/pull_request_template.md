@@ -24,8 +24,7 @@ GPU validation evidence/defer reason:
 ### Reproduction
 
 ```text
-python -m scripts.benchmark status
-python -m scripts.benchmark publish --model-id <MODEL_ID> --dry-run
+python -m scripts.publish_results --model-id <MODEL_ID>
 python -m scripts.validate_results --repo-results results/
 ```
 

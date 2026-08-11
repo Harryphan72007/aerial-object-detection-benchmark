@@ -23,6 +23,6 @@ an existing branch is fetched and fast-forwarded. Force-push is never used.
 Dry-run needs no authentication and leaves Git unchanged:
 
 ```bash
-python -m scripts.benchmark publish --model-id rtdetrv2_l --dry-run
+python -m scripts.publish_results --model-id rtdetrv2_l
 python -m scripts.validate_results --repo-results results/
 ```

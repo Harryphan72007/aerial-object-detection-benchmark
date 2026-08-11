@@ -59,17 +59,25 @@ def test_clone_branch_tag_commit_and_refuse_dirty_update(tmp_path: Path) -> None
         clone_or_checkout_repository(str(remote), clone, "main", "branch")
 
 
-def test_bootstrap_notebook_is_cross_platform_clean_and_never_starts_training() -> None:
-    notebook = nbformat.read(ROOT / "notebooks" / "00_bootstrap_colab.ipynb", as_version=4)
-    nbformat.validate(notebook)
-    code = "\n".join(cell.source for cell in notebook.cells if cell.cell_type == "code")
-    for cell in notebook.cells:
-        if cell.cell_type == "code":
-            assert cell.execution_count is None
-            assert cell.outputs == []
-    assert "checkout_repository_ref" in code
-    assert "bootstrap_notebook" in code
-    assert "IN_KAGGLE" in code
-    assert "run_diagnostics" in code
-    assert "trainer" not in code.lower()
-    assert "START_EXPENSIVE_STAGE" not in code
+def test_notebooks_are_cross_platform_clean_and_never_start_training_by_default() -> None:
+    """Opening and running a notebook must never begin a GPU run on its own.
+
+    Every canonical notebook bootstraps the same way and gates its expensive
+    stage behind a flag that ships False, so an operator who runs all cells to
+    inspect the contract cannot accidentally consume a GPU-day.
+    """
+    from scripts.validate_notebooks import CANONICAL_NOTEBOOKS
+
+    for name in sorted(CANONICAL_NOTEBOOKS):
+        notebook = nbformat.read(ROOT / "notebooks" / name, as_version=4)
+        nbformat.validate(notebook)
+        code = "\n".join(
+            cell.source for cell in notebook.cells if cell.cell_type == "code"
+        )
+        for cell in notebook.cells:
+            if cell.cell_type == "code":
+                assert cell.execution_count is None, name
+                assert cell.outputs == [], name
+        assert "bootstrap_notebook" in code, name
+        for flag in ("START", "START_HPO", "START_FINETUNING", "PUBLISH_RESULTS"):
+            assert f"{flag} = True" not in code, f"{name} ships {flag} enabled"

@@ -37,21 +37,22 @@ def test_every_model_has_hpo_and_final_smoke_entrypoints() -> None:
         assert any(name.startswith("2") and model in name for name in PRIMARY_NOTEBOOKS)
 
 
-def test_retired_lr_controlled_protocol_entry_point_raises(tmp_path) -> None:
-    """PR-11: only two_stage_random_hpo_v1 is live; lr_controlled_v1 is retired."""
+def test_retired_lr_controlled_protocol_is_gone() -> None:
+    """Only two_stage_random_hpo_v1 is live; lr_controlled_v1 no longer ships.
+
+    It used to survive as an entry point that raised. A module that cannot be
+    imported at all is a stronger guarantee than one that refuses at runtime,
+    and it removes the second protocol from the provenance surface entirely.
+    """
+    import importlib
+
     import pytest
 
-    from src.workflows.model_day import (
-        ModelDayOptions,
-        RetiredProtocolError,
-        run_model_day,
-    )
-
-    options = ModelDayOptions(
-        model_id="faster_rcnn_resnet50", start_expensive_stage=True
-    )
-    with pytest.raises(RetiredProtocolError, match="lr_controlled_v1"):
-        run_model_day(ROOT, tmp_path, options)
+    for module in ("src.workflows.model_day", "src.training.lr_workflow"):
+        with pytest.raises(ModuleNotFoundError):
+            importlib.import_module(module)
+    for script in ("benchmark.py", "lr_search.py", "full_dataset_finetune.py"):
+        assert not (ROOT / "scripts" / script).exists(), script
 
 
 def test_canonical_notebooks_do_not_require_browser_uploads() -> None:

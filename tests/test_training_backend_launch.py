@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from src import subprocess_utils
 from src.subprocess_utils import (
     MODEL_PYTHON_ENV,
     EnvironmentNotProvisionedError,
     python_module_command,
 )
 from src.training.trainer import TrainingOrchestrator
-from src.workflows import model_day
 
 
 def _write_backend_contract(run_dir: Path, model_id: str) -> None:
@@ -190,7 +190,7 @@ def test_backend_module_entrypoint_can_import_project(
 
 
 @pytest.mark.parametrize("module", ["scripts.evaluate", "scripts.profile_model"])
-def test_model_day_downstream_stage_is_launched_as_module(
+def test_downstream_stage_is_launched_as_module_in_the_model_runtime(
     module: str, tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.setenv(MODEL_PYTHON_ENV, sys.executable)
@@ -214,8 +214,8 @@ def test_model_day_downstream_stage_is_launched_as_module(
             python_executable=python_executable,
         )
 
-    monkeypatch.setattr(model_day, "run_checked", capture)
-    model_day._run_module(tmp_path, module, "--help")
+    monkeypatch.setattr(subprocess_utils, "run_checked", capture)
+    subprocess_utils.run_module_in_model_runtime(tmp_path, module, "--help")
 
     assert launched["command"] == [sys.executable, "-m", module, "--help"]
     assert launched["cwd"] == tmp_path

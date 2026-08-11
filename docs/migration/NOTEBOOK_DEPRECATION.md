@@ -9,11 +9,8 @@ logic must not be implemented in notebook cells.
 
 | Historical responsibility | Canonical entry point |
 |---|---|
-| Environment and repository setup | `notebooks/00_bootstrap_colab.ipynb` |
+| Environment and repository setup | the bootstrap cell every notebook shares |
 | Dataset preparation and verification | `notebooks/00_prepare_visdrone.ipynb` |
-| Preserved controlled LR workflow | `notebooks/01_run_model_day.ipynb` |
-| Controlled result publication | `notebooks/02_publish_results.ipynb` |
-| Controlled comparison | `notebooks/03_compare_all_models.ipynb` |
 | Model-specific HPO | `notebooks/10_hpo_resnet50.ipynb` through `13_hpo_rtdetrv2.ipynb` |
 | Final training | `notebooks/20_finetune_resnet50.ipynb` through `23_finetune_rtdetrv2.ipynb` |
 | Versioned evaluation and publication | `notebooks/30_evaluate_all_models.ipynb` and `31_publish_results.ipynb` |
@@ -21,6 +18,11 @@ logic must not be implemented in notebook cells.
 The planned 04–06 responsibilities were absorbed by model-specific 10–23 notebooks and
 the versioned 30–31 evaluation flow; creating placeholder notebooks would produce a
 second, ambiguous workflow.
+
+The `lr_controlled_v1` notebooks (`00_bootstrap_colab`, `01_run_model_day`,
+`02_publish_results`, `03_compare_all_models`) were deleted with that protocol. They had
+already stopped being runnable; keeping unrunnable entry points on disk only made it
+harder to tell which workflow was live.
 
 ## Compatibility and operation
 

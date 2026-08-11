@@ -8,8 +8,7 @@ from src.data.contract import verify_complete_data_contract
 from src.data.conversion import ensure_conversion
 from src.data.download import VISDRONE_ARCHIVES, ensure_archive, extract_idempotent
 from src.paths import ProjectPaths
-from src.training.lr_search import validate_lr_search_manifests
-from src.training.lr_workflow import LRControlledBenchmark
+from src.training.lr_search import ensure_lr_search_manifests
 from src.utils.serialization import write_json
 
 
@@ -47,24 +46,6 @@ def require_prepared_dataset_track(
             "Missing:\n- " + "\n- ".join(missing) + f"\n{remedy}"
         )
     return {name: str(path) for name, path in required.items()}
-
-
-def _lr_manifests_current(paths: ProjectPaths) -> bool:
-    annotations = paths.coco("2class") / "annotations"
-    try:
-        validate_lr_search_manifests(
-            paths.lr_search_manifests,
-            official_train_json=annotations / "instances_train.json",
-            official_validation_json=annotations / "instances_val.json",
-        )
-        return True
-    except (
-        AssertionError,
-        FileNotFoundError,
-        KeyError,
-        ValueError,
-    ):
-        return False
 
 
 def prepare_visdrone(
@@ -131,11 +112,8 @@ def prepare_visdrone(
             if action == "converted":
                 operations["conversions"].append(f"{track}:{split}")
 
-    lr_was_current = _lr_manifests_current(paths)
-    split_summary = LRControlledBenchmark(repo, paths.root).prepare_manifests(
-        force=not lr_was_current
-    )
-    if not lr_was_current:
+    split_summary, manifest_action = ensure_lr_search_manifests(paths)
+    if manifest_action == "created":
         operations["lr_manifest_generations"].append("2class")
 
     contract = verify_complete_data_contract(

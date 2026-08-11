@@ -754,5 +754,6 @@ reduction.
   [`src/training/checkpoint_selection.py`](../../src/training/checkpoint_selection.py)
 - LR-search settings and promotion policy:
   [`src/training/lr_search.py`](../../src/training/lr_search.py)
-- LR workflow orchestration:
-  [`src/training/lr_workflow.py`](../../src/training/lr_workflow.py)
+- LR workflow orchestration: `src/training/lr_workflow.py`, deleted with the
+  retired `lr_controlled_v1` protocol. Read it at the commit this diagnosis
+  describes; the live protocol is `two_stage_random_hpo_v1`.

@@ -498,20 +498,85 @@ def test_drive_is_not_mounted_when_it_was_not_requested() -> None:
 
 
 @pytest.mark.parametrize(
-    ("platform", "root", "persistent"),
+    ("platform", "root", "configured", "expected"),
     [
-        ("colab", "/content/drive/MyDrive/visdrone_architecture_benchmark", True),
-        ("colab", "/content/drive", True),
-        ("colab", "/content/aerial-object-detection-benchmark/local_artifacts", False),
-        ("colab", "/content/visdrone_artifacts", False),
-        ("kaggle", "/kaggle/working/visdrone_architecture_benchmark", True),
-        ("local", "/home/user/repo/local_artifacts", True),
+        (
+            "colab",
+            "/content/drive/MyDrive/visdrone_architecture_benchmark",
+            False,
+            notebook_env.ARTIFACT_ROOT_PERSISTENT,
+        ),
+        ("colab", "/content/drive", False, notebook_env.ARTIFACT_ROOT_PERSISTENT),
+        (
+            "colab",
+            "/content/aerial-object-detection-benchmark/local_artifacts",
+            False,
+            notebook_env.ARTIFACT_ROOT_SESSION,
+        ),
+        (
+            "colab",
+            "/content/visdrone_artifacts",
+            False,
+            notebook_env.ARTIFACT_ROOT_SESSION,
+        ),
+        # DriveUnavailableError tells the operator to mount persistent storage
+        # and point VISDRONE_DRIVE_ROOT at it. Calling that "ephemeral" would
+        # contradict the repository's own remediation.
+        (
+            "colab",
+            "/mnt/gcs/visdrone",
+            True,
+            notebook_env.ARTIFACT_ROOT_OPERATOR_DECLARED,
+        ),
+        ("colab", "/mnt/gcs/visdrone", False, notebook_env.ARTIFACT_ROOT_SESSION),
+        (
+            "kaggle",
+            "/kaggle/working/visdrone_architecture_benchmark",
+            False,
+            notebook_env.ARTIFACT_ROOT_PERSISTENT,
+        ),
+        (
+            "local",
+            "/home/user/repo/local_artifacts",
+            False,
+            notebook_env.ARTIFACT_ROOT_PERSISTENT,
+        ),
     ],
 )
 def test_artifact_root_persistence_classification(
-    platform: str, root: str, persistent: bool
+    platform: str, root: str, configured: bool, expected: str
 ) -> None:
-    assert notebook_env.artifact_root_is_persistent(platform, root) is persistent
+    assert (
+        notebook_env.artifact_root_persistence(
+            platform, root, operator_configured=configured
+        )
+        == expected
+    )
+    assert notebook_env.artifact_root_is_persistent(
+        platform, root, operator_configured=configured
+    ) is (expected != notebook_env.ARTIFACT_ROOT_SESSION)
+
+
+def test_operator_declared_root_is_not_warned_about_as_ephemeral(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Following the error's own option 2 must not produce a contradiction."""
+    repository = _fake_repository(tmp_path)
+    declared = tmp_path / "bucket" / "visdrone"
+    monkeypatch.setattr(notebook_env, "_mount_google_drive", lambda *_: None)
+
+    notebook_env.setup_notebook_environment(
+        repository,
+        platform="colab",
+        use_google_drive=False,
+        install_dependencies=False,
+        environ={"VISDRONE_DRIVE_ROOT": str(declared)},
+    )
+
+    output = capsys.readouterr().out
+    assert "EPHEMERAL ARTIFACT ROOT" not in output
+    assert "VISDRONE_DRIVE_ROOT" in output
+    assert "not verified" in output
 
 
 def test_active_notebooks_expose_the_drive_switch() -> None:

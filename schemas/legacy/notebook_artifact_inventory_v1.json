@@ -8959,7 +8959,7 @@
       "artifact_references": [
         {
           "cell": 0,
-          "line": 371,
+          "line": 407,
           "literals": [],
           "operations": [
             "read"
@@ -8983,7 +8983,7 @@
         "typing"
       ],
       "path": "src/notebook_environment.py",
-      "sha256": "375888d57d3a0b44236f2ec93402755b038b0a517d2d5274b5dbdb3efa99c91d"
+      "sha256": "03cbc952d29bf337b0a72f2632e466fbf05a2efa7098d4868fb1d14592ea142c"
     },
     {
       "artifact_references": [

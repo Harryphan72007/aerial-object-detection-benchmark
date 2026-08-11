@@ -17,6 +17,8 @@ from src.notebook_utils import in_colab, in_kaggle
 SUPPORTED_NOTEBOOK_PLATFORMS = {"colab", "kaggle", "local", "ci"}
 HOSTED_NOTEBOOK_PLATFORMS = frozenset({"colab", "kaggle"})
 REPOSITORY_NAME = "aerial-object-detection-benchmark"
+# The only path on a Colab runtime that outlives the session.
+DRIVE_MOUNTPOINT = "/content/drive"
 # Opt-in switch for the rare case of deliberately applying hosted pins to a
 # local interpreter. Absent it, a local notebook never rewrites the developer's
 # environment.
@@ -89,6 +91,21 @@ def default_artifact_root(
     return Path(repository_root).resolve() / "local_artifacts"
 
 
+def artifact_root_is_persistent(platform: str, artifact_root: str | Path) -> bool:
+    """Whether artifacts written here survive the end of the session.
+
+    Colab keeps only mounted Drive; everything else under ``/content`` is session
+    storage. Kaggle's ``/kaggle/working`` persists into the notebook's output, so
+    it is treated as persistent. A local checkout is a real filesystem.
+    """
+    resolved = Path(artifact_root).expanduser()
+    if platform == "colab":
+        return resolved == Path(DRIVE_MOUNTPOINT) or Path(
+            DRIVE_MOUNTPOINT
+        ) in resolved.parents
+    return True
+
+
 def default_local_cache_root(platform: str, repository_root: str | Path) -> Path:
     if platform == "colab":
         return Path("/content/visdrone_cache")
@@ -153,14 +170,49 @@ class NotebookEnvironment:
         }
 
 
+class DriveUnavailableError(RuntimeError):
+    """Drive was requested as the artifact root but this session cannot mount it."""
+
+
 def _mount_google_drive(platform: str, requested: bool) -> None:
+    """Mount Drive, or explain the choice instead of guessing one.
+
+    Some Colab session types - draft/preview sessions, restricted and enterprise
+    runtimes, local runtimes - refuse ``drive.mount`` with ``NotImplementedError``
+    because ``/var/colab/hostname`` is absent. Falling back to local storage
+    automatically would be the worst possible response: the artifact root holds
+    the dataset, the Optuna studies, and every checkpoint, and a multi-hour
+    search would be silently written somewhere that disappears on disconnect.
+    So this fails closed and names the options.
+    """
     if platform != "colab" or not requested:
         return
     try:
         from google.colab import drive
     except ImportError as error:
         raise RuntimeError("Google Drive mounting is available only in Colab") from error
-    drive.mount("/content/drive")
+    try:
+        drive.mount(DRIVE_MOUNTPOINT)
+    except (NotImplementedError, OSError, ValueError) as error:
+        raise DriveUnavailableError(
+            f"This Colab session cannot mount Google Drive: {error}\n\n"
+            "Drive is the persistent artifact root: it holds the prepared "
+            "dataset, the Optuna study database, and every checkpoint. Running "
+            "without it is a real choice, not a detail, so it is never made "
+            "automatically.\n\n"
+            "Pick one:\n"
+            "1. Connect a standard Colab runtime. Draft/preview sessions, "
+            "restricted or enterprise runtimes, and local runtimes block "
+            "mounting; a normal hosted GPU runtime does not. This is the option "
+            "that keeps your work.\n"
+            "2. Set VISDRONE_DRIVE_ROOT to a persistent directory you have "
+            "already mounted yourself (for example via PyDrive2 or a bucket "
+            "mount), then rerun.\n"
+            "3. Set USE_GOOGLE_DRIVE = False in the notebook's first cell to "
+            "run against local session storage. Everything - dataset, studies, "
+            "checkpoints - is DELETED when the session ends, so use this only "
+            "for a short smoke run, never for an HPO or final-training run."
+        ) from error
 
 
 def parse_pinned_requirements(text: str) -> dict[str, str]:
@@ -352,6 +404,20 @@ def setup_notebook_environment(
     )
     if smoke_test:
         artifacts = (repository / ".notebook-smoke" / "dataset").resolve()
+    elif not artifact_root_is_persistent(selected_platform, artifacts):
+        # Reached only when the operator opted out of Drive or pointed the root
+        # somewhere ephemeral. Say so every run: an interrupted 8-epoch final
+        # run is recoverable from Drive and unrecoverable from session storage.
+        print(
+            "WARNING: EPHEMERAL ARTIFACT ROOT\n"
+            f"  {artifacts}\n"
+            f"  is session storage on {selected_platform}, not Google Drive. The "
+            "dataset, Optuna studies, and checkpoints written here are DELETED "
+            "when this session ends, and an interrupted run cannot resume.\n"
+            "  Acceptable for a smoke run. Not acceptable for HPO or final "
+            "training - use a runtime that can mount Drive, or set "
+            "VISDRONE_DRIVE_ROOT to a persistent directory."
+        )
     local_cache = Path(
         values.get(
             "VISDRONE_LOCAL_CACHE_ROOT",

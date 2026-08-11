@@ -3,3 +3,7 @@ pytest==8.4.1
 nbformat==5.10.4
 nbclient==0.10.2
 ipykernel==6.29.5
+# Same pin as requirements-hpo-colab.txt. Without it CI skips every
+# Optuna-dependent test, so the HPO objective validation, study-compatibility,
+# and runtime-hardening paths go unexercised on every pull request.
+optuna==4.5.0

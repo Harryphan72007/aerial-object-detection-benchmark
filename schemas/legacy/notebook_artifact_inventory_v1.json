@@ -2181,7 +2181,7 @@
         },
         {
           "cell": 0,
-          "line": 205,
+          "line": 247,
           "literals": [
             "scalars.json"
           ],
@@ -2190,7 +2190,7 @@
         },
         {
           "cell": 0,
-          "line": 206,
+          "line": 248,
           "literals": [
             "*/vis_data/scalars.json"
           ],
@@ -2201,7 +2201,7 @@
         },
         {
           "cell": 0,
-          "line": 208,
+          "line": 250,
           "literals": [
             "scalars.json"
           ],
@@ -2210,7 +2210,7 @@
         },
         {
           "cell": 0,
-          "line": 211,
+          "line": 253,
           "literals": [],
           "operations": [
             "read"
@@ -2219,7 +2219,7 @@
         },
         {
           "cell": 0,
-          "line": 215,
+          "line": 257,
           "literals": [],
           "operations": [
             "read"
@@ -2228,7 +2228,7 @@
         },
         {
           "cell": 0,
-          "line": 270,
+          "line": 312,
           "literals": [],
           "operations": [
             "write"
@@ -2237,7 +2237,7 @@
         },
         {
           "cell": 0,
-          "line": 271,
+          "line": 313,
           "literals": [
             "epoch_metrics.jsonl"
           ],
@@ -2246,7 +2246,7 @@
         },
         {
           "cell": 0,
-          "line": 272,
+          "line": 314,
           "literals": [],
           "operations": [
             "write"
@@ -2255,7 +2255,7 @@
         },
         {
           "cell": 0,
-          "line": 275,
+          "line": 317,
           "literals": [
             "metrics_history.csv"
           ],
@@ -2266,7 +2266,7 @@
         },
         {
           "cell": 0,
-          "line": 432,
+          "line": 474,
           "literals": [
             "training_config.yaml"
           ],
@@ -2277,7 +2277,7 @@
         },
         {
           "cell": 0,
-          "line": 448,
+          "line": 490,
           "literals": [
             "pretrained"
           ],
@@ -2286,7 +2286,7 @@
         },
         {
           "cell": 0,
-          "line": 452,
+          "line": 494,
           "literals": [
             "PRETRAINING_WARNING.txt"
           ],
@@ -2297,7 +2297,7 @@
         },
         {
           "cell": 0,
-          "line": 458,
+          "line": 500,
           "literals": [],
           "operations": [
             "read"
@@ -2306,7 +2306,7 @@
         },
         {
           "cell": 0,
-          "line": 459,
+          "line": 501,
           "literals": [],
           "operations": [
             "read"
@@ -2315,7 +2315,7 @@
         },
         {
           "cell": 0,
-          "line": 474,
+          "line": 516,
           "literals": [
             "applied_overrides.json"
           ],
@@ -2326,7 +2326,7 @@
         },
         {
           "cell": 0,
-          "line": 475,
+          "line": 517,
           "literals": [],
           "operations": [
             "write"
@@ -2335,7 +2335,7 @@
         },
         {
           "cell": 0,
-          "line": 545,
+          "line": 584,
           "literals": [
             "last.pth"
           ],
@@ -2344,7 +2344,7 @@
         },
         {
           "cell": 0,
-          "line": 546,
+          "line": 585,
           "literals": [
             "last.pth"
           ],
@@ -2353,7 +2353,7 @@
         },
         {
           "cell": 0,
-          "line": 555,
+          "line": 594,
           "literals": [],
           "operations": [
             "write"
@@ -2362,7 +2362,7 @@
         },
         {
           "cell": 0,
-          "line": 556,
+          "line": 595,
           "literals": [
             "checkpoint_policy.json"
           ],
@@ -2371,7 +2371,7 @@
         },
         {
           "cell": 0,
-          "line": 562,
+          "line": 601,
           "literals": [
             "last.pth"
           ],
@@ -2380,7 +2380,7 @@
         },
         {
           "cell": 0,
-          "line": 582,
+          "line": 621,
           "literals": [
             "scheduler_contract.json"
           ],
@@ -2389,7 +2389,7 @@
         },
         {
           "cell": 0,
-          "line": 584,
+          "line": 623,
           "literals": [],
           "operations": [
             "read"
@@ -2398,7 +2398,7 @@
         },
         {
           "cell": 0,
-          "line": 585,
+          "line": 624,
           "literals": [],
           "operations": [
             "read"
@@ -2407,7 +2407,7 @@
         },
         {
           "cell": 0,
-          "line": 593,
+          "line": 632,
           "literals": [],
           "operations": [
             "write"
@@ -2416,7 +2416,7 @@
         },
         {
           "cell": 0,
-          "line": 594,
+          "line": 633,
           "literals": [],
           "operations": [
             "write"
@@ -2425,7 +2425,7 @@
         },
         {
           "cell": 0,
-          "line": 758,
+          "line": 804,
           "literals": [],
           "operations": [
             "write"
@@ -2434,7 +2434,7 @@
         },
         {
           "cell": 0,
-          "line": 781,
+          "line": 827,
           "literals": [],
           "operations": [
             "read"
@@ -2443,7 +2443,7 @@
         },
         {
           "cell": 0,
-          "line": 793,
+          "line": 839,
           "literals": [
             "last.pth"
           ],
@@ -2452,7 +2452,7 @@
         },
         {
           "cell": 0,
-          "line": 800,
+          "line": 846,
           "literals": [
             "last.pth"
           ],
@@ -2461,7 +2461,7 @@
         },
         {
           "cell": 0,
-          "line": 803,
+          "line": 849,
           "literals": [],
           "operations": [
             "read"
@@ -2470,7 +2470,7 @@
         },
         {
           "cell": 0,
-          "line": 821,
+          "line": 867,
           "literals": [
             "last.pth"
           ],
@@ -2479,7 +2479,7 @@
         },
         {
           "cell": 0,
-          "line": 824,
+          "line": 870,
           "literals": [],
           "operations": [
             "read"
@@ -2488,7 +2488,7 @@
         },
         {
           "cell": 0,
-          "line": 850,
+          "line": 896,
           "literals": [
             "last.pth"
           ],
@@ -2497,7 +2497,7 @@
         },
         {
           "cell": 0,
-          "line": 897,
+          "line": 943,
           "literals": [
             "best.pth"
           ],
@@ -2506,7 +2506,7 @@
         },
         {
           "cell": 0,
-          "line": 923,
+          "line": 969,
           "literals": [
             "final_metrics.json"
           ],
@@ -2517,7 +2517,7 @@
         },
         {
           "cell": 0,
-          "line": 926,
+          "line": 972,
           "literals": [
             "training_curves.png"
           ],
@@ -2534,6 +2534,7 @@
         "mmengine.hooks",
         "mmengine.runner",
         "pathlib",
+        "src.evaluation",
         "src.evaluation.policy",
         "src.optional_outputs",
         "src.reproducibility",
@@ -2548,7 +2549,7 @@
         "typing"
       ],
       "path": "scripts/run_mmdetection.py",
-      "sha256": "5befd62057af36f9964b95f57c5217ffd78c1f552c3c92771c2ebd52049fd4d2"
+      "sha256": "b7cb1b5e7f14b7ec27de7a8532c61ccae7e9953825e180afaa5d8d8f40eb8c5a"
     },
     {
       "artifact_references": [
@@ -9645,7 +9646,7 @@
         },
         {
           "cell": 0,
-          "line": 298,
+          "line": 300,
           "literals": [
             "best.pth"
           ],
@@ -9654,7 +9655,7 @@
         },
         {
           "cell": 0,
-          "line": 301,
+          "line": 303,
           "literals": [
             "best_map.pth"
           ],
@@ -9663,7 +9664,7 @@
         },
         {
           "cell": 0,
-          "line": 304,
+          "line": 306,
           "literals": [
             "best_raw.pth"
           ],
@@ -9672,7 +9673,7 @@
         },
         {
           "cell": 0,
-          "line": 308,
+          "line": 310,
           "literals": [
             "best.pt"
           ],
@@ -9681,7 +9682,7 @@
         },
         {
           "cell": 0,
-          "line": 309,
+          "line": 311,
           "literals": [
             "best_aptiny.pth"
           ],
@@ -9690,7 +9691,7 @@
         },
         {
           "cell": 0,
-          "line": 315,
+          "line": 317,
           "literals": [
             "last.pth"
           ],
@@ -9699,7 +9700,7 @@
         },
         {
           "cell": 0,
-          "line": 317,
+          "line": 319,
           "literals": [
             "latest.pt"
           ],
@@ -9708,7 +9709,7 @@
         },
         {
           "cell": 0,
-          "line": 330,
+          "line": 332,
           "literals": [],
           "operations": [
             "read"
@@ -9717,7 +9718,7 @@
         },
         {
           "cell": 0,
-          "line": 407,
+          "line": 409,
           "literals": [
             "best.pth"
           ],
@@ -9726,7 +9727,7 @@
         },
         {
           "cell": 0,
-          "line": 428,
+          "line": 430,
           "literals": [
             "last.pth"
           ],
@@ -9751,7 +9752,7 @@
         "typing"
       ],
       "path": "src/training/checkpointing.py",
-      "sha256": "a8b5a38a6f31fafde95d516302e0389d6411818e5142efddeef49e690aa19e3c"
+      "sha256": "85192a8f99526f92ed63704747f1b96acc75f679cfc0427fc94415350b3b6920"
     },
     {
       "artifact_references": [

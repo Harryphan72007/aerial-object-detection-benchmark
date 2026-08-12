@@ -254,7 +254,9 @@ def atomic_torch_save(value: Any, destination: str | Path) -> None:
     os.close(fd)
     try:
         torch.save(value, name)
-        with open(name, "rb") as handle:
+        # The handle has to be writable: Windows refuses to flush buffers
+        # through a read-only descriptor, which POSIX happily accepts.
+        with open(name, "rb+") as handle:
             os.fsync(handle.fileno())
         os.replace(name, target)
     finally:

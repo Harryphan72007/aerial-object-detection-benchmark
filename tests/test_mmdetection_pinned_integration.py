@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import importlib
 import os
 from pathlib import Path
 
@@ -11,10 +10,12 @@ import pytest
 from PIL import Image
 
 from scripts.run_mmdetection import (
+    AERIAL_METRIC_NAME,
     append_aerial_evaluator,
     configure_dataset,
     configure_evaluator_annotation,
     configure_faster_rcnn_from_mask,
+    register_aerial_metric,
 )
 
 
@@ -35,9 +36,6 @@ def test_pinned_mask_pipeline_accepts_empty_visdrone_segmentations(
     from mmengine.config import Config
     from mmengine.registry import init_default_scope
     from mmengine.runner import Runner
-
-    metric_module = importlib.import_module("src.evaluation.mmdet_aerial_metric")
-    importlib.reload(metric_module)
 
     image_root = tmp_path / "images"
     image_root.mkdir()
@@ -75,6 +73,11 @@ def test_pinned_mask_pipeline_accepts_empty_visdrone_segmentations(
         loader.num_workers = 0
         loader.persistent_workers = False
     assert configure_evaluator_annotation(cfg.val_evaluator, str(annotation)) > 0
+    # The production registration path, not a hand-rolled import: assigning
+    # custom_imports to a loaded config imports nothing, and building the
+    # evaluator is the step that used to fail with an unregistered metric.
+    imports = register_aerial_metric(cfg)
+    assert "src.evaluation.mmdet_aerial_metric" in imports["imports"]
     cfg.val_evaluator = append_aerial_evaluator(cfg.val_evaluator, str(annotation))
 
     init_default_scope("mmdet")
@@ -83,3 +86,6 @@ def test_pinned_mask_pipeline_accepts_empty_visdrone_segmentations(
 
     assert batch["data_samples"][0].gt_instances.bboxes.shape[0] == 1
     assert evaluator is not None
+    assert AERIAL_METRIC_NAME in {
+        type(metric).__name__ for metric in evaluator.metrics
+    }

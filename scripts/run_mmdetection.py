@@ -81,6 +81,8 @@ def set_num_classes(node: Any, number_of_classes: int) -> None:
 
 
 MASK_ONLY_TRANSFORMS = {"CopyPaste", "LoadPanopticAnnotations"}
+AERIAL_METRIC_NAME = "AerialCocoMetric"
+AERIAL_METRIC_MODULE = "src.evaluation.mmdet_aerial_metric"
 
 
 def strip_mask_pipeline(node: Any) -> int:
@@ -177,8 +179,48 @@ def append_aerial_evaluator(node: Any, annotation_file: str) -> list[Any]:
     """Append the custom evaluator without creating unsupported nested lists."""
 
     evaluators = list(node) if isinstance(node, (list, tuple)) else [node]
-    evaluators.append({"type": "AerialCocoMetric", "ann_file": annotation_file})
+    evaluators.append({"type": AERIAL_METRIC_NAME, "ann_file": annotation_file})
     return evaluators
+
+
+def merge_custom_imports(existing: Any) -> dict[str, Any]:
+    """Add the metric module to ``custom_imports`` without dropping upstream entries."""
+
+    current = dict(existing) if isinstance(existing, dict) else {}
+    imports = list(current.get("imports") or [])
+    if isinstance(imports, str):
+        imports = [imports]
+    if AERIAL_METRIC_MODULE not in imports:
+        imports.append(AERIAL_METRIC_MODULE)
+    return {"imports": imports, "allow_failed_imports": False}
+
+
+def register_aerial_metric(cfg: Any) -> dict[str, Any]:
+    """Import the custom metric into this interpreter and record it in the config.
+
+    MMEngine only honours ``custom_imports`` while ``Config.fromfile`` parses a
+    file, so assigning the key to an already-loaded config imports nothing and
+    the runtime registry stays empty. The import therefore happens here, and the
+    merged key is kept only so the dumped ``runtime_config.py`` stays reloadable.
+    """
+
+    from src.evaluation import mmdet_aerial_metric
+
+    mmdet_aerial_metric.ensure_registered()
+    cfg.custom_imports = merge_custom_imports(cfg.get("custom_imports"))
+    return cfg.custom_imports
+
+
+def disable_default_checkpoint_hook(default_hooks: Any) -> None:
+    """Switch off MMEngine's own CheckpointHook.
+
+    Deleting the key does not disable it: ``Runner.register_default_hooks``
+    re-inserts a stock ``CheckpointHook(interval=1)`` for every default name it
+    does not find, and only an explicit ``None`` drops it. This benchmark writes
+    exactly one rolling checkpoint through ``AtomicRollingCheckpointHook``.
+    """
+
+    default_hooks["checkpoint"] = None
 
 
 def apply_detection_policy(model: Any) -> dict[str, Any]:
@@ -511,10 +553,7 @@ def main() -> None:
         raise ValueError("validation config contains no COCO evaluator")
     if not configure_evaluator_annotation(cfg.test_evaluator, args.val_ann):
         raise ValueError("test config contains no COCO evaluator")
-    cfg.custom_imports = {
-        "imports": ["src.evaluation.mmdet_aerial_metric"],
-        "allow_failed_imports": False,
-    }
+    register_aerial_metric(cfg)
     cfg.val_evaluator = append_aerial_evaluator(cfg.val_evaluator, args.val_ann)
     cfg.test_evaluator = append_aerial_evaluator(cfg.test_evaluator, args.val_ann)
     if hasattr(cfg, "train_cfg") and cfg.train_cfg:
@@ -551,7 +590,7 @@ def main() -> None:
         base_optimizer["loss_scale"] = "dynamic"
         cfg.optim_wrapper = base_optimizer
     cfg.optim_wrapper["accumulative_counts"] = args.accumulation
-    cfg.default_hooks.pop("checkpoint", None)
+    disable_default_checkpoint_hook(cfg.default_hooks)
     write_json(
         run_dir / "checkpoint_policy.json",
         {
@@ -665,31 +704,38 @@ def main() -> None:
             args.lr_range_end_multiplier,
         )
         range_history: list[dict[str, Any]] = []
-        original_step = runner.optim_wrapper.step
         range_state: dict[str, Any] = {
             "optimizer_step": 0,
             "pending_losses": [],
         }
-
-        def tracked_step(**kwargs: Any) -> Any:
-            squared = torch.zeros((), device=runner.model.data_preprocessor.device)
-            for parameter in runner.model.parameters():
-                if parameter.grad is not None:
-                    squared += parameter.grad.detach().float().norm(2).square()
-            runner.optim_wrapper._lr_range_gradient_norm = float(
-                squared.sqrt().cpu().item()
-            )
-            result = original_step(**kwargs)
-            range_state["optimizer_step"] += 1
-            return result
-
-        runner.optim_wrapper.step = tracked_step
 
         class LRRangeStop(RuntimeError):
             pass
 
         class LRRangeHook(Hook):
             priority = "VERY_HIGH"
+
+            def before_train(self, runner: Any) -> None:
+                # ``Runner.train`` builds the optimizer wrapper itself, so before
+                # this point ``runner.optim_wrapper`` is still the config dict and
+                # has no ``step`` to wrap.
+                original_step = runner.optim_wrapper.step
+
+                def tracked_step(**kwargs: Any) -> Any:
+                    squared = torch.zeros(
+                        (), device=runner.model.data_preprocessor.device
+                    )
+                    for parameter in runner.model.parameters():
+                        if parameter.grad is not None:
+                            squared += parameter.grad.detach().float().norm(2).square()
+                    runner.optim_wrapper._lr_range_gradient_norm = float(
+                        squared.sqrt().cpu().item()
+                    )
+                    result = original_step(**kwargs)
+                    range_state["optimizer_step"] += 1
+                    return result
+
+                runner.optim_wrapper.step = tracked_step
 
             def before_train_iter(
                 self, runner: Any, batch_idx: int, data_batch: Any = None

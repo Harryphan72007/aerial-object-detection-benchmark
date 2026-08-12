@@ -321,7 +321,10 @@ def test_backend_sources_forbid_new_aliases_and_epoch_histories() -> None:
     assert '"max_keep_ckpts": 1' in mmdet
     assert '"save_best": None' in mmdet
     assert '"filename": "last.pth"' in mmdet
-    assert 'cfg.default_hooks.pop("checkpoint", None)' in mmdet
+    # Popping the key is not enough: MMEngine re-inserts a stock CheckpointHook
+    # for every default name it cannot find, so it has to be set to None.
+    assert 'cfg.default_hooks.pop("checkpoint", None)' not in mmdet
+    assert "disable_default_checkpoint_hook(cfg.default_hooks)" in mmdet
     assert "class AtomicRollingCheckpointHook" in mmdet
     final_workflow = (ROOT / "src" / "hpo" / "final_workflow.py").read_text(
         encoding="utf-8"

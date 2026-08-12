@@ -5,16 +5,24 @@ from pathlib import Path
 
 import yaml
 
+import pytest
+
 from scripts.run_mmdetection import (
+    AERIAL_METRIC_MODULE,
     apply_detection_policy,
     append_aerial_evaluator,
     best_metrics_from_rows,
     configure_evaluator_annotation,
     configure_faster_rcnn_from_mask,
+    disable_default_checkpoint_hook,
+    merge_custom_imports,
     _read_scalar_rows,
     restore_selection_state,
 )
-from src.evaluation.mmdet_aerial_metric import flatten_image_results
+from src.evaluation.mmdet_aerial_metric import (
+    flatten_image_results,
+    image_record,
+)
 from src.evaluation.policy import (
     DETECTION_SCORE_THRESHOLD,
     MAX_DETECTIONS_PER_IMAGE,
@@ -103,6 +111,84 @@ def test_detection_policy_and_nested_evaluator_annotation_are_consistent() -> No
     assert len(appended) == 3
     assert appended[-1]["type"] == "AerialCocoMetric"
     assert all(not isinstance(value, list) for value in appended)
+
+
+class FakeTensor:
+    """Stand in for the device-resident tensors MMDetection puts in predictions."""
+
+    def __init__(self, rows: list) -> None:
+        self.rows = rows
+        self.moved = False
+
+    def cpu(self) -> "FakeTensor":
+        moved = FakeTensor(self.rows)
+        moved.moved = True
+        return moved
+
+    def numpy(self) -> list:
+        if not self.moved:
+            raise AssertionError("prediction fields must be moved to CPU first")
+        return self.rows
+
+
+def test_metric_reads_the_flattened_data_samples_mmengine_actually_passes() -> None:
+    # ``Evaluator.process`` converts every DetDataSample with ``to_dict()``,
+    # which lifts metainfo to the top level and turns pred_instances into a
+    # plain dict of tensors.
+    sample = {
+        "img_id": 77,
+        "ori_shape": (1080, 1920),
+        "pred_instances": {
+            "bboxes": FakeTensor([[10.0, 20.0, 30.0, 50.0]]),
+            "scores": FakeTensor([0.75]),
+            "labels": FakeTensor([1]),
+        },
+    }
+
+    record = image_record(sample)
+
+    assert record == {
+        "image_id": 77,
+        "detections": [
+            {
+                "image_id": 77,
+                "category_id": 2,
+                "bbox": [10.0, 20.0, 20.0, 30.0],
+                "score": 0.75,
+            }
+        ],
+    }
+
+
+def test_metric_still_reads_data_elements_that_nest_metainfo() -> None:
+    class Sample:
+        metainfo = {"img_id": 5}
+        pred_instances = None
+
+    assert image_record(Sample()) == {"image_id": 5, "detections": []}
+
+
+def test_metric_refuses_samples_without_an_image_id_instead_of_guessing() -> None:
+    with pytest.raises(KeyError, match="img_id"):
+        image_record({"pred_instances": None})
+
+
+def test_custom_imports_registers_the_metric_without_dropping_upstream_modules() -> None:
+    merged = merge_custom_imports({"imports": ["model"], "allow_failed_imports": True})
+    assert merged == {
+        "imports": ["model", AERIAL_METRIC_MODULE],
+        "allow_failed_imports": False,
+    }
+    assert merge_custom_imports(None)["imports"] == [AERIAL_METRIC_MODULE]
+    assert merge_custom_imports(merged)["imports"] == ["model", AERIAL_METRIC_MODULE]
+
+
+def test_default_checkpoint_hook_is_disabled_rather_than_removed() -> None:
+    # MMEngine re-adds a stock CheckpointHook for any default name that is
+    # simply absent, so only an explicit None keeps epoch_*.pth off disk.
+    hooks = {"checkpoint": {"type": "CheckpointHook", "interval": 1}}
+    disable_default_checkpoint_hook(hooks)
+    assert hooks == {"checkpoint": None}
 
 
 def test_metric_results_keep_empty_images_until_compute_boundary() -> None:
